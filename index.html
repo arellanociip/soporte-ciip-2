@@ -29,6 +29,23 @@
     <a href="bandeja.html">la bandeja de soporte</a> de este mismo navegador. Nadie más lo ve.</div>
   </div>
 
+  <!-- ===================== MIS SOLICITUDES =====================
+       Solo sale si has enviado alguna desde este navegador. El estado se
+       consulta al servidor por el id de cada una, que es lo único que prueba
+       que son tuyas. Lo llena js/solicitud.js. -->
+  <section id="misSolicitudes" hidden>
+    <div class="tarjeta">
+      <div class="mis-h">
+        <div>
+          <div class="mis-t">Lo que has pedido</div>
+          <div class="mis-s" id="misResumen"></div>
+        </div>
+        <button type="button" class="boton plano chico" id="botonRefrescarMias">Actualizar</button>
+      </div>
+      <div id="misLista"></div>
+    </div>
+  </section>
+
   <!-- ===================== EL FORMULARIO ===================== -->
   <section id="pantallaFormulario">
     <div class="intro">

@@ -190,6 +190,21 @@ los campos con los datos puestos, y **No soy yo** los borra de verdad.
 > opcionales y los escribe cada quien. Si algún día la página queda detrás de una
 > clave, se puede reconsiderar — pero es una decisión aparte, no un descuido.
 
+**Y puede ver en qué va.** Al volver al formulario, arriba sale *Lo que has
+pedido*: cada solicitud con su número, su estado y —cuando GTIC la cierra— la
+respuesta del técnico. No hace falta clave ni recordar el número.
+
+> **Cómo se sostiene eso sin cuentas.** Al enviar, el navegador guarda el uid=1050397(f.reyes) gid=1049089 groups=1049089
+> de la solicitud, que es un UUID: 122 bits al azar. El servidor entrega una
+> solicitud a quien sepa su uid=1050397(f.reyes) gid=1049089 groups=1049089, y solo lo sabe el navegador de quien la mandó.
+> Pedirla por número (, …) está negado, porque entonces cualquiera
+> recorrería las de toda la casa. Tampoco se entregan listas, ni se devuelven
+> cédula, teléfono ni gerencia — solo el resumen que a esa persona le sirve.
+>
+> El precio: vive en un navegador. Quien borre sus datos o cambie de equipo
+> pierde el rastro y tendrá que preguntarle a GTIC. Es el resguardo de papel
+> que uno se lleva, no un expediente.
+
 **GTIC.** Entra a la bandeja con su correo y clave. Ve las pendientes de primero.
 Abre una, pone quién la atiende, deja las observaciones y llena los renglones de
 equipo —hasta seis, como en el Excel—, cambia el estado a *Atendida* y guarda.

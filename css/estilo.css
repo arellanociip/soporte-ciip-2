@@ -149,6 +149,41 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .recuerdame b{font-weight:700; color:var(--gray-soft);}
 .recuerdame:has(input:focus-visible){color:var(--navy);}
 
+/* ===================== MIS SOLICITUDES =====================
+   El seguimiento de lo que uno pidió. Va arriba del formulario porque quien
+   vuelve a esta página suele venir a preguntar por lo de ayer, no a pedir algo
+   nuevo. */
+#misSolicitudes{margin-bottom:16px;}
+.mis-h{display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;}
+.mis-t{font-size:15px; font-weight:700;}
+.mis-s{font-size:12px; color:var(--gray-soft); margin-top:2px;}
+.mis-h .boton{margin-left:auto; flex:0 0 auto;}
+
+.mis-fila{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:11px 0; border-top:1px solid var(--line-soft);
+}
+.mis-fila:first-child{border-top:none; padding-top:0;}
+.mis-num{
+  font-size:12px; font-weight:800; color:var(--navy);
+  font-variant-numeric:tabular-nums; flex:0 0 auto;
+}
+.mis-num small{display:block; font-size:10px; font-weight:600; color:var(--gray-soft);}
+.mis-q{flex:1 1 220px; min-width:0;}
+.mis-q .d{font-size:13px; display:-webkit-box; -webkit-line-clamp:1;
+  -webkit-box-orient:vertical; overflow:hidden;}
+.mis-q .f{font-size:11.5px; color:var(--gray-soft); margin-top:2px;}
+.mis-fila .etiqueta{flex:0 0 auto;}
+
+/* Lo que dejó el técnico al cerrar: es la respuesta que la persona vino a leer. */
+.mis-obs{
+  flex:1 1 100%; background:var(--good-bg); border:1px solid #C9E7D8;
+  border-radius:var(--r-sm); padding:9px 12px; font-size:12.5px; color:var(--ink);
+  margin-top:2px; white-space:pre-wrap;
+}
+.mis-obs b{display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--good); margin-bottom:3px;}
+
 /* ===================== ATAJOS ===================== */
 /* Los cinco problemas que cubren el 78 % de lo que pide la casa, más la
    salida para el resto. Son botones de verdad, no divs: se llega a ellos con

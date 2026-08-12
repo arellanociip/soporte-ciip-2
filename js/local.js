@@ -74,4 +74,32 @@
 
     vaciar(){ localStorage.removeItem(LLAVE); },
   };
+
+  /* ---------- el resguardo de lo que uno ha pedido ----------
+     Aparte del modo prueba y siempre activo: al enviar, aquí queda el id de la
+     solicitud. Ese id es la llave para consultar su estado después sin cuenta
+     ni contraseña — el servidor solo la entrega a quien lo sepa, y solo lo
+     sabe este navegador. Por eso guarda el id y no el número: el número es
+     001, 002, 003… y con él cualquiera leería las de los demás.
+
+     Vive en un solo navegador, como es natural: es el resguardo de papel que
+     uno se lleva, no un expediente. */
+  const LLAVE_MIAS = 'soporte_mis_solicitudes';
+
+  window.soporteMias = {
+    leer(){
+      try{ return JSON.parse(localStorage.getItem(LLAVE_MIAS)) || []; }
+      catch(e){ return []; }
+    },
+    anotar(fila){
+      if(!fila || !fila.id) return;
+      const mias = window.soporteMias.leer().filter(m => m.id !== fila.id);
+      mias.unshift({id: fila.id, numero: fila.numero, anio: fila.anio,
+                    enviada_en: fila.creada_en || new Date().toISOString()});
+      /* con las últimas veinte sobra: más abajo ya nadie mira */
+      try{ localStorage.setItem(LLAVE_MIAS, JSON.stringify(mias.slice(0, 20))); }
+      catch(e){ console.warn('No se pudo anotar la solicitud:', e); }
+    },
+    vaciar(){ localStorage.removeItem(LLAVE_MIAS); },
+  };
 })();

@@ -443,6 +443,10 @@
          guardado antes, que es lo que uno espera al decir "no me recuerdes". */
       if($('recordarme').checked) guardarYo(datos);
       else localStorage.removeItem(LLAVE_YO);
+      /* El resguardo para consultar su estado después. Va siempre, marque o no
+         la casilla: eso decide si se recuerdan sus DATOS, no si puede seguir
+         lo que acaba de pedir. */
+      soporteMias.anotar(fila);
       mostrarAcuse(fila);
     }catch(err){
       console.error('No se pudo enviar la solicitud:', err);
@@ -506,8 +510,82 @@
     cambiarPantalla($('pantallaAcuse'), $('pantallaFormulario'));
   });
 
+  /* ---------- el seguimiento de lo que uno pidió ----------
+     Se consulta cada solicitud por su id, que es lo único que prueba que es
+     tuya: el servidor no entrega listas a quien no tiene cuenta. Sin servidor
+     (modo prueba) se lee del almacén del navegador, para que el circuito se
+     pueda enseñar igual. */
+  const ESTADO_LBL = {recibida:'Recibida', en_proceso:'En proceso',
+                      atendida:'Atendida', anulada:'Anulada'};
+
+  const escapar = s => String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  function fechaCorta(iso){
+    if(!iso) return '';
+    return new Date(iso).toLocaleDateString('es-VE', {day:'2-digit', month:'short'});
+  }
+
+  async function consultarUna(m){
+    if(!soporteHayBackend()){
+      return soporteLocal.leer().find(s => s.id === m.id) || null;
+    }
+    const B = window.SOPORTE_BACKEND;
+    const r = await fetch(B.url + '/rest/v1/solicitudes?id=eq.' + encodeURIComponent(m.id),
+      {headers: soporteCabeceras()});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const filas = await r.json();
+    return Array.isArray(filas) ? filas[0] : filas;
+  }
+
+  function filaMiaHtml(s){
+    /* La observación del técnico solo cuando ya cerró: antes no hay nada que
+       leer y sería una caja vacía dando falsas esperanzas. */
+    const respuesta = (s.estado === 'atendida' && s.observaciones)
+      ? `<div class="mis-obs"><b>Respuesta de GTIC${s.tecnico ? ' · ' + escapar(s.tecnico) : ''}</b>${escapar(s.observaciones)}</div>`
+      : '';
+    return `<div class="mis-fila">
+      <div class="mis-num">${String(s.numero).padStart(3,'0')}<small>${escapar(String(s.anio))}</small></div>
+      <div class="mis-q">
+        <div class="d">${escapar(s.descripcion)}</div>
+        <div class="f">Enviada el ${escapar(fechaCorta(s.creada_en))}${
+          s.atendida_en ? ' · atendida el ' + escapar(fechaCorta(s.atendida_en)) : ''}</div>
+      </div>
+      <span class="etiqueta ${escapar(s.estado)}">${escapar(ESTADO_LBL[s.estado] || s.estado)}</span>
+      ${respuesta}
+    </div>`;
+  }
+
+  async function pintarMias(){
+    const mias = soporteMias.leer();
+    if(!mias.length){ $('misSolicitudes').hidden = true; return; }
+
+    $('misSolicitudes').hidden = false;
+    $('misResumen').textContent = 'Consultando…';
+
+    /* Todas a la vez: son pocas y así no se espera una detrás de otra. */
+    const filas = (await Promise.all(mias.map(m =>
+      consultarUna(m).catch(e => { console.warn('No se pudo consultar', m.id, e); return null; })
+    ))).filter(Boolean);
+
+    if(!filas.length){
+      $('misResumen').textContent = 'No se pudo consultar el estado. Revisa la conexión.';
+      $('misLista').innerHTML = '';
+      return;
+    }
+    const pendientes = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso').length;
+    $('misResumen').textContent = pendientes
+      ? (pendientes === 1 ? '1 solicitud sigue abierta' : pendientes + ' solicitudes siguen abiertas')
+      : 'Todo lo tuyo está atendido';
+    $('misLista').innerHTML = filas.map(filaMiaHtml).join('');
+  }
+
+  $('botonRefrescarMias').addEventListener('click', () => pintarMias());
+
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
   aplicarYo();
   pintarAvance();
+  pintarMias();
 })();

@@ -393,7 +393,31 @@ async function atenderApi(req, res, url){
                   '·', fila.usuario, '·', fila.gerencia);
       return responder(res, 201, [fila]);
     }
-    /* Verlas y atenderlas: solo GTIC. */
+    /* ---- consultar el estado de LA PROPIA solicitud, sin cuenta ----
+       Solo de una en una y solo dando su id, que es un UUID: 122 bits al azar
+       que nadie adivina ni recorre en orden. Es lo que hace que se pueda
+       consultar sin clave sin que eso permita leer las de los demás — a
+       diferencia del número correlativo, que sería 001, 002, 003…
+       El navegador de quien pidió guarda esos id al enviar; nadie más los
+       tiene. Y se devuelve un resumen: lo que a esa persona le sirve saber,
+       no la ficha entera. */
+    if(req.method === 'GET' && !sesionDe(req)){
+      const filtro = url.searchParams.get('id') || '';
+      const id = filtro.startsWith('eq.') ? filtro.slice(3) : '';
+      if(!/^[0-9a-f-]{36}$/i.test(id)){
+        return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
+      }
+      const s = leerSolicitudes().find(x => x.id === id);
+      if(!s) return responder(res, 200, []);
+      return responder(res, 200, [{
+        id: s.id, numero: s.numero, anio: s.anio, estado: s.estado,
+        descripcion: s.descripcion, tipo: s.tipo, detalle: s.detalle,
+        creada_en: s.creada_en, atendida_en: s.atendida_en,
+        tecnico: s.tecnico, observaciones: s.observaciones,
+      }]);
+    }
+
+    /* Verlas todas y atenderlas: solo GTIC. */
     if(!sesionDe(req)) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
 
     if(req.method === 'GET'){
