@@ -386,8 +386,12 @@
     const irArriba = () => window.scrollTo(
       {top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
 
+    /* el medidor de la planilla solo tiene sentido con la planilla delante */
+    const alAcuse = entra === $('pantallaAcuse');
     if(menosMovimiento){
-      sale.hidden = true; entra.hidden = false; irArriba();
+      sale.hidden = true; entra.hidden = false;
+      $('tarjetaAvance').hidden = alAcuse;
+      irArriba();
       return;
     }
     sale.classList.add('pantalla-sale');
@@ -395,6 +399,7 @@
       sale.hidden = true;
       sale.classList.remove('pantalla-sale');
       entra.hidden = false;
+      $('tarjetaAvance').hidden = alAcuse;
       entra.classList.add('pantalla-entra');
       irArriba();
       setTimeout(() => entra.classList.remove('pantalla-entra'), 420);
@@ -690,11 +695,15 @@
   function bloquearSiHayAbierta(abierta){
     const aviso = $('avisoUnaALaVez');
     if(!abierta){
-      $('pantallaFormulario').hidden = !$('pantallaAcuse').hidden;
+      const enAcuse = !$('pantallaAcuse').hidden;
+      $('pantallaFormulario').hidden = enAcuse;
+      /* el medidor de la planilla acompaña a la planilla: sin ella no mide nada */
+      $('tarjetaAvance').hidden = enAcuse;
       aviso.hidden = true;
       return;
     }
     $('pantallaFormulario').hidden = true;
+    $('tarjetaAvance').hidden = true;
     $('pantallaAcuse').hidden = true;
     aviso.innerHTML = `<span>🕓</span><div>
       <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—

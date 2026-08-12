@@ -45,6 +45,9 @@
        Solo sale si has enviado alguna desde este navegador. El estado se
        consulta al servidor por el id de cada una, que es lo único que prueba
        que son tuyas. Lo llena js/solicitud.js. -->
+  <!-- Los dos medidores, uno al lado del otro: a la izquierda en qué va lo que
+       ya pediste, a la derecha cuánto te falta para pedir lo siguiente. -->
+  <div class="tira">
   <section id="misSolicitudes" hidden>
     <div class="tarjeta">
       <div class="mis-h">
@@ -72,22 +75,10 @@
     </div>
   </section>
 
-  <!-- Sale en lugar del formulario mientras haya una solicitud abierta. -->
-  <div class="aviso alerta" id="avisoUnaALaVez" hidden></div>
-
-  <!-- ===================== EL FORMULARIO ===================== -->
-  <section id="pantallaFormulario">
-    <div class="intro">
-      <h1>Cuéntanos qué necesitas</h1>
-      <p>Llena esta planilla y la solicitud entra de una vez a la cola de GTIC. Al terminar
-      recibes un número para hacerle seguimiento. Solo toma un minuto.</p>
-    </div>
-
-    <form class="tarjeta" id="formulario" novalidate>
-
-      <!-- Cuánto falta. Solo cuenta lo obligatorio; lo llena js/solicitud.js.
-           El anillo es decorativo para quien no ve: el porcentaje y la frase
-           de al lado ya lo dicen, y los atributos aria lo anuncian aparte. -->
+  <!-- El avance de la planilla, en su propia tarjeta para poder ir al lado del
+       seguimiento. Se esconde con el formulario cuando hay una abierta. -->
+  <section id="tarjetaAvance">
+    <div class="tarjeta">
       <div class="avance" id="avance" role="progressbar"
            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
            aria-label="Avance de la planilla">
@@ -103,6 +94,22 @@
           <span id="avanceSub">5 datos obligatorios</span>
         </div>
       </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- Sale en lugar del formulario mientras haya una solicitud abierta. -->
+  <div class="aviso alerta" id="avisoUnaALaVez" hidden></div>
+
+  <!-- ===================== EL FORMULARIO ===================== -->
+  <section id="pantallaFormulario">
+    <div class="intro">
+      <h1>Cuéntanos qué necesitas</h1>
+      <p>Llena esta planilla y la solicitud entra de una vez a la cola de GTIC. Al terminar
+      recibes un número para hacerle seguimiento. Solo toma un minuto.</p>
+    </div>
+
+    <form class="tarjeta" id="formulario" novalidate>
 
       <div class="seccion">Quién solicita</div>
 
