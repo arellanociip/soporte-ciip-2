@@ -236,6 +236,38 @@ function sesionDe(req){
   return s;
 }
 
+/* ================= avisar en cuanto algo cambia =================
+   Preguntar cada quince segundos deja una espera que se siente. Aquí el
+   servidor avisa: cada página abierta deja una conexión escuchando y recibe un
+   empujón en cuanto una solicitud entra o cambia de estado.
+
+   El aviso NO lleva datos, solo dice "algo cambió". Así no hay que decidir qué
+   puede ver cada quien por este canal: cada página vuelve a preguntar por su
+   vía de siempre, con sus permisos. Un cambio en la solicitud de alguien no le
+   filtra nada a los demás.
+
+   Si esto falla —o el día que los datos se muden a Supabase, que no tiene esta
+   ruta— las páginas siguen preguntando cada tanto por su cuenta. */
+const oyentes = new Set();
+
+function avisarCambio(){
+  for(const res of oyentes){
+    try{ res.write('data: cambio\n\n'); }
+    catch(e){ oyentes.delete(res); }
+  }
+}
+
+/* Una línea de vida cada 25 segundos. Sin ella, una conexión que lleva rato
+   callada la puede dar por muerta el sistema operativo o un proxy, y el aviso
+   no llegaría nunca. Los ':' son un comentario del protocolo: el navegador lo
+   recibe y lo descarta. */
+setInterval(() => {
+  for(const res of oyentes){
+    try{ res.write(': sigo aqui\n\n'); }
+    catch(e){ oyentes.delete(res); }
+  }
+}, 25000).unref();
+
 /* ================= respuestas ================= */
 function responder(res, codigo, cuerpo, tipo){
   const texto = typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo);
@@ -360,6 +392,22 @@ function atenderSolicitud(id, cambios){
 }
 
 async function atenderApi(req, res, url){
+  /* ---- la línea abierta por la que llegan los avisos ----
+     Sin cuenta, porque el aviso no dice nada: solo que algo cambió. Esta
+     respuesta no se cierra; se queda abierta hasta que la página se va. */
+  if(url.pathname === '/rest/v1/eventos' && req.method === 'GET'){
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+    });
+    /* si la conexión se cae, que el navegador vuelva en tres segundos */
+    res.write('retry: 3000\n\n');
+    oyentes.add(res);
+    req.on('close', () => oyentes.delete(res));
+    return;
+  }
+
   /* ---- entrar ---- */
   if(url.pathname === '/auth/v1/token'){
     const tipo = url.searchParams.get('grant_type');
@@ -438,6 +486,7 @@ async function atenderApi(req, res, url){
     escribirJson(F_SOLIC, solicitudes);
     console.log('  - retirada ' + String(s.numero).padStart(3,'0') + '-' + s.anio +
                 ' por ' + s.usuario);
+    avisarCambio();
     return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
   }
 
@@ -448,6 +497,7 @@ async function atenderApi(req, res, url){
       const fila = crearSolicitud(await cuerpoDe(req));
       console.log('  + solicitud', String(fila.numero).padStart(3,'0') + '-' + fila.anio,
                   '·', fila.usuario, '·', fila.gerencia);
+      avisarCambio();
       return responder(res, 201, [fila]);
     }
     /* ---- consultar el estado de LA PROPIA solicitud, sin cuenta ----
@@ -490,6 +540,7 @@ async function atenderApi(req, res, url){
       const fila = atenderSolicitud(id, await cuerpoDe(req));
       console.log('  ~ atendida', String(fila.numero).padStart(3,'0') + '-' + fila.anio,
                   '→', fila.estado);
+      avisarCambio();
       return responder(res, 200, [fila]);
     }
   }

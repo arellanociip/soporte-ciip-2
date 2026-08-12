@@ -746,16 +746,39 @@
 
      Con la pestaña de fondo no se pregunta nada: quien no está mirando no
      necesita enterarse, y al volver se pregunta enseguida. */
-  const CADA = 15000;
+  /* Primero se intenta escuchar: el servidor avisa en el instante en que un
+     técnico toma la solicitud, sin espera. Si esa línea no existe —contra
+     Supabase, por ejemplo— o se cae, queda la consulta periódica.
+
+     Con la línea abierta se pregunta cada minuto en vez de cada quince
+     segundos: es solo una red por si un aviso se perdiera. */
+  const CADA_ESCUCHANDO = 60000;
+  const CADA_SIN_LINEA  = 15000;
   let reloj = null;
+  let linea = null;
+
+  function escuchar(){
+    if(linea || typeof EventSource === 'undefined') return;
+    const B = window.SOPORTE_BACKEND;
+    /* la ruta de avisos es del servidor de casa; Supabase tiene lo suyo */
+    if(!soporteHayBackend() || B.servidor !== 'local') return;
+    try{
+      linea = new EventSource(B.url + '/rest/v1/eventos');
+      linea.onmessage = () => { if(soporteMias.leer().length) pintarMias(); };
+      /* EventSource reintenta solo; si no lo logra, la consulta periódica
+         sigue ahí y no hay nada que rescatar a mano */
+      linea.onerror = () => {};
+    }catch(e){ linea = null; }
+  }
 
   function vigilar(){
     clearInterval(reloj);
     /* sin nada que seguir, no hay a qué estar pendiente */
     if(!soporteMias.leer().length) return;
+    escuchar();
     reloj = setInterval(() => {
       if(!document.hidden) pintarMias();
-    }, CADA);
+    }, linea ? CADA_ESCUCHANDO : CADA_SIN_LINEA);
   }
 
   document.addEventListener('visibilitychange', () => {

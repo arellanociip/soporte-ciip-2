@@ -144,6 +144,31 @@
     $('cabDerecha').hidden = false;
   }
 
+  /* ================= enterarse en el momento =================
+     El servidor avisa cuando entra una solicitud o cambia una: así la cola se
+     actualiza sola mientras el técnico la tiene abierta, sin recargar.
+     El aviso no dice qué cambió, solo que algo cambió, y la bandeja vuelve a
+     pedir la lista con su sesión.
+
+     No se recarga si hay una ficha abierta: cambiar el suelo bajo alguien que
+     está escribiendo observaciones le borraría lo que lleva. Al cerrarla se
+     pone al día. */
+  let linea = null;
+  let pendienteDeRecargar = false;
+
+  function escuchar(){
+    if(linea || enPrueba || typeof EventSource === 'undefined') return;
+    if(B.servidor !== 'local') return;
+    try{
+      linea = new EventSource(B.url + '/rest/v1/eventos');
+      linea.onmessage = () => {
+        if(!$('velo').hidden || !$('veloPerfil').hidden){ pendienteDeRecargar = true; return; }
+        cargar().catch(e => console.warn('No se pudo actualizar sola:', e));
+      };
+      linea.onerror = () => {};
+    }catch(e){ linea = null; }
+  }
+
   /* ================= traer y pintar ================= */
   async function cargar(){
     if(enPrueba){
@@ -291,6 +316,11 @@
     $('velo').hidden = true;
     abierta = null;
     document.body.style.overflow = '';
+    /* mientras la ficha estuvo abierta llegaron avisos que no se aplicaron */
+    if(pendienteDeRecargar){
+      pendienteDeRecargar = false;
+      cargar().catch(e => console.warn('No se pudo actualizar:', e));
+    }
   }
 
   /* ---------- el estado, como el camino que es ----------
@@ -662,6 +692,7 @@
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
       await cargar();
+      escuchar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
       aviso.hidden = false;
@@ -865,7 +896,7 @@
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    try{ await cargar(); }
+    try{ await cargar(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();
