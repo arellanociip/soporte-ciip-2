@@ -139,7 +139,7 @@
      Ojo con los equipos compartidos: por eso el recuadro dice a nombre de
      quién está y "No soy yo" lo borra de verdad. */
   const LLAVE_YO = 'soporte_yo';
-  const CAMPOS_YO = ['gerencia', 'usuario', 'cedula', 'telefono', 'piso', 'oficina'];
+  const CAMPOS_YO = ['gerencia', 'usuario', 'cedula', 'telefono', 'piso', 'oficina', 'cargo'];
 
   function leerYo(){
     try{ return JSON.parse(localStorage.getItem(LLAVE_YO)); }catch(e){ return null; }
@@ -222,6 +222,7 @@
     $('gerencia').value = p.gerencia;
     $('piso').value     = p.piso;
     $('oficina').value  = p.oficina;
+    $('cargo').value    = p.cargo || '';
     marcar('quienEres', '');
     mostrarRecuadro({usuario: p.nombre, gerencia: p.gerencia, piso: p.piso,
                      oficina: p.oficina, cedula: $('cedula').value});
@@ -371,6 +372,7 @@
       telefono:    $('telefono').value.trim() || null,
       piso:        piso.value,
       oficina:     $('oficina').value.trim().toUpperCase(),
+      cargo:       $('cargo').value.trim() || null,
       descripcion: desc.value.trim(),
       tipo:        tipo.value || null,
       detalle:     detalle.value || null,

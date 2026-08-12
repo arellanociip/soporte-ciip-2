@@ -10,34 +10,42 @@
    para que eso deje de pasar; la opción "Otra" recoge lo que falte.
    Prefijo: CAT. */
 
-/* Hoja2!B3:B22 — en el orden del Excel, que es el orden protocolar del CIIP.
-   Las tres últimas no estaban en la lista pero sí aparecen en hojas llenadas,
-   así que se agregan al final para no obligar a nadie a elegir mal. */
+/* Las dependencias del listado de control de acceso (corte 27/07/2026), que es
+   el censo real del personal. Primero las del CIIP y después las de Marca País,
+   marcadas, porque tres se llaman igual en los dos entes y en la Hoja de
+   Servicio hay que poder distinguirlas.
+
+   La última es la salida para quien no encuentre la suya: sin ella, alguien de
+   una gerencia que el listado no recoja no podría ni pedir soporte. */
 const CAT_GERENCIAS = [
-  'AUDITORIA INTERNA',
+  'AUDITORÍA INTERNA',
+  'CONSULTORÍA JURÍDICA',
+  'DIRECTORIO',
+  'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA',
+  'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL',
+  'GERENCIA GENERAL DE GESTIÓN HUMANA',
+  'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO',
+  'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES',
+  'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS',
+  'GERENCIA GENERAL DE SEGURIDAD INTEGRAL',
+  'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN',
+  'GERENCIA GENERAL DEL DESPACHO',
+  'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO',
   'PRESIDENCIA',
-  'DIRECCION GRAL. DE DESPACHO',
-  'CONSULTORIA JURIDICA',
-  'GCIA. PLANIFICACION Y PRESUPUESTO',
-  'GCIA. GESTION HUMANA',
-  'GCIA. GESTION ADMINISTRATIVA',
-  'GCIA. GESTION COMUNICACIONAL',
-  'GCIA. GRAL. OBSERVATORIO NACIONAL ANTIBLOQUEO',
-  'GCIA. GRAL. PROYECTOS DE INVERSION Y ACTIVOS',
-  'GCIA. GRAL. PROMOCION DE INVERSION',
-  'GCIA. MONITOREO DEL IMPACTO DE MCU Y OTRAS MEDIDAS RESTRICTIVAS O PUNITIVAS',
-  'GCIA. ESTUDIOS COMPARADOS Y SISTEMATIZACION DE MEDIDAS ANTIBLOQUEO',
-  'GCIA. SEGUIMIENTO DE ACTIVOS',
-  'GCIA. REGISTRO DE PROYECTOS DE INVERSION Y ACTIVOS',
-  'GCIA. FACTIBILIDAD Y EVALUACION DE PROYECTOS',
-  'BANCO DE PROYECTOS DE INVERSION Y ACTIVOS',
-  'GCIA. ATENCION AL INVERSIONISTA',
-  'GCIA. ARTICULACION SECTORIAL DE INVERSIONES',
-  'GCIA. MODELOS ASOCIATIVOS',
-  /* usadas en hojas reales, ausentes de la lista del Excel */
-  'GCIA. TECNOLOGIA DE LA INFORMACION Y COMUNICACION',
-  'FUNDACION MARCA PAIS',
-  'VICEMINISTERIO DE ECONOMIA PRODUCTIVA',
+  'VICEPRESIDENCIA',
+  'AUDITORÍA INTERNA (MARCA PAÍS)',
+  'CONSULTORÍA JURÍDICA (MARCA PAÍS)',
+  'GERENCIA DE ATENCIÓN CIUDADANA (MARCA PAÍS)',
+  'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)',
+  'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)',
+  'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)',
+  'GERENCIA GENERAL (MARCA PAÍS)',
+  'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)',
+  'GERENCIA GENERAL DE REGULACIÓN, USO Y SEGUIMIENTO DE LA MARCA PAÍS (MARCA PAÍS)',
+  'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)',
+  'GERENTE DE ARTICULACIÓN ESTRATÉGICA PARA EL IMPULSO DE LA MARCA PAÍS (MARCA PAÍS)',
+  'PRESIDENCIA (MARCA PAÍS)',
+  'OTRA (no aparece en la lista)',
 ];
 
 /* Hoja2!D3:D4 (TIPO_S) y las listas que INDIRECT resolvía por su nombre.
@@ -83,15 +91,13 @@ const CAT_SERVICIOS = [
 /* Los pisos que aparecen en las hojas: PB y del 1 al 9. */
 const CAT_PISOS = ['PB', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-/* Oficinas vistas en las hojas, ya normalizadas (el Excel mezclaba "4-1" y
-   "4-01" para la misma). Es una sugerencia, no una jaula: el campo admite
-   cualquier cosa, porque la lista de oficinas cambia sola con el tiempo. */
+/* Las oficinas del listado de control de acceso, en formato piso-puerta.
+   Es una sugerencia, no una jaula: el campo admite cualquiera, porque la gente
+   se muda y el listado se queda atrás. */
 const CAT_OFICINAS = [
-  '1-02', '1-07', '1-08',
-  '2-01', '2-02', '2-03', '2-04', '2-05', '2-06', '2-07', '2-09',
-  '3-01', '3-02', '3-04', '3-05',
-  '4-01', '4-02', '4-03', '4-04', '4-05', '4-06', '4-07', '4-09',
-  '8-06', 'LOBBY',
+  '1-02', '1-07', '2-01', '2-02', '2-03', '2-04', '2-05', '2-06',
+  '2-07', '3-01', '3-02', '3-04', '3-05', '4-01', '4-02', '4-03',
+  '4-04', '4-05', '4-06', '4-07', '4-08', '4-09', '8-02',
 ];
 
 /* Equipos y marcas: lo que de verdad se atiende en la casa, agrupado y sin las

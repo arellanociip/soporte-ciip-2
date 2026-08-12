@@ -295,7 +295,7 @@ function cuerpoDe(req){
 }
 
 /* ================= la API ================= */
-const CAMPOS_QUE_LLEGAN = ['gerencia','usuario','cedula','telefono','piso','oficina',
+const CAMPOS_QUE_LLEGAN = ['gerencia','usuario','cedula','telefono','piso','oficina','cargo',
                            'descripcion','tipo','detalle'];
 /* tecnico es el nombre; los tres de al lado salen impresos junto a su firma */
 const CAMPOS_QUE_ATIENDE = ['estado','tecnico','tecnico_cargo','tecnico_cedula',
@@ -568,6 +568,7 @@ async function atenderApi(req, res, url){
       return responder(res, 200, [{
         id: s.id, numero: s.numero, anio: s.anio, estado: s.estado,
         descripcion: s.descripcion, tipo: s.tipo, detalle: s.detalle,
+        cargo: s.cargo || null,
         creada_en: s.creada_en, atendida_en: s.atendida_en,
         tecnico: s.tecnico, tecnico_cargo: s.tecnico_cargo || null,
         observaciones: s.observaciones,

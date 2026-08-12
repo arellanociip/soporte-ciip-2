@@ -852,7 +852,7 @@
               NOMBRE Y APELLIDO: ${esc(s.usuario)}<br>
               C.I. N°.: ${esc(s.cedula||'S/N')}<br>
               TELEFONO: ${esc(s.telefono||'S/N')}<br>
-              CARGO: <span class="lin"></span><br>
+              CARGO: ${s.cargo ? esc(s.cargo) : '<span class="lin"></span>'}<br>
               FIRMA: <span class="lin"></span>
             </div>
             <div class="hs-sello">SELLO</div>
