@@ -128,6 +128,70 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 
 .contador{font-size:11px; color:var(--gray-soft); text-align:right;}
 
+/* ===================== ATAJOS ===================== */
+/* Los cinco problemas que cubren el 78 % de lo que pide la casa, más la
+   salida para el resto. Son botones de verdad, no divs: se llega a ellos con
+   el tabulador y se activan con la barra espaciadora. */
+.atajos{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+@media (max-width:780px){ .atajos{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:420px){ .atajos{grid-template-columns:1fr;} }
+
+.atajo{
+  border:1.5px solid var(--line); border-radius:var(--r); padding:14px 13px;
+  background:#fff; cursor:pointer; text-align:left; font-family:inherit; color:var(--ink);
+  transition:border-color .15s ease, background .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.atajo:hover{border-color:var(--navy); background:#FAFCFF; transform:translateY(-1px);}
+.atajo:active{transform:translateY(0);}
+.atajo:focus-visible{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(0,64,144,.18);}
+.atajo[aria-pressed="true"]{border-color:var(--navy); background:var(--navy-soft);}
+.atajo .ic{width:26px; height:26px; margin-bottom:9px; color:var(--navy);}
+.atajo .ic svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;}
+.atajo .t{font-size:13px; font-weight:700; line-height:1.25;}
+.atajo .s{font-size:11px; color:var(--gray-soft); margin-top:3px;}
+/* "Otra cosa" se ve como lo que es: la salida, no una opción más. */
+.atajo.otra{border-style:dashed;}
+.atajo.otra .ic{color:var(--gray-soft);}
+
+/* Cómo quedó clasificado tras elegir un atajo */
+.clasificado{
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  background:var(--block); border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:9px 13px; margin-top:14px; font-size:12.5px;
+}
+.clasificado .et{color:var(--gray-soft); font-size:10.5px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;}
+.clasificado .va{font-weight:700; color:var(--navy); flex:1; min-width:0;}
+.clasificado button{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:12px; font-weight:700; color:var(--navy); text-decoration:underline; padding:2px;
+}
+.clasificado button:hover{color:var(--navy-deep);}
+
+/* ===================== DATOS RECORDADOS ===================== */
+/* Quien ya pidió soporte no vuelve a escribir sus seis datos: quedan en este
+   navegador y aquí solo se confirman. Verde porque es una buena noticia, no
+   un aviso. */
+.recordado{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--good-bg); border:1px solid #C9E7D8; border-radius:var(--r-sm);
+  padding:12px 15px; margin-bottom:16px;
+}
+.recordado .ic{width:20px; height:20px; flex:0 0 20px; color:var(--good);}
+.recordado .ic svg{width:100%; height:100%; fill:none; stroke:currentColor;
+  stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
+.recordado .q{flex:1; min-width:160px;}
+.recordado .q b{font-size:13px; font-weight:700; display:block;}
+.recordado .q span{display:block; font-size:12px; color:var(--gray);}
+.recordado .acciones{display:flex; gap:14px; margin-left:auto;}
+.recordado .acciones button{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:12px; font-weight:700; color:var(--navy); text-decoration:underline; padding:2px;
+}
+.recordado .acciones button:hover{color:var(--navy-deep);}
+#botonNoSoyYo{color:var(--rust) !important;}
+
 /* ===================== BOTONES ===================== */
 .botones{display:flex; align-items:center; gap:12px; margin-top:26px; flex-wrap:wrap;}
 .boton{

@@ -60,12 +60,126 @@
     detalle.classList.add('despierta');
   });
 
+  /* ---------- los atajos ----------
+     No guardan nada por su cuenta: rellenan los dos desplegables de siempre,
+     que siguen siendo la única fuente de la clasificación. Así la Hoja de
+     Servicio sale igual venga de un atajo o de los desplegables. */
+  let atajoElegido = null;
+
+  const AYUDA_POR_DEFECTO = 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.';
+
+  CAT_ATAJOS.forEach(a => {
+    const b = document.createElement('button');
+    b.type = 'button';                       /* si no, envía el formulario */
+    b.className = 'atajo' + (a.id === 'otra' ? ' otra' : '');
+    b.dataset.id = a.id;
+    b.setAttribute('aria-pressed', 'false');
+    /* a.icono es SVG escrito en js/catalogo.js, nunca dato de entrada */
+    b.innerHTML = `<div class="ic">${a.icono}</div>
+      <div class="t"></div><div class="s"></div>`;
+    b.querySelector('.t').textContent = a.titulo;
+    b.querySelector('.s').textContent = a.sub;
+    b.addEventListener('click', () => elegirAtajo(a.id));
+    $('atajos').append(b);
+  });
+
+  function elegirAtajo(id){
+    /* volver a pulsar el mismo lo suelta: nadie queda atrapado en una opción */
+    const a = (atajoElegido === id) ? null : CAT_ATAJOS.find(x => x.id === id);
+    atajoElegido = a ? a.id : null;
+
+    $('atajos').querySelectorAll('.atajo').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.id === atajoElegido)));
+
+    /* el texto guía de la descripción se adapta: es donde la gente se traba */
+    desc.placeholder = a ? a.ejemplo : AYUDA_POR_DEFECTO;
+
+    if(a && a.tipo){
+      tipo.value = a.tipo;
+      tipo.dispatchEvent(new Event('change'));   /* rehace la lista de detalles */
+      detalle.value = a.detalle || '';
+      $('clasificadoTexto').textContent =
+        catTipoEtiqueta(a.tipo) + (a.detalle ? ' · ' + a.detalle : '');
+      $('clasificado').hidden = false;
+      $('clasificacionManual').hidden = true;
+    }else{
+      /* "Otra cosa", o ningún atajo: los desplegables completos */
+      tipo.value = '';
+      tipo.dispatchEvent(new Event('change'));
+      $('clasificado').hidden = true;
+      $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
+      if(a) detalle.focus();
+    }
+  }
+
+  /* "Cambiar" abre los desplegables con lo que el atajo dejó puesto. */
+  $('botonAfinar').addEventListener('click', () => {
+    $('clasificado').hidden = true;
+    $('clasificacionManual').hidden = false;
+    tipo.focus();
+  });
+
   /* ---------- contador de la descripción ---------- */
   const contador = $('contadorDesc');
   desc.addEventListener('input', () => {
     contador.textContent = desc.value.length;
     /* avisa al acercarse al tope, no cuando ya no cabe nada */
     contador.classList.toggle('cerca', desc.value.length > 540);
+  });
+
+  /* ---------- los datos de quien pide, recordados ----------
+     38 de las 125 personas del Excel pidieron soporte más de una vez, y cada
+     vez volvieron a escribir su gerencia, su cédula, su piso y su oficina.
+     Aquí eso se escribe una sola vez: queda en ESTE navegador —nunca en el
+     servidor— y en las siguientes solo hay que confirmarlo.
+     Ojo con los equipos compartidos: por eso el recuadro dice a nombre de
+     quién está y "No soy yo" lo borra de verdad. */
+  const LLAVE_YO = 'soporte_yo';
+  const CAMPOS_YO = ['gerencia', 'usuario', 'cedula', 'telefono', 'piso', 'oficina'];
+
+  function leerYo(){
+    try{ return JSON.parse(localStorage.getItem(LLAVE_YO)); }catch(e){ return null; }
+  }
+
+  function guardarYo(datos){
+    const yo = {};
+    CAMPOS_YO.forEach(k => { yo[k] = datos[k] || ''; });
+    try{ localStorage.setItem(LLAVE_YO, JSON.stringify(yo)); }
+    catch(e){ console.warn('No se pudieron recordar los datos:', e); }
+  }
+
+  function olvidarYo(){
+    localStorage.removeItem(LLAVE_YO);
+    CAMPOS_YO.forEach(k => { $(k).value = ''; });
+    $('recordado').hidden = true;
+    $('camposIdentidad').hidden = false;
+    pintarAvance();
+    $('gerencia').focus();
+  }
+
+  /* Con datos recordados los seis campos se llenan y se guardan de la vista:
+     la planilla empieza en "cuéntanos qué pasa", que es a lo que se vino. */
+  function aplicarYo(){
+    const yo = leerYo();
+    if(!yo || !yo.usuario) return false;
+    CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
+    $('recordadoNombre').textContent = yo.usuario;
+    $('recordadoDonde').textContent = [
+      yo.gerencia,
+      (yo.piso ? 'Piso ' + yo.piso : '') + (yo.oficina ? ', of. ' + yo.oficina : ''),
+      yo.cedula ? 'C.I. ' + yo.cedula : '',
+    ].filter(Boolean).join(' · ');
+    $('recordado').hidden = false;
+    $('camposIdentidad').hidden = true;
+    return true;
+  }
+
+  $('botonNoSoyYo').addEventListener('click', olvidarYo);
+  $('botonCorregir').addEventListener('click', () => {
+    /* deja los datos puestos y descubre los campos para retocar uno */
+    $('recordado').hidden = true;
+    $('camposIdentidad').hidden = false;
+    $('usuario').focus();
   });
 
   /* ---------- cuánto falta ----------
@@ -242,6 +356,14 @@
     avisoError('');
 
     if(!revisarTodo()){
+      /* Si lo que falla está entre los datos recordados —que están guardados de
+         la vista— hay que descubrirlos: un error señalado dentro de un bloque
+         oculto no lo ve nadie, y la planilla parecería no responder. */
+      const fallaIdentidad = CAMPOS_YO.some(k => $(k).closest('.campo').classList.contains('mal'));
+      if(fallaIdentidad && $('camposIdentidad').hidden){
+        $('recordado').hidden = true;
+        $('camposIdentidad').hidden = false;
+      }
       const primero = form.querySelector('.campo.mal input, .campo.mal select, .campo.mal textarea');
       if(primero) primero.focus();
       return;
@@ -255,6 +377,9 @@
       const fila = soporteHayBackend()
         ? await mandarAlServidor(datos)
         : soporteLocal.agregar(datos);
+      /* solo se recuerda lo que llegó a enviarse: si el envío falló, no hay
+         por qué dar por buenos unos datos que nadie confirmó */
+      guardarYo(datos);
       mostrarAcuse(fila);
     }catch(err){
       console.error('No se pudo enviar la solicitud:', err);
@@ -290,11 +415,23 @@
        tipo anterior: hay que rehacerlo a mano. */
     tipo.dispatchEvent(new Event('change'));
     detalle.classList.remove('despierta');
+    /* suelta el atajo y devuelve la clasificación a su estado inicial */
+    atajoElegido = null;
+    $('atajos').querySelectorAll('.atajo').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    desc.placeholder = AYUDA_POR_DEFECTO;
+    $('clasificado').hidden = true;
+    $('clasificacionManual').hidden = true;
     form.querySelectorAll('.campo.mal').forEach(c => {
       c.classList.remove('mal');
       const hueco = c.querySelector('.error'); if(hueco) hueco.textContent = '';
     });
     avisoError('');
+    /* Limpiar vacía la planilla, no la memoria: quien ya se identificó no
+       tiene por qué volver a hacerlo por haber querido reescribir su problema. */
+    if(!aplicarYo()){
+      $('recordado').hidden = true;
+      $('camposIdentidad').hidden = false;
+    }
     pintarAvance();
   }
 
@@ -306,5 +443,6 @@
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
+  aplicarYo();
   pintarAvance();
 })();

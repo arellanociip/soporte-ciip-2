@@ -67,7 +67,22 @@
       </div>
 
       <div class="seccion">Quién solicita</div>
-      <div class="rejilla">
+
+      <!-- Quien ya pidió antes no vuelve a escribir sus datos: el navegador los
+           recuerda y aquí solo confirma. Lo enciende js/solicitud.js. -->
+      <div class="recordado" id="recordado" hidden>
+        <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg></div>
+        <div class="q">
+          <b id="recordadoNombre"></b>
+          <span id="recordadoDonde"></span>
+        </div>
+        <div class="acciones">
+          <button type="button" id="botonCorregir">Corregir</button>
+          <button type="button" id="botonNoSoyYo">No soy yo</button>
+        </div>
+      </div>
+
+      <div class="rejilla" id="camposIdentidad">
         <div class="campo c8">
           <label for="gerencia">Gerencia solicitante *</label>
           <select id="gerencia" name="gerencia" required>
@@ -111,15 +126,33 @@
       </div>
 
       <div class="seccion">Qué está pasando</div>
+
+      <!-- Los cinco atajos cubren el 78 % de lo que se pide. Solo rellenan los
+           dos desplegables de abajo: no hay un camino de datos aparte. -->
+      <div class="campo" style="margin-bottom:18px">
+        <label id="rotuloAtajos">¿Con qué necesitas ayuda? <span class="opc">· opcional</span></label>
+        <div class="atajos" id="atajos" role="group" aria-labelledby="rotuloAtajos"></div>
+      </div>
+
       <div class="rejilla">
         <div class="campo">
-          <label for="descripcion">Describe la situación *</label>
+          <label for="descripcion">Cuéntanos qué pasa *</label>
           <textarea id="descripcion" name="descripcion" required maxlength="600"
                     placeholder="Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado."></textarea>
           <div class="contador"><span id="contadorDesc">0</span> / 600</div>
           <div class="error"></div>
         </div>
+      </div>
 
+      <!-- Cómo quedó clasificado, cuando se eligió un atajo. -->
+      <div class="clasificado" id="clasificado" hidden>
+        <span class="et">Se registrará como</span>
+        <span class="va" id="clasificadoTexto"></span>
+        <button type="button" id="botonAfinar">Cambiar</button>
+      </div>
+
+      <!-- Los desplegables completos: salen con "Otra cosa" o con "Cambiar". -->
+      <div class="rejilla" id="clasificacionManual" hidden>
         <div class="campo c6">
           <label for="tipo">Tipo de servicio <span class="opc">· opcional</span></label>
           <select id="tipo" name="tipo">
