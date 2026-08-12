@@ -17,6 +17,7 @@
       <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
     </div>
     <div class="der" id="cabDerecha" hidden>
+      <a href="#" id="botonStats">Estadísticas</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
     </div>
@@ -77,6 +78,18 @@
     </div>
 
     <div id="lista"></div>
+  </section>
+
+  <!-- ===================== ESTADÍSTICAS =====================
+       Sale en lugar de la cola, con el enlace de la barra. Se calcula con lo
+       que ya está cargado: no pide nada más al servidor. -->
+  <section id="panelStats" hidden>
+    <div class="intro">
+      <h1>Estadísticas</h1>
+      <p id="statsPeriodo"></p>
+    </div>
+    <div class="kpis" id="statsKpis"></div>
+    <div class="barrios" id="statsBarras"></div>
   </section>
 
 </main>

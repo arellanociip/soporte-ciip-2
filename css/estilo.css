@@ -6,6 +6,10 @@
 
 :root{
   --navy:#004090; --navy-deep:#00336d; --navy-soft:#e8effa;
+  /* El azul de la marca es muy oscuro para rellenar barras: como mancha grande
+     se lee casi negro. Este es el mismo azul un paso más claro, y es el que
+     usan las barras de las estadísticas. */
+  --navy-medio:#0060B0;
   --cyan:#20B0F0;
   --ink:#0E1424; --gray:#5B6478; --gray-soft:#8A93A6;
   --line:#E4E7EE; --line-soft:#EEF1F6;
@@ -648,6 +652,74 @@ select.despierta{animation:destello .7s ease;}
     scroll-behavior:auto !important;
   }
 }
+
+/* ===================== ESTADÍSTICAS =====================
+   Cuatro cifras y unas listas ordenadas. Nada de tortas ni de colorines: cada
+   barra mide lo mismo —cuántas veces— así que van todas del mismo azul, y lo
+   que distingue una fila de otra es su rótulo, no su color.
+
+   El azul de las barras es el medio (--navy-medio), no el de la marca: el CIIP
+   es tan oscuro que como relleno grande se lee casi negro. Se comprobó con el
+   validador de la guía de visualización, no a ojo. */
+
+/* ---- las cuatro cifras ---- */
+.kpis{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;
+}
+@media (max-width:900px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:480px){ .kpis{grid-template-columns:1fr;} }
+
+.kpi{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:18px 20px;
+}
+.kpi .r{
+  font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--gray-soft);
+}
+/* La cifra manda: es lo que se viene a leer. */
+.kpi .v{
+  font-size:34px; font-weight:800; line-height:1.1; margin-top:6px;
+  color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+}
+.kpi .v small{font-size:15px; font-weight:700; color:var(--gray-soft); margin-left:3px;}
+.kpi .s{font-size:11.5px; color:var(--gray-soft); margin-top:4px;}
+/* Lo pendiente se marca solo si de verdad hay algo pendiente. */
+.kpi.urge .v{color:var(--amber);}
+.kpi.urge .r{color:var(--amber);}
+
+/* ---- las listas con barra ---- */
+.barrios{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+@media (max-width:820px){ .barrios{grid-template-columns:1fr;} }
+
+.barrio{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:18px 20px;
+}
+.barrio > h2{font-size:14px; font-weight:700; margin-bottom:3px;}
+.barrio > .s{font-size:11.5px; color:var(--gray-soft); margin-bottom:14px;}
+
+.bfila{display:grid; grid-template-columns:1fr auto; gap:3px 10px; margin-bottom:11px;}
+.bfila:last-child{margin-bottom:0;}
+.bfila .et{
+  font-size:12.5px; color:var(--ink); min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* El número va al final de su fila, no encima de la barra: dentro de una barra
+   corta no cabría y quedaría recortado. */
+.bfila .n{font-size:12.5px; font-weight:700; color:var(--gray);
+  font-variant-numeric:tabular-nums;}
+.bfila .riel{grid-column:1 / -1; height:10px; background:var(--line-soft); border-radius:5px;}
+.bfila .riel i{
+  display:block; height:100%; background:var(--navy-medio);
+  /* redondeado solo en la punta que crece; cuadrado contra la línea de salida */
+  border-radius:0 4px 4px 0;
+  min-width:3px;                     /* que un 1 se vea, no desaparezca */
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.bfila:hover .riel i{background:var(--navy);}
+
+.barrio .vacio-b{font-size:12.5px; color:var(--gray-soft); padding:6px 0;}
 
 /* ===================== IMPRESIÓN: la Hoja de Servicio ===================== */
 /* Reconstruye el formato del Excel para firmar y sellar. En pantalla vive

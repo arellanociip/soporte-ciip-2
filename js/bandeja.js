@@ -142,6 +142,9 @@
     $('pantallaAcceso').hidden = true;
     $('pantallaBandeja').hidden = false;
     $('cabDerecha').hidden = false;
+    /* volver a la cola cierra las estadísticas: nunca las dos a la vez */
+    const st = $('panelStats');
+    if(st){ st.hidden = true; $('botonStats').textContent = 'Estadísticas'; }
   }
 
   /* ================= enterarse en el momento =================
@@ -215,6 +218,8 @@
       : `<div class="vacio">${solicitudes.length
           ? 'Ninguna solicitud coincide con lo que buscas.'
           : 'Todavía no ha entrado ninguna solicitud.'}</div>`;
+    /* si las estadísticas están delante, se rehacen con lo recién llegado */
+    if($('panelStats') && !$('panelStats').hidden) pintarStats();
   }
 
   /* Cuánto lleva esperando, en palabras. Se cuenta por días de calendario, no
@@ -262,6 +267,118 @@
       </div>
     </div>`;
   }
+
+  /* ================= estadísticas =================
+     Se calculan con lo que ya está cargado; no piden nada al servidor. Todo
+     mide lo mismo —cuántas veces— así que son listas ordenadas con una barra,
+     no gráficos de colores: lo que distingue una fila de otra es su rótulo. */
+
+  /* Cuenta cuántas veces aparece cada valor y devuelve el top, ya ordenado.
+     Lo que no llegue al corte se suma en "Otras", que es más honesto que
+     esconderlo: si no, los porcentajes no cuadran con el total. */
+  function contar(lista, deQuien, cuantas){
+    const c = new Map();
+    lista.forEach(s => {
+      const v = deQuien(s);
+      if(!v) return;
+      c.set(v, (c.get(v) || 0) + 1);
+    });
+    const orden = [...c].sort((a, b) => b[1] - a[1]);
+    if(orden.length <= cuantas) return orden;
+    const cabeza = orden.slice(0, cuantas);
+    const cola = orden.slice(cuantas).reduce((s, x) => s + x[1], 0);
+    return cola ? [...cabeza, ['Otras', cola]] : cabeza;
+  }
+
+  function barrasHtml(titulo, sub, filas){
+    if(!filas.length){
+      return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
+        <div class="vacio-b">Todavía no hay datos.</div></div>`;
+    }
+    /* Las barras se miden contra el mayor, no contra el total: así la
+       diferencia entre el primero y el segundo se ve, que es lo que se lee. */
+    const mayor = filas[0][1];
+    return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
+      ${filas.map(([et, n]) => `<div class="bfila" title="${esc(et)}: ${n}">
+        <div class="et">${esc(et)}</div><div class="n">${n}</div>
+        <div class="riel"><i style="width:${Math.round(n / mayor * 100)}%"></i></div>
+      </div>`).join('')}</div>`;
+  }
+
+  /* Cuánto se tarda de recibida a atendida, en promedio. Solo cuenta las que
+     tienen las dos fechas: sin eso el promedio sería inventado. */
+  function tiempoMedio(lista){
+    const cerradas = lista.filter(s => s.estado === 'atendida' && s.atendida_en && s.creada_en);
+    if(!cerradas.length) return null;
+    const horas = cerradas.reduce((suma, s) =>
+      suma + (new Date(s.atendida_en) - new Date(s.creada_en)) / 3600000, 0) / cerradas.length;
+    return {horas, sobre: cerradas.length};
+  }
+
+  function pintarStats(){
+    const hoy = new Date();
+    const esteMes = s => {
+      const d = new Date(s.creada_en);
+      return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
+    };
+    const delMes = solicitudes.filter(esteMes);
+    const abiertas = solicitudes.filter(s => ['recibida','en_proceso'].includes(s.estado));
+    const atendidasMes = delMes.filter(s => s.estado === 'atendida');
+    const t = tiempoMedio(solicitudes);
+
+    const mes = hoy.toLocaleDateString('es-VE', {month: 'long', year: 'numeric'});
+    $('statsPeriodo').textContent = 'Todo lo que ha entrado, con el detalle de ' + mes + '.';
+
+    const tiempo = !t ? '—'
+      : t.horas < 1 ? Math.round(t.horas * 60) + '<small>min</small>'
+      : t.horas < 48 ? t.horas.toFixed(1).replace('.', ',') + '<small>h</small>'
+      : (t.horas / 24).toFixed(1).replace('.', ',') + '<small>días</small>';
+
+    $('statsKpis').innerHTML = `
+      <div class="kpi ${abiertas.length ? 'urge' : ''}">
+        <div class="r">Sin resolver</div>
+        <div class="v">${abiertas.length}</div>
+        <div class="s">${abiertas.filter(s => s.estado === 'en_proceso').length} ya en proceso</div>
+      </div>
+      <div class="kpi">
+        <div class="r">Entraron en ${esc(mes.split(' ')[0])}</div>
+        <div class="v">${delMes.length}</div>
+        <div class="s">${atendidasMes.length} ya resueltas</div>
+      </div>
+      <div class="kpi">
+        <div class="r">Tiempo medio</div>
+        <div class="v">${tiempo}</div>
+        <div class="s">${t ? 'sobre ' + t.sobre + ' resueltas' : 'aún sin resolver ninguna'}</div>
+      </div>
+      <div class="kpi">
+        <div class="r">Desde el principio</div>
+        <div class="v">${solicitudes.length}</div>
+        <div class="s">${solicitudes.filter(s => s.estado === 'atendida').length} resueltas en total</div>
+      </div>`;
+
+    $('statsBarras').innerHTML =
+      barrasHtml('Lo que más se pide', 'Por detalle de servicio',
+        contar(solicitudes, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 6)) +
+      barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
+        contar(solicitudes, s => s.gerencia, 6)) +
+      barrasHtml('En qué piso', 'Dónde está el trabajo',
+        contar(solicitudes, s => s.piso ? 'Piso ' + s.piso : null, 6)) +
+      barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
+        contar(solicitudes.filter(s => s.estado === 'atendida'), s => s.tecnico, 6));
+  }
+
+  function verStats(si){
+    $('panelStats').hidden = !si;
+    $('pantallaBandeja').hidden = si;
+    /* el enlace dice a dónde lleva, no dónde estás */
+    $('botonStats').textContent = si ? 'Ver la cola' : 'Estadísticas';
+    if(si) pintarStats();
+  }
+
+  $('botonStats').addEventListener('click', e => {
+    e.preventDefault();
+    verStats($('panelStats').hidden);
+  });
 
   /* ================= la ficha de una solicitud ================= */
   function opcionesHtml(lista, elegido){
