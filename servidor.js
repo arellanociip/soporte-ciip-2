@@ -349,6 +349,7 @@ function crearSolicitud(datos){
     anio,
     estado: 'recibida',
     tecnico: null, observaciones: null, renglones: [], atendida_en: null,
+    mensajes: [],
     creada_en: new Date().toISOString(),
   };
   /* solo se copia lo que le toca escribir a quien pide: el estado, el técnico
@@ -457,6 +458,54 @@ async function atenderApi(req, res, url){
     return responder(res, 200, quien);
   }
 
+  /* ---- escribirle al técnico, o al usuario ----
+     Una sola ruta para los dos lados. Quién habla no lo dice el cuerpo del
+     mensaje —eso sería confiar en el navegador— sino cómo llegó la petición:
+     con sesión de GTIC, habla el técnico; sin ella, habla quien pidió, y su
+     prueba es el id imposible de adivinar de su propia solicitud.
+
+     Así nadie puede escribir haciéndose pasar por otro, y quien pide sigue sin
+     necesitar cuenta. */
+  if(url.pathname === '/rest/v1/rpc/enviar_mensaje' && req.method === 'POST'){
+    const {id, texto} = await cuerpoDe(req);
+    if(!/^[0-9a-f-]{36}$/i.test(id || '')){
+      return responder(res, 400, {message: 'Falta el identificador de la solicitud.'});
+    }
+    const limpio = String(texto == null ? '' : texto).trim().slice(0, 1000);
+    if(!limpio) return responder(res, 400, {message: 'El mensaje viene vacío.'});
+
+    const solicitudes = leerSolicitudes();
+    const i = solicitudes.findIndex(s => s.id === id);
+    if(i < 0) return responder(res, 404, {message: 'No existe esa solicitud.'});
+    const s = solicitudes[i];
+    if(s.estado === 'anulada'){
+      return responder(res, 409, {message: 'Esa solicitud está anulada; ya no se puede escribir en ella.'});
+    }
+
+    const ses = sesionDe(req);
+    let de, nombre;
+    if(ses){
+      const u = leerUsuarios().find(x => x.correo === ses.correo) || {};
+      de = 'gtic';
+      nombre = u.nombre || ses.correo;
+    }else{
+      de = 'usuario';
+      nombre = s.usuario;
+    }
+
+    if(!Array.isArray(s.mensajes)) s.mensajes = [];
+    s.mensajes.push({de, nombre, texto: limpio, en: new Date().toISOString()});
+    /* cien mensajes por solicitud son de sobra; más es una conversación que
+       debería estar pasando por teléfono */
+    if(s.mensajes.length > 100) s.mensajes = s.mensajes.slice(-100);
+
+    escribirJson(F_SOLIC, solicitudes);
+    console.log('  » mensaje en ' + String(s.numero).padStart(3,'0') + '-' + s.anio +
+                ' de ' + de + ' (' + nombre + ')');
+    avisarCambio();
+    return responder(res, 200, [s.mensajes[s.mensajes.length - 1]]);
+  }
+
   /* ---- retirar la propia solicitud, sin cuenta ----
      Uno se equivoca al escribir, o resuelve el problema solo, y con la regla de
      una a la vez se quedaría bloqueado esperando a que GTIC cierre algo que ya
@@ -520,8 +569,10 @@ async function atenderApi(req, res, url){
         id: s.id, numero: s.numero, anio: s.anio, estado: s.estado,
         descripcion: s.descripcion, tipo: s.tipo, detalle: s.detalle,
         creada_en: s.creada_en, atendida_en: s.atendida_en,
-        tecnico: s.tecnico, observaciones: s.observaciones,
+        tecnico: s.tecnico, tecnico_cargo: s.tecnico_cargo || null,
+        observaciones: s.observaciones,
         anulada_por: s.anulada_por || null,
+        mensajes: Array.isArray(s.mensajes) ? s.mensajes : [],
       }]);
     }
 

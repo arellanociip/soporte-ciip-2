@@ -513,6 +513,81 @@
       </div>`;
   }
 
+  /* ---------- la conversación con quien pidió ----------
+     El mismo hilo que ve el usuario, visto desde el otro lado: aquí lo suyo va
+     a la izquierda y lo de GTIC a la derecha. */
+  const iniciales = n => String(n || '').trim().split(/\s+/).slice(0, 2)
+    .map(p => p[0] || '').join('').toUpperCase() || '?';
+
+  const hora = iso => {
+    if(!iso) return '';
+    const d = new Date(iso);
+    const mismoDia = d.toDateString() === new Date().toDateString();
+    return mismoDia
+      ? d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'})
+      : d.toLocaleDateString('es-VE', {day: '2-digit', month: 'short'}) + ' ' +
+        d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'});
+  };
+
+  function chatHtml(s){
+    if(s.estado === 'anulada') return '';
+    const msgs = Array.isArray(s.mensajes) ? s.mensajes : [];
+    return `<div class="chat">
+      <div class="chat-h">
+        <div class="ic">${esc(iniciales(s.usuario))}</div>
+        <div>
+          <b>Conversación con ${esc(s.usuario)}</b>
+          <span>${msgs.length ? msgs.length + (msgs.length === 1 ? ' mensaje' : ' mensajes')
+                              : 'Todavía no se han escrito'}</span>
+        </div>
+      </div>
+      <div class="chat-hilo" id="chatHilo">
+        ${msgs.length ? msgs.map(m => `<div class="burbuja ${m.de === 'gtic' ? 'usuario' : 'gtic'}">` +
+            `<div class="quien">${esc(m.de === 'gtic' ? m.nombre : String(m.nombre).split(' ')[0])}</div>` +
+            `<div class="texto">${esc(m.texto)}</div>` +
+            `<div class="hora">${esc(hora(m.en))}</div>` +
+          `</div>`).join('')
+          : `<div class="chat-vacio">Puedes escribirle para pedirle un dato,
+             avisarle a qué hora subes, o decirle que ya quedó.</div>`}
+      </div>
+      <div class="chat-escribir">
+        <textarea id="chatTexto" rows="1" maxlength="1000"
+                  placeholder="Escríbele a ${esc(String(s.usuario).split(' ')[0])}…"></textarea>
+        <button type="button" class="boton primario" id="chatEnviar">Enviar</button>
+      </div>
+      <div class="chat-nota">Lo que escribas aquí lo ve quien pidió el soporte, no sale en la Hoja de Servicio.</div>
+    </div>`;
+  }
+
+  async function enviarMensaje(){
+    const caja = $('chatTexto'), boton = $('chatEnviar');
+    const texto = caja.value.trim();
+    if(!texto){ caja.focus(); return; }
+    boton.disabled = true; caja.disabled = true;
+    try{
+      const r = await pedir('/rest/v1/rpc/enviar_mensaje', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: abierta.id, texto}),
+      });
+      const nuevo = (await r.json())[0];
+      /* se añade a la copia de trabajo y se repinta: no hace falta volver a
+         pedir la solicitud entera para ver el mensaje que uno acaba de poner */
+      if(!Array.isArray(abierta.mensajes)) abierta.mensajes = [];
+      abierta.mensajes.push(nuevo);
+      const i = solicitudes.findIndex(x => x.id === abierta.id);
+      if(i >= 0) solicitudes[i].mensajes = abierta.mensajes;
+      pintarFicha();
+      const hilo = $('chatHilo');
+      if(hilo) hilo.scrollTop = hilo.scrollHeight;
+      $('chatTexto').focus();
+    }catch(err){
+      console.error('No se pudo enviar el mensaje:', err);
+      boton.disabled = false; caja.disabled = false;
+      alert('No se pudo enviar el mensaje. Revisa la conexión y vuelve a intentar.');
+    }
+  }
+
   function dato(rotulo, valor, completo){
     return `<div class="dato ${completo?'completo':''}">
       <div class="r">${esc(rotulo)}</div>
@@ -545,6 +620,8 @@
         <div class="campo"><label for="fObs">Observaciones <span class="opc">· sale impreso en la hoja</span></label>
           <textarea id="fObs" rows="4" placeholder="Qué se encontró y qué se hizo.">${esc(s.observaciones||'')}</textarea></div>
       </div>
+
+      ${chatHtml(s)}
 
       <div class="seccion">Renglones de equipo</div>
       <div id="renglones">${s.renglones.map(renglonHtml).join('')}</div>
@@ -911,6 +988,8 @@
     /* el atajo del recuadro cuando a la cuenta le faltan cargo o cédula */
     if(e.target.id === 'botonCompletarDatos'){ abrirPerfil(); return; }
 
+    if(e.target.id === 'chatEnviar'){ enviarMensaje(); return; }
+
     /* las tres etapas: mueven el campo oculto que lee guardar() */
     const etapa = e.target.closest('#segmEstado [data-estado]');
     if(etapa){
@@ -974,6 +1053,15 @@
       const detalles = catDetallesDe(e.target.value);
       sel.innerHTML = '<option value="">—</option>' + opcionesHtml(detalles, '');
       sel.disabled = !detalles.length;
+    }
+  });
+
+  /* Enter envía, Mayús+Enter hace línea nueva: lo que se espera de un chat. */
+  $('velo').addEventListener('keydown', e => {
+    if(e.target.id !== 'chatTexto') return;
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      if(!$('chatEnviar').disabled) enviarMensaje();
     }
   });
 

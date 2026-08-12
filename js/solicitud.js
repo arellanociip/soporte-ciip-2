@@ -611,6 +611,53 @@
     }).join('') + '</div>';
   }
 
+  /* ---------- la conversación con el técnico ----------
+     Sale en cuanto alguien la toma: hasta entonces no hay con quién hablar, y
+     un cuadro de escribir sin destinatario solo genera mensajes al vacío. */
+  const iniciales = n => String(n || '').trim().split(/\s+/).slice(0, 2)
+    .map(p => p[0] || '').join('').toUpperCase() || '?';
+
+  const hora = iso => {
+    if(!iso) return '';
+    const d = new Date(iso);
+    const hoy = new Date();
+    const mismoDia = d.toDateString() === hoy.toDateString();
+    return mismoDia
+      ? d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'})
+      : d.toLocaleDateString('es-VE', {day: '2-digit', month: 'short'}) + ' ' +
+        d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'});
+  };
+
+  function chatHtml(s){
+    /* sin técnico asignado no hay interlocutor todavía */
+    if(!s.tecnico || s.estado === 'anulada') return '';
+    const msgs = Array.isArray(s.mensajes) ? s.mensajes : [];
+    return `<div class="chat">
+      <div class="chat-h">
+        <div class="ic">${escapar(iniciales(s.tecnico))}</div>
+        <div>
+          <b>${escapar(s.tecnico)}</b>
+          <span>${escapar(s.tecnico_cargo || 'GTIC')} · está atendiendo lo tuyo</span>
+        </div>
+      </div>
+      <div class="chat-hilo" id="chatHilo">
+        ${msgs.length ? msgs.map(m => `<div class="burbuja ${m.de === 'usuario' ? 'usuario' : 'gtic'}">` +
+            `<div class="quien">${escapar(m.de === 'usuario' ? 'Tú' : m.nombre)}</div>` +
+            `<div class="texto">${escapar(m.texto)}</div>` +
+            `<div class="hora">${escapar(hora(m.en))}</div>` +
+          `</div>`).join('')
+          : `<div class="chat-vacio">Puedes escribirle si necesitas contarle algo más:<br>
+             a qué hora estás, dónde te consigue, o cualquier detalle que ayude.</div>`}
+      </div>
+      <div class="chat-escribir">
+        <textarea id="chatTexto" rows="1" maxlength="1000"
+                  placeholder="Escríbele a ${escapar(s.tecnico.split(' ')[0])}…"></textarea>
+        <button type="button" class="boton primario" id="chatEnviar"
+                data-id="${escapar(s.id)}">Enviar</button>
+      </div>
+    </div>`;
+  }
+
   function filaMiaHtml(s){
     /* La observación del técnico solo cuando ya cerró: antes no hay nada que
        leer y sería una caja vacía dando falsas esperanzas. */
@@ -630,6 +677,7 @@
       ${s.estado === 'recibida' ? `<div class="mis-acciones">
         <button type="button" class="enlace retirar" data-retirar="${escapar(s.id)}"
           >Me equivoqué, retirar esta solicitud</button></div>` : ''}
+      ${verHistorial ? '' : chatHtml(s)}
     </div>`;
   }
 
@@ -689,6 +737,56 @@
   }
   $('misLista').addEventListener('scroll', revisarVelo);
   window.addEventListener('resize', revisarVelo);
+
+  /* ---------- escribirle al técnico ---------- */
+  async function enviarMensaje(id, boton){
+    const caja = $('chatTexto');
+    const texto = caja.value.trim();
+    if(!texto) { caja.focus(); return; }
+
+    boton.disabled = true; caja.disabled = true;
+    try{
+      if(soporteHayBackend()){
+        const B = window.SOPORTE_BACKEND;
+        const r = await fetch(B.url + '/rest/v1/rpc/enviar_mensaje', {
+          method: 'POST',
+          headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
+          body: JSON.stringify({id, texto}),
+        });
+        if(!r.ok){
+          const c = await r.json().catch(() => ({}));
+          throw new Error(c.message || ('HTTP ' + r.status));
+        }
+      }
+      caja.value = '';
+      await pintarMias();
+      /* al fondo del hilo, que es donde está lo recién dicho */
+      const hilo = $('chatHilo');
+      if(hilo) hilo.scrollTop = hilo.scrollHeight;
+      const nueva = $('chatTexto');
+      if(nueva) nueva.focus();
+    }catch(err){
+      console.error('No se pudo enviar el mensaje:', err);
+      boton.disabled = false; caja.disabled = false;
+      alert('No se pudo enviar el mensaje. Revisa la conexión y vuelve a intentar.');
+    }
+  }
+
+  $('misLista').addEventListener('click', e => {
+    const b = e.target.closest('#chatEnviar');
+    if(b) enviarMensaje(b.dataset.id, b);
+  });
+
+  /* Enter envía; Mayús+Enter hace una línea nueva. Es lo que la gente espera de
+     un chat, y evita que un mensaje corto obligue a soltar el teclado. */
+  $('misLista').addEventListener('keydown', e => {
+    if(e.target.id !== 'chatTexto') return;
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      const b = $('chatEnviar');
+      if(b && !b.disabled) enviarMensaje(b.dataset.id, b);
+    }
+  });
 
   /* ---------- retirar una solicitud ----------
      Solo mientras nadie la haya tomado. El servidor lo vuelve a comprobar: si
@@ -876,12 +974,43 @@
       ? 'Volver a lo que sigue en curso'
       : (ocultas ? 'Ver todas tus solicitudes' : 'No tienes solicitudes anteriores');
     boton.setAttribute('aria-pressed', String(verHistorial));
+    /* Un aviso puede llegar mientras la persona escribe, y el repintado le
+       borraría el mensaje a medias. Se guarda lo escrito, si estaba tecleando
+       ahí, y por dónde iba el hilo; se devuelve todo después de pintar. */
+    const cajaVieja = $('chatTexto');
+    const guardado = cajaVieja ? {
+      texto: cajaVieja.value,
+      escribiendo: document.activeElement === cajaVieja,
+      hilo: $('chatHilo') ? $('chatHilo').scrollTop : 0,
+      alFondo: $('chatHilo')
+        ? $('chatHilo').scrollHeight - $('chatHilo').clientHeight - $('chatHilo').scrollTop < 24
+        : true,
+    } : null;
+
     /* Sin nada en curso se enseña el camino apagado, igual que a quien nunca
        ha pedido: dice qué va a pasar cuando pida, en vez de un hueco. Lo ya
        resuelto está a un toque del anillo. */
     $('misLista').innerHTML = visibles.length
       ? visibles.map(filaMiaHtml).join('')
       : caminoVacioHtml();
+
+    if(guardado){
+      const caja = $('chatTexto');
+      if(caja){
+        caja.value = guardado.texto;
+        if(guardado.escribiendo){
+          caja.focus();
+          caja.setSelectionRange(caja.value.length, caja.value.length);
+        }
+      }
+      const hilo = $('chatHilo');
+      /* si estaba mirando el final, se queda en el final —que es donde acaba de
+         llegar lo nuevo—; si había subido a leer, se respeta dónde estaba */
+      if(hilo) hilo.scrollTop = guardado.alFondo ? hilo.scrollHeight : guardado.hilo;
+    }else{
+      const hilo = $('chatHilo');
+      if(hilo) hilo.scrollTop = hilo.scrollHeight;
+    }
     $('misLista').classList.toggle('una-sola', visibles.length <= 1);
     $('misLista').scrollTop = 0;
     revisarVelo();

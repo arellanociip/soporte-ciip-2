@@ -193,6 +193,16 @@ pedido*: cada solicitud con su número, las tres etapas del trámite dibujadas
 —Recibida → En proceso → Atendida— y, cuando GTIC la cierra, la respuesta del
 técnico. No hace falta clave ni recordar el número.
 
+**Y puede hablar con quien la atiende.** En cuanto un tecnico la toma, aparece
+su nombre y un hilo para escribirle: a que hora esta, donde lo consigue, lo que
+haga falta. GTIC ve y responde el mismo hilo desde la ficha. Los mensajes no
+salen en la Hoja de Servicio; son para ponerse de acuerdo, no para el acta.
+
+> Quien habla no lo dice el mensaje, lo dice como llego: con sesion de GTIC
+> habla el tecnico; sin ella, habla quien pidio, y su prueba es el mismo id
+> imposible de adivinar de su solicitud. Nadie puede escribir haciendose pasar
+> por otro, y quien pide sigue sin necesitar cuenta.
+
 **Y puede retirar la suya.** Mientras nadie la haya tomado, en su fila hay un
 "Me equivoqué, retirar esta solicitud": la anula y deja libre para pedir otra.
 En cuanto un técnico la pasa a *En proceso* deja de poder — ya hay alguien
