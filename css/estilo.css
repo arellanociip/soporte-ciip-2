@@ -175,6 +175,49 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .mis-q .f{font-size:11.5px; color:var(--gray-soft); margin-top:2px;}
 .mis-fila .etiqueta{flex:0 0 auto;}
 
+/* ---------- por dónde va ----------
+   Las tres etapas del trámite, para que se vea el camino y no solo el punto:
+   entra, la toma un técnico, se cierra. Ocupa una línea y no pide leer. */
+.pasos{
+  flex:1 1 100%; display:flex; align-items:flex-start;
+  margin:10px 0 2px; padding:0 2px;
+}
+.paso{flex:1; text-align:center; position:relative; min-width:0;}
+.paso .bola{
+  width:15px; height:15px; margin:0 auto 6px; border-radius:50%;
+  background:#fff; border:2px solid var(--line); position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .25s ease, border-color .25s ease;
+}
+.paso .bola svg{width:9px; height:9px; fill:none; stroke:#fff; stroke-width:3.4;
+  stroke-linecap:round; stroke-linejoin:round; opacity:0;}
+.paso .rot{font-size:10.5px; color:var(--gray-soft); line-height:1.25;}
+.paso .cuando{font-size:9.5px; color:#B4BBC9; margin-top:1px;}
+
+/* la raya que une una bola con la siguiente */
+.paso::before{
+  content:""; position:absolute; top:6.5px; left:-50%; width:100%; height:2px;
+  background:var(--line);
+}
+.paso:first-child::before{display:none;}
+
+/* etapa cumplida */
+.paso.hecho .bola{background:var(--good); border-color:var(--good);}
+.paso.hecho .bola svg{opacity:1;}
+.paso.hecho .rot{color:var(--good); font-weight:700;}
+.paso.hecho::before{background:var(--good);}
+
+/* la etapa en la que está ahora mismo */
+.paso.ahora .bola{background:var(--navy); border-color:var(--navy);
+  box-shadow:0 0 0 4px rgba(0,64,144,.14);}
+.paso.ahora .rot{color:var(--navy); font-weight:700;}
+
+/* anulada: el trámite no siguió el camino, así que no se dibuja el camino */
+.mis-anulada{
+  flex:1 1 100%; background:var(--line-soft); border-radius:var(--r-sm);
+  padding:8px 12px; font-size:12.5px; color:var(--gray); margin-top:6px;
+}
+
 /* Lo que dejó el técnico al cerrar: es la respuesta que la persona vino a leer. */
 .mis-obs{
   flex:1 1 100%; background:var(--good-bg); border:1px solid #C9E7D8;

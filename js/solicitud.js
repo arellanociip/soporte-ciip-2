@@ -365,8 +365,16 @@
       body: JSON.stringify(datos),
     });
     if(!r.ok){
-      const cuerpo = await r.text().catch(() => '');
-      throw new Error('HTTP ' + r.status + (cuerpo ? ' · ' + cuerpo.slice(0, 300) : ''));
+      const cuerpo = await r.json().catch(() => ({}));
+      /* 409: el servidor dice que esa persona ya tiene una abierta. No es un
+         fallo que haya que reintentar, es una regla — se cuenta como tal y se
+         anota la que ya existe para poder seguirla desde aquí. */
+      if(r.status === 409){
+        const e = new Error(cuerpo.message || 'Ya tienes una solicitud abierta.');
+        e.yaAbierta = cuerpo.abierta || null;
+        throw e;
+      }
+      throw new Error('HTTP ' + r.status + (cuerpo.message ? ' · ' + cuerpo.message : ''));
     }
     const filas = await r.json();
     return Array.isArray(filas) ? filas[0] : filas;
@@ -449,12 +457,21 @@
       soporteMias.anotar(fila);
       mostrarAcuse(fila);
     }catch(err){
+      enviar.disabled = false;
+      enviar.textContent = 'Enviar solicitud';
+
+      /* La regla de una a la vez no es una avería: se explica y se pasa a
+         seguir la que ya existe, en vez de invitar a reintentar en balde. */
+      if(err.yaAbierta){
+        soporteMias.anotar(err.yaAbierta);
+        await pintarMias();
+        window.scrollTo({top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
+        return;
+      }
       console.error('No se pudo enviar la solicitud:', err);
       avisoError('<span>⚠</span><div><b>No se pudo enviar la solicitud.</b> '
         + 'Puede ser la conexión o el servidor. Vuelve a intentar en un momento; '
         + 'lo que escribiste sigue aquí.' + comoContactar() + '</div>');
-      enviar.disabled = false;
-      enviar.textContent = 'Enviar solicitud';
       return;
     }
 
@@ -539,6 +556,36 @@
     return Array.isArray(filas) ? filas[0] : filas;
   }
 
+  /* ---------- por dónde va ----------
+     Las tres etapas del trámite dibujadas: entra, la toma un técnico, se
+     cierra. Ver el camino tranquiliza más que leer una palabra suelta, porque
+     dice cuánto falta y no solo dónde está. */
+  const ETAPAS = [
+    {clave: 'recibida',   rot: 'Recibida',   pie: s => fechaCorta(s.creada_en)},
+    {clave: 'en_proceso', rot: 'En proceso', pie: () => 'Un técnico la toma'},
+    {clave: 'atendida',   rot: 'Atendida',   pie: s => s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta'},
+  ];
+  const VISTO = '<svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>';
+
+  function pasosHtml(s){
+    /* anulada no recorrió el camino, así que dibujarlo mentiría */
+    if(s.estado === 'anulada'){
+      return `<div class="mis-anulada">Esta solicitud fue anulada por GTIC.
+        Si sigues necesitando ayuda, puedes pedir una nueva.</div>`;
+    }
+    const donde = ETAPAS.findIndex(e => e.clave === s.estado);
+    return '<div class="pasos">' + ETAPAS.map((e, i) => {
+      const clase = i < donde ? 'hecho' : (i === donde ? 'ahora' : '');
+      /* la última, alcanzada, es un fin: se marca cumplida y no "en curso" */
+      const cumplida = i < donde || (i === donde && e.clave === 'atendida');
+      return `<div class="paso ${cumplida ? 'hecho' : clase}">
+        <div class="bola">${cumplida ? VISTO : ''}</div>
+        <div class="rot">${escapar(e.rot)}</div>
+        <div class="cuando">${i <= donde ? escapar(e.pie(s)) : ''}</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
   function filaMiaHtml(s){
     /* La observación del técnico solo cuando ya cerró: antes no hay nada que
        leer y sería una caja vacía dando falsas esperanzas. */
@@ -553,6 +600,7 @@
           s.atendida_en ? ' · atendida el ' + escapar(fechaCorta(s.atendida_en)) : ''}</div>
       </div>
       <span class="etiqueta ${escapar(s.estado)}">${escapar(ESTADO_LBL[s.estado] || s.estado)}</span>
+      ${pasosHtml(s)}
       ${respuesta}
     </div>`;
   }
@@ -574,11 +622,34 @@
       $('misLista').innerHTML = '';
       return;
     }
-    const pendientes = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso').length;
-    $('misResumen').textContent = pendientes
-      ? (pendientes === 1 ? '1 solicitud sigue abierta' : pendientes + ' solicitudes siguen abiertas')
+    const abiertas = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso');
+    $('misResumen').textContent = abiertas.length
+      ? (abiertas.length === 1 ? 'Tu solicitud sigue abierta' : abiertas.length + ' solicitudes siguen abiertas')
       : 'Todo lo tuyo está atendido';
     $('misLista').innerHTML = filas.map(filaMiaHtml).join('');
+    bloquearSiHayAbierta(abiertas[0] || null);
+  }
+
+  /* ---------- una a la vez ----------
+     Con una solicitud abierta no se puede pedir otra: el formulario se guarda
+     y en su lugar queda el porqué. La regla la impone el servidor —esto es
+     solo no dejar escribir en balde— porque desde otro navegador la pantalla
+     no sabría nada. */
+  function bloquearSiHayAbierta(abierta){
+    const aviso = $('avisoUnaALaVez');
+    if(!abierta){
+      $('pantallaFormulario').hidden = !$('pantallaAcuse').hidden;
+      aviso.hidden = true;
+      return;
+    }
+    $('pantallaFormulario').hidden = true;
+    $('pantallaAcuse').hidden = true;
+    aviso.innerHTML = `<span>🕓</span><div>
+      <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—
+      así que no puedes pedir otra todavía. Arriba ves por dónde va.
+      <br>En cuanto GTIC la cierre, esta planilla vuelve a abrirse.
+      Si es algo urgente y distinto, llama a la gerencia.</div>`;
+    aviso.hidden = false;
   }
 
   $('botonRefrescarMias').addEventListener('click', () => pintarMias());

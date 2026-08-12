@@ -191,8 +191,16 @@ los campos con los datos puestos, y **No soy yo** los borra de verdad.
 > clave, se puede reconsiderar — pero es una decisión aparte, no un descuido.
 
 **Y puede ver en qué va.** Al volver al formulario, arriba sale *Lo que has
-pedido*: cada solicitud con su número, su estado y —cuando GTIC la cierra— la
-respuesta del técnico. No hace falta clave ni recordar el número.
+pedido*: cada solicitud con su número, las tres etapas del trámite dibujadas
+—Recibida → En proceso → Atendida— y, cuando GTIC la cierra, la respuesta del
+técnico. No hace falta clave ni recordar el número.
+
+**Una solicitud a la vez.** Con una abierta, la planilla se guarda y en su lugar
+queda el porqué y el estado de la que ya tiene. La regla la impone el servidor,
+no la pantalla: desde otro navegador el rechazo llega igual, con un 409 que el
+formulario traduce mostrando la solicitud que ya existía. Se compara por el
+nombre normalizado, porque la cédula es opcional. Si a alguien se le queda una
+abierta y necesita otra cosa, GTIC la cierra o la anula y queda libre.
 
 > **Cómo se sostiene eso sin cuentas.** Al enviar, el navegador guarda el uid=1050397(f.reyes) gid=1049089 groups=1049089
 > de la solicitud, que es un UUID: 122 bits al azar. El servidor entrega una

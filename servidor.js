@@ -283,9 +283,34 @@ function anioCaracas(){
   return new Date(Date.now() - 4 * 3600 * 1000).getUTCFullYear();
 }
 
+/* Una solicitud abierta por persona. Se compara por el nombre, normalizado,
+   que es lo único que siempre viene (la cédula es opcional). No es a prueba de
+   pillos —quien quiera escribirá su nombre distinto— pero no es de eso de lo
+   que protege: evita que la misma persona mande cinco veces lo mismo porque
+   "no le han respondido", que es lo que de verdad pasa. */
+const ABIERTAS = ['recibida', 'en_proceso'];
+const normNombre = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+function abiertaDe(solicitudes, usuario){
+  const n = normNombre(usuario);
+  if(!n) return null;
+  return solicitudes.find(s => ABIERTAS.includes(s.estado) && normNombre(s.usuario) === n) || null;
+}
+
 function crearSolicitud(datos){
   const solicitudes = leerSolicitudes();
   const anio = anioCaracas();
+
+  const yaTiene = abiertaDe(solicitudes, datos.usuario);
+  if(yaTiene){
+    const e = new Error('Ya tienes una solicitud abierta: la N° ' +
+      String(yaTiene.numero).padStart(3, '0') + '-' + yaTiene.anio +
+      '. Cuando GTIC la cierre podrás pedir otra.');
+    e.codigo = 409;                    /* 409 = choca con algo que ya existe */
+    e.abierta = {id: yaTiene.id, numero: yaTiene.numero, anio: yaTiene.anio,
+                 estado: yaTiene.estado};
+    throw e;
+  }
   const fila = {
     id: crypto.randomUUID(),
     numero: siguienteNumero(solicitudes, anio),
@@ -490,7 +515,10 @@ const servidor = http.createServer(async (req, res) => {
     return servirArchivo(res, url.pathname);
   }catch(e){
     console.error('  ! ', e.message);
-    responder(res, e.codigo || 500, {message: e.message});
+    /* el 409 viaja con la solicitud que ya estaba abierta: el formulario la
+       muestra en vez de limitarse a decir que no */
+    responder(res, e.codigo || 500,
+      Object.assign({message: e.message}, e.abierta ? {abierta: e.abierta} : {}));
   }
 });
 
