@@ -783,9 +783,12 @@
 
   function abrirChat(id){
     chatId = id;
-    pintarChat();
+    /* Se muestra ANTES de pintar: mientras está oculta, la ventana no tiene
+       altura, así que llevar el hilo al final no haría nada y la conversación
+       se abriría por el principio en vez de por lo último dicho. */
     $('veloChat').hidden = false;
     document.body.style.overflow = 'hidden';
+    pintarChat();
     const caja = $('chatTexto');
     if(caja) caja.focus();
   }
