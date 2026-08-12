@@ -179,6 +179,8 @@
     /* deja los datos puestos y descubre los campos para retocar uno */
     $('recordado').hidden = true;
     $('camposIdentidad').hidden = false;
+    /* si estaba recordado, la casilla debe reflejarlo al descubrirse */
+    $('recordarme').checked = true;
     $('usuario').focus();
   });
 
@@ -377,9 +379,12 @@
       const fila = soporteHayBackend()
         ? await mandarAlServidor(datos)
         : soporteLocal.agregar(datos);
-      /* solo se recuerda lo que llegó a enviarse: si el envío falló, no hay
-         por qué dar por buenos unos datos que nadie confirmó */
-      guardarYo(datos);
+      /* Solo se recuerda lo que llegó a enviarse —si el envío falló, no hay por
+         qué dar por buenos unos datos que nadie confirmó— y solo si la persona
+         lo pidió. Desmarcar la casilla no es pasivo: borra lo que hubiera
+         guardado antes, que es lo que uno espera al decir "no me recuerdes". */
+      if($('recordarme').checked) guardarYo(datos);
+      else localStorage.removeItem(LLAVE_YO);
       mostrarAcuse(fila);
     }catch(err){
       console.error('No se pudo enviar la solicitud:', err);
@@ -407,7 +412,11 @@
 
   /* ---------- limpiar y volver a empezar ---------- */
   function limpiar(){
+    /* form.reset() devolvería la casilla a "marcada", su valor de fábrica, y
+       quien dijo que NO lo quería se encontraría con que sí, sin tocarla. */
+    const queriaRecordar = $('recordarme').checked;
     form.reset();
+    $('recordarme').checked = queriaRecordar;
     revisandoAlSalir = false;
     contador.textContent = '0';
     contador.classList.remove('cerca');

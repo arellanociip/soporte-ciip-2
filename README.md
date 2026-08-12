@@ -149,10 +149,26 @@ No hay que configurar nada más: no hay build ni variables de entorno, porque la
 
 ## Cómo se usa
 
-**Quien pide.** Abre el formulario, elige su gerencia, dice quién es y dónde está,
-cuenta qué le pasa y envía. Recibe un número tipo `GTIC-HS/007-2026`. Clasificar
-el servicio es opcional a propósito: quien tiene el problema no siempre sabe si
-es "asistencia" o "soporte técnico", y forzarlo solo ensucia la data.
+**Quien pide.** Abre el formulario, elige uno de los cinco atajos —"La computadora
+no sirve", "Problema con la impresora"…—, cuenta qué le pasa y envía. Recibe un
+número tipo `GTIC-HS/007-2026`.
+
+Los atajos son los cinco detalles más pedidos del Excel y cubren el 78 % de los
+casos; "Otra cosa" abre los desplegables completos para el resto. No guardan nada
+por su cuenta: solo rellenan esos mismos desplegables, así que la Hoja de
+Servicio sale idéntica venga de donde venga. Clasificar sigue siendo opcional a
+propósito: quien tiene el problema no siempre sabe si es "asistencia" o "soporte
+técnico", y forzarlo solo ensucia la data.
+
+**Sus datos se escriben una sola vez.** Con la casilla *Recordar mis datos en este
+equipo* marcada, la gerencia, el nombre, la cédula, el teléfono, el piso y la
+oficina quedan guardados **en ese navegador, nunca en el servidor**, y la próxima
+vez solo hay que confirmar un recuadro. En el Excel, 38 de las 125 personas
+pidieron soporte más de una vez y volvieron a escribirlo todo cada vez.
+
+En un equipo compartido eso importa, así que: la casilla se ve antes de enviar y
+se puede desmarcar; el recuadro dice a nombre de quién está; **Corregir** descubre
+los campos con los datos puestos, y **No soy yo** los borra de verdad.
 
 **GTIC.** Entra a la bandeja con su correo y clave. Ve las pendientes de primero.
 Abre una, pone quién la atiende, deja las observaciones y llena los renglones de

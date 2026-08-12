@@ -128,6 +128,20 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 
 .contador{font-size:11px; color:var(--gray-soft); text-align:right;}
 
+/* La casilla de recordar: ocupa la fila entera, debajo de los datos. */
+.recuerdame{
+  grid-column:span 12; display:flex; align-items:flex-start; gap:9px;
+  cursor:pointer; font-size:12.5px; color:var(--gray); line-height:1.45;
+  transition:color .15s ease;
+}
+.recuerdame:hover{color:var(--ink);}
+.recuerdame input{
+  width:16px; height:16px; flex:0 0 16px; margin-top:1px;
+  accent-color:var(--navy); cursor:pointer;
+}
+.recuerdame b{font-weight:700; color:var(--gray-soft);}
+.recuerdame:has(input:focus-visible){color:var(--navy);}
+
 /* ===================== ATAJOS ===================== */
 /* Los cinco problemas que cubren el 78 % de lo que pide la casa, más la
    salida para el resto. Son botones de verdad, no divs: se llega a ellos con
