@@ -62,11 +62,17 @@ function claveLegible(){
   return trozo() + trozo() + '-' + trozo() + trozo() + '-' + crypto.randomInt(10, 100);
 }
 
-/* Las banderas sueltas del comando: --nombre "Dan Moreno" --cargo "Técnico". */
+/* Las banderas sueltas del comando: --nombre "Dan Moreno" --cargo "Técnico".
+   Devuelve undefined si no se puso la bandera y '' si se puso vacía. Esa
+   diferencia importa: no ponerla conserva lo que hubiera, y ponerla vacía
+   (--cedula "") lo borra, que es como se corrige un dato que no era de esa
+   persona. */
 function bandera(nombre){
   const i = process.argv.indexOf('--' + nombre);
-  return (i >= 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--'))
-    ? process.argv[i + 1].trim() : null;
+  if(i < 0) return undefined;
+  const v = process.argv[i + 1];
+  if(v === undefined || v.startsWith('--')) return '';
+  return v.trim();
 }
 
 /* Lo que sale impreso en el bloque "TECNICO DE SOPORTE" de la Hoja de Servicio.
@@ -86,23 +92,33 @@ function crearUsuario(correo, clave){
   }
   /* si la "clave" empieza por -- es en realidad la primera bandera */
   if(clave && clave.startsWith('--')) clave = null;
-  const inventada = !clave;
-  if(inventada) clave = claveLegible();
-  if(clave.length < 6){
-    console.error('La clave es muy corta: pon al menos 6 caracteres.');
-    process.exit(1);
-  }
+
   const usuarios = leerUsuarios();
-  const sal = crypto.randomBytes(16).toString('hex');
   const buscado = correo.toLowerCase().trim();
   const previo = usuarios.find(u => u.correo === buscado);
 
-  const fila = {correo: buscado, sal, hash: huella(clave, sal),
+  /* Corregirle el cargo a alguien no puede dejarlo fuera de su propia cuenta.
+     Sin clave: si ya existía, se conserva la suya; si es nuevo, se inventa una
+     y se muestra. (Este mismo comando le cambió la clave a alguien por
+     corregirle un dato; de ahí la distinción.) */
+  const conservaClave = !clave && !!previo;
+  const inventada = !clave && !previo;
+  if(inventada) clave = claveLegible();
+  if(clave && clave.length < 6){
+    console.error('La clave es muy corta: pon al menos 6 caracteres.');
+    process.exit(1);
+  }
+
+  const sal = conservaClave ? previo.sal : crypto.randomBytes(16).toString('hex');
+  const hash = conservaClave ? previo.hash : huella(clave, sal);
+
+  const fila = {correo: buscado, sal, hash,
                 creado_en: (previo && previo.creado_en) || new Date().toISOString()};
   /* lo que no se vuelva a indicar se conserva: cambiar la clave no debe borrar
-     el cargo de nadie */
+     el cargo de nadie. Indicarlo vacío sí borra. */
   DATOS_TECNICO.forEach(k => {
-    fila[k] = bandera(k) || (previo && previo[k]) || null;
+    const b = bandera(k);
+    fila[k] = (b === undefined) ? ((previo && previo[k]) || null) : (b || null);
   });
   /* sin nombre, el de la Hoja de Servicio sería un correo electrónico */
   if(!fila.nombre) fila.nombre = buscado.split('@')[0].replace(/[._]/g, ' ');
@@ -119,12 +135,15 @@ function crearUsuario(correo, clave){
   if(inventada){
     console.log('  Clave:    ' + clave);
     console.log('\n  Pásasela y que la cambie cuando quiera, con este mismo comando.');
+  }else if(conservaClave){
+    console.log('  Clave:    la de siempre, no se tocó.');
   }
-  if(!fila.cargo || !fila.cedula){
-    console.log('\n  Ojo: sin cargo ni cédula, la Hoja de Servicio sale con esas');
-    console.log('  rayas en blanco para llenar a mano. Se agregan así:');
-    console.log('    node servidor.js --crear-usuario ' + fila.correo + ' \\');
-    console.log('      --cargo "Técnico de soporte" --cedula 26.610.022');
+  const faltan = ['cargo','cedula','telefono'].filter(k => !fila[k]);
+  if(faltan.length){
+    console.log('\n  Ojo: sin ' + faltan.join(' ni ') + ', la Hoja de Servicio sale con');
+    console.log('  esas rayas en blanco para llenar a mano. Se agregan así:');
+    console.log('    node servidor.js --crear-usuario ' + fila.correo +
+                ' ' + faltan.map(k => '--' + k + ' "…"').join(' '));
   }
   console.log('');
 }
