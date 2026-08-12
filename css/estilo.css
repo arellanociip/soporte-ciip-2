@@ -90,6 +90,13 @@ a{color:var(--navy);}
 .campo label{font-size:12px; font-weight:700; color:var(--ink); transition:color .16s ease;}
 .campo label .opc{font-weight:400; color:var(--gray-soft);}
 .campo .ayuda{font-size:11.5px; color:var(--gray-soft);}
+/* Un botón que se lee como enlace: va dentro de una línea de ayuda, donde un
+   botón con su caja partiría la frase. */
+.enlace{
+  background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  font-size:11.5px; font-weight:700; color:var(--navy); text-decoration:underline;
+}
+.enlace:hover{color:var(--navy-deep);}
 /* La etiqueta acompaña al campo que se está llenando: sin mover nada de sitio,
    sabes en cuál estás parado aunque el cursor no se vea. */
 .campo:focus-within label{color:var(--navy);}

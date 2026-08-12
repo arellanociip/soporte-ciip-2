@@ -68,8 +68,22 @@
 
       <div class="seccion">Quién solicita</div>
 
-      <!-- Quien ya pidió antes no vuelve a escribir sus datos: el navegador los
-           recuerda y aquí solo confirma. Lo enciende js/solicitud.js. -->
+      <!-- El punto de partida: un solo campo. Escribes tu nombre, te eliges de
+           la lista de la casa (js/directorio.js) y tu gerencia, tu piso y tu
+           oficina se llenan solas. Los seis campos solo salen si hace falta. -->
+      <div class="rejilla" id="buscadorPersona">
+        <div class="campo c8">
+          <label for="quienEres">¿Quién eres? *</label>
+          <input type="text" id="quienEres" list="listaPersonas" autocomplete="name"
+                 placeholder="Escribe tu nombre y apellido">
+          <datalist id="listaPersonas"></datalist>
+          <div class="ayuda">Elígete de la lista y el resto se llena solo ·
+            <button type="button" class="enlace" id="botonNoEstoy">No aparezco en la lista</button></div>
+          <div class="error"></div>
+        </div>
+      </div>
+
+      <!-- Ya sabemos quién eres: aquí solo se confirma. Lo enciende js/solicitud.js. -->
       <div class="recordado" id="recordado" hidden>
         <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg></div>
         <div class="q">
@@ -82,7 +96,7 @@
         </div>
       </div>
 
-      <div class="rejilla" id="camposIdentidad">
+      <div class="rejilla" id="camposIdentidad" hidden>
         <div class="campo c8">
           <label for="gerencia">Gerencia solicitante *</label>
           <select id="gerencia" name="gerencia" required>
@@ -206,6 +220,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/catalogo.js"></script>
+<script src="js/directorio.js"></script>
 <script src="js/local.js"></script>
 <script src="js/solicitud.js"></script>
 </body>

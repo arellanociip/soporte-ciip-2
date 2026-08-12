@@ -160,15 +160,26 @@ Servicio sale idéntica venga de donde venga. Clasificar sigue siendo opcional a
 propósito: quien tiene el problema no siempre sabe si es "asistencia" o "soporte
 técnico", y forzarlo solo ensucia la data.
 
-**Sus datos se escriben una sola vez.** Con la casilla *Recordar mis datos en este
-equipo* marcada, la gerencia, el nombre, la cédula, el teléfono, el piso y la
-oficina quedan guardados **en ese navegador, nunca en el servidor**, y la próxima
-vez solo hay que confirmar un recuadro. En el Excel, 38 de las 125 personas
-pidieron soporte más de una vez y volvieron a escribirlo todo cada vez.
+**Nadie escribe su gerencia ni su oficina.** El formulario abre con un solo campo:
+*¿Quién eres?*. Se escribe el nombre, se elige de la lista de la casa
+([`js/directorio.js`](js/directorio.js), 89 personas sacadas de las hojas ya
+llenadas) y la gerencia, el piso y la oficina se llenan solas. Quien no aparezca
+pulsa **No aparezco en la lista** y le salen los seis campos de siempre.
+
+**Y la segunda vez, ni eso.** Con la casilla *Recordar mis datos en este equipo*
+marcada, todo queda guardado **en ese navegador, nunca en el servidor**, y solo
+hay que confirmar el recuadro. En el Excel, 38 de las 125 personas pidieron
+soporte más de una vez y volvieron a escribirlo todo cada vez.
 
 En un equipo compartido eso importa, así que: la casilla se ve antes de enviar y
 se puede desmarcar; el recuadro dice a nombre de quién está; **Corregir** descubre
 los campos con los datos puestos, y **No soy yo** los borra de verdad.
+
+> **El directorio no lleva cédula ni teléfono, a propósito.** Ese archivo viaja al
+> navegador de cualquiera que abra la página, que no pide clave: publicar ahí la
+> cédula de 112 compañeros sería regalarlas. Los dos campos siguen siendo
+> opcionales y los escribe cada quien. Si algún día la página queda detrás de una
+> clave, se puede reconsiderar — pero es una decisión aparte, no un descuido.
 
 **GTIC.** Entra a la bandeja con su correo y clave. Ve las pendientes de primero.
 Abre una, pone quién la atiende, deja las observaciones y llena los renglones de
@@ -205,7 +216,8 @@ index.html          el formulario que llena la casa
 bandeja.html        la cola de GTIC
 css/estilo.css      todo el diseño, incluida la hoja impresa
 js/config.js        ← el único archivo que hay que tocar para arrancar
-js/catalogo.js      gerencias, tipos, detalles, equipos y marcas
+js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
+js/directorio.js    quién trabaja dónde, para no escribirlo cada vez
 js/local.js         el modo prueba: el almacén del navegador mientras no haya servidor
 js/solicitud.js     la lógica del formulario
 js/bandeja.js       acceso, cola, atención e impresión

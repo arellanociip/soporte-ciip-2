@@ -148,37 +148,90 @@
     catch(e){ console.warn('No se pudieron recordar los datos:', e); }
   }
 
+  /* ---------- los tres estados de "quién solicita" ----------
+     1. buscador  → un solo campo: escribe tu nombre y elígete de la lista
+     2. recordado → el recuadro verde: ya sabemos quién eres, solo confirma
+     3. campos    → los seis, para quien no está en la lista o quiere corregir
+     Solo uno está a la vista a la vez. */
+  function mostrarIdentidad(cual){
+    $('buscadorPersona').hidden  = cual !== 'buscador';
+    $('recordado').hidden        = cual !== 'recordado';
+    $('camposIdentidad').hidden  = cual !== 'campos';
+  }
+
   function olvidarYo(){
     localStorage.removeItem(LLAVE_YO);
     CAMPOS_YO.forEach(k => { $(k).value = ''; });
-    $('recordado').hidden = true;
-    $('camposIdentidad').hidden = false;
+    $('quienEres').value = '';
+    marcar('quienEres', '');
+    mostrarIdentidad('buscador');
     pintarAvance();
-    $('gerencia').focus();
+    $('quienEres').focus();
   }
 
-  /* Con datos recordados los seis campos se llenan y se guardan de la vista:
-     la planilla empieza en "cuéntanos qué pasa", que es a lo que se vino. */
-  function aplicarYo(){
-    const yo = leerYo();
-    if(!yo || !yo.usuario) return false;
-    CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
+  /* Pinta el recuadro verde con quien esté identificado. */
+  function mostrarRecuadro(yo){
     $('recordadoNombre').textContent = yo.usuario;
     $('recordadoDonde').textContent = [
       yo.gerencia,
       (yo.piso ? 'Piso ' + yo.piso : '') + (yo.oficina ? ', of. ' + yo.oficina : ''),
       yo.cedula ? 'C.I. ' + yo.cedula : '',
     ].filter(Boolean).join(' · ');
-    $('recordado').hidden = false;
-    $('camposIdentidad').hidden = true;
+    mostrarIdentidad('recordado');
+  }
+
+  function aplicarYo(){
+    const yo = leerYo();
+    if(!yo || !yo.usuario) return false;
+    CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
+    $('quienEres').value = yo.usuario;
+    mostrarRecuadro(yo);
     return true;
   }
+
+  /* ---------- elegirse del directorio ----------
+     El nombre escrito solo cuenta cuando coincide con alguien de la lista.
+     Si no aparece, no se adivina: se abren los seis campos con el nombre ya
+     puesto, porque el directorio es un punto de partida, no una autoridad. */
+  DIRECTORIO.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.nombre;
+    o.label = p.gerencia + ' · Piso ' + p.piso + ', of. ' + p.oficina;
+    $('listaPersonas').append(o);
+  });
+
+  function intentarIdentificar(){
+    const p = directorioBuscar($('quienEres').value);
+    if(!p) return false;
+    $('usuario').value  = p.nombre;
+    $('gerencia').value = p.gerencia;
+    $('piso').value     = p.piso;
+    $('oficina').value  = p.oficina;
+    marcar('quienEres', '');
+    mostrarRecuadro({usuario: p.nombre, gerencia: p.gerencia, piso: p.piso,
+                     oficina: p.oficina, cedula: $('cedula').value});
+    pintarAvance();
+    return true;
+  }
+
+  /* El datalist dispara 'change' al elegir de la lista y 'input' al teclear;
+     se prueba en ambos para que valga tanto elegir con el ratón como escribir
+     el nombre completo a mano. */
+  $('quienEres').addEventListener('change', intentarIdentificar);
+  $('quienEres').addEventListener('input', intentarIdentificar);
+
+  /* "No aparezco en la lista": los seis campos, con el nombre ya escrito. */
+  $('botonNoEstoy').addEventListener('click', () => {
+    $('usuario').value = $('quienEres').value.trim();
+    mostrarIdentidad('campos');
+    ($('usuario').value ? $('gerencia') : $('usuario')).focus();
+    pintarAvance();
+  });
 
   $('botonNoSoyYo').addEventListener('click', olvidarYo);
   $('botonCorregir').addEventListener('click', () => {
     /* deja los datos puestos y descubre los campos para retocar uno */
-    $('recordado').hidden = true;
-    $('camposIdentidad').hidden = false;
+    mostrarIdentidad('campos');
     /* si estaba recordado, la casilla debe reflejarlo al descubrirse */
     $('recordarme').checked = true;
     $('usuario').focus();
@@ -358,13 +411,19 @@
     avisoError('');
 
     if(!revisarTodo()){
-      /* Si lo que falla está entre los datos recordados —que están guardados de
-         la vista— hay que descubrirlos: un error señalado dentro de un bloque
-         oculto no lo ve nadie, y la planilla parecería no responder. */
+      /* Los campos de identidad casi siempre están guardados de la vista, así
+         que un error señalado ahí no lo vería nadie y la planilla parecería no
+         responder. Según el estado en que esté, el reclamo va a otro sitio. */
       const fallaIdentidad = CAMPOS_YO.some(k => $(k).closest('.campo').classList.contains('mal'));
-      if(fallaIdentidad && $('camposIdentidad').hidden){
-        $('recordado').hidden = true;
-        $('camposIdentidad').hidden = false;
+      if(fallaIdentidad){
+        if(!$('buscadorPersona').hidden){
+          /* En el buscador no hay seis campos que señalar: hay uno. Se recogen
+             los cuatro reclamos invisibles en un solo mensaje, ahí. */
+          CAMPOS_YO.forEach(k => marcar(k, ''));
+          marcar('quienEres', 'Elígete de la lista, o pulsa «No aparezco en la lista».');
+        }else if($('camposIdentidad').hidden){
+          mostrarIdentidad('campos');
+        }
       }
       const primero = form.querySelector('.campo.mal input, .campo.mal select, .campo.mal textarea');
       if(primero) primero.focus();
@@ -435,12 +494,10 @@
       const hueco = c.querySelector('.error'); if(hueco) hueco.textContent = '';
     });
     avisoError('');
+    marcar('quienEres', '');
     /* Limpiar vacía la planilla, no la memoria: quien ya se identificó no
        tiene por qué volver a hacerlo por haber querido reescribir su problema. */
-    if(!aplicarYo()){
-      $('recordado').hidden = true;
-      $('camposIdentidad').hidden = false;
-    }
+    if(!aplicarYo()) mostrarIdentidad('buscador');
     pintarAvance();
   }
 
