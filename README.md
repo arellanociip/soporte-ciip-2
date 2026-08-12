@@ -76,9 +76,9 @@ decide el servidor en `sql/esquema.sql`, no la clave.
 ## Verlo en tu máquina
 
 No hay que instalar ni compilar nada: es HTML, CSS y JavaScript planos. Solo hay
-que servir la carpeta.
+que servir la carpeta. **Doble clic a `servir.cmd`** y él imprime las direcciones.
 
-Desde `C:\Users\F.reyes\Desktop\soporte-gtic`:
+O a mano, desde `C:\Users\F.reyes\Desktop\soporte-gtic`:
 
 ```
 python -m http.server 8123
@@ -88,6 +88,49 @@ Y abrir:
 
 - Formulario → <http://localhost:8123/index.html>
 - Bandeja → <http://localhost:8123/bandeja.html>
+
+## Que entre alguien desde otra máquina de la oficina
+
+Ya funciona: `python -m http.server` atiende a toda la red, no solo a esta
+máquina. El compañero abre, en su navegador:
+
+```
+http://172.21.20.49:8123/index.html
+```
+
+Esa es la IP de esta PC en la red del CIIP. **Puede cambiar** cuando se reinicie
+el equipo, porque la asigna el servidor DHCP; `servir.cmd` la vuelve a averiguar
+y la imprime cada vez. Para verla a mano: `ipconfig`, línea "Dirección IPv4" del
+adaptador Ethernet. Ojo con no usar la de `CloudflareWARP` (172.16.x), que es del
+VPN y no sirve para que otro entre.
+
+En esta máquina el firewall de Windows está **desactivado** en los tres perfiles,
+así que no hace falta abrir el puerto. Si un día lo activan, hará falta esto una
+vez, en PowerShell **como administrador**:
+
+```powershell
+New-NetFirewallRule -DisplayName "Soporte GTIC (prueba en red local)" `
+  -Direction Inbound -Protocol TCP -LocalPort 8123 -Action Allow -Profile Domain,Private
+```
+
+Y para quitarlo:
+
+```powershell
+Remove-NetFirewallRule -DisplayName "Soporte GTIC (prueba en red local)"
+```
+
+> ### Lo que NO hace compartir la carpeta
+>
+> Mientras `js/config.js` esté vacío, **cada máquina guarda sus solicitudes en su
+> propio navegador**. El compañero verá el formulario perfecto, lo llenará y
+> recibirá su número… pero eso **no llega a tu bandeja**. Ni a la suya: lo suyo
+> queda en su equipo, lo tuyo en el tuyo.
+>
+> Compartir la carpeta reparte *la página*, no *los datos*. Para que todos vean
+> la misma cola hace falta el paso de Supabase, y entonces ya no importa desde
+> qué máquina entre nadie.
+>
+> Sirve, eso sí, para enseñarle a alguien cómo va a funcionar sin instalarle nada.
 
 En Edge, desde PowerShell:
 
