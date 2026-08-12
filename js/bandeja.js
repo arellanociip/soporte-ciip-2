@@ -639,6 +639,10 @@
         body: JSON.stringify({id: chatId, texto}),
       });
       const nuevo = (await r.json())[0];
+      /* Se vacía ANTES de repintar. pintarChat conserva lo que haya escrito
+         —para no borrarlo cuando entra un mensaje del otro lado— así que si no
+         se vacía aquí, devuelve el texto que acaba de enviarse. */
+      caja.value = '';
       /* se añade a lo que ya está cargado y se repinta: no hace falta volver a
          pedir la solicitud entera para ver el mensaje que uno acaba de poner */
       const i = solicitudes.findIndex(x => x.id === chatId);
