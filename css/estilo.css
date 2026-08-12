@@ -182,10 +182,12 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 /* ---------- la lista rueda por dentro ----------
    Quien lleva meses pidiendo soporte acumula solicitudes, y sin un tope la
    tarjeta crecería sin fin, empujando la planilla fuera de la pantalla. Se
-   corta a la altura de dos y media —el medio sirve de aviso de que hay más— y
-   rueda dentro de su propia caja, sin arrastrar la página. */
+   corta a la altura de una y pico —lo que asoma de la siguiente es el aviso de
+   que hay más— y rueda dentro de su propia caja, sin arrastrar la página.
+   El tope es corto a propósito: lo que se viene a hacer aquí es pedir soporte,
+   y el historial no debe robarle la pantalla a la planilla. */
 .mis-lista{
-  max-height:290px; overflow-y:auto; overscroll-behavior:contain;
+  max-height:168px; overflow-y:auto; overscroll-behavior:contain;
   /* el hueco de la barra sale del padding, no del ancho del contenido */
   padding-right:8px; margin-right:-8px;
   position:relative;
