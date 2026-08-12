@@ -63,8 +63,9 @@ a{color:var(--navy);}
 }
 .tarjeta + .tarjeta{margin-top:16px;}
 
-.intro{margin-bottom:18px;}
+.intro{margin-bottom:16px;}
 .intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
+/* La regla del párrafo se queda aunque hoy no haya ninguno: el acuse la usa. */
 .intro p{color:var(--gray); margin-top:5px; max-width:62ch;}
 
 .seccion{
