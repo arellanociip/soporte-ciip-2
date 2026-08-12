@@ -154,10 +154,14 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
    vuelve a esta página suele venir a preguntar por lo de ayer, no a pedir algo
    nuevo. */
 #misSolicitudes{margin-bottom:16px;}
-.mis-h{display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;}
+.mis-h{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+/* reusa .avance, el anillo del formulario, para hablar un solo idioma */
+.mis-h .avance{margin-bottom:0; flex:1 1 auto; min-width:0;}
 .mis-t{font-size:15px; font-weight:700;}
 .mis-s{font-size:12px; color:var(--gray-soft); margin-top:2px;}
 .mis-h .boton{margin-left:auto; flex:0 0 auto;}
+/* al terminar, el rótulo no se pinta de verde: el que manda es el resumen */
+.mis-h .avance.completo .texto b{color:var(--ink);}
 
 .mis-fila{
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;

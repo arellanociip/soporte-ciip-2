@@ -625,6 +625,21 @@
        </div>`).join('') + '</div>';
   }
 
+  /* El anillo del panel cuenta etapas, no campos: una de tres es 33 %, dos 66,
+     las tres 100. Es el mismo aro que arriba mide la planilla, para que ver
+     "cuánto falta" signifique lo mismo antes y después de enviar. */
+  function pintarAnilloMias(s){
+    const donde = s ? ETAPAS.findIndex(e => e.clave === s.estado) : -1;
+    /* anulada no está en el camino: el aro se queda vacío y lo explica la fila */
+    const hechas = donde < 0 ? 0 : donde + 1;
+    const pct = Math.round(hechas / ETAPAS.length * 100);
+
+    $('misArco').style.strokeDashoffset = CIRCUNFERENCIA * (1 - hechas / ETAPAS.length);
+    $('misPct').textContent = pct + '%';
+    $('misAvance').classList.toggle('completo', pct === 100);
+    $('misAvance').setAttribute('aria-valuenow', pct);
+  }
+
   async function pintarMias(){
     const mias = soporteMias.leer();
     $('misSolicitudes').hidden = false;
@@ -633,6 +648,7 @@
       $('misResumen').textContent = 'Aquí seguirás tu solicitud en cuanto la envíes';
       $('misLista').innerHTML = caminoVacioHtml();
       $('botonRefrescarMias').hidden = true;
+      pintarAnilloMias(null);
       bloquearSiHayAbierta(null);
       return;
     }
@@ -650,8 +666,17 @@
       return;
     }
     const abiertas = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso');
+    /* El anillo sigue a la que importa: la abierta si la hay, y si no la
+       última que se cerró. Con la regla de una a la vez, casi siempre es una. */
+    const manda = abiertas[0] || filas[0];
+    pintarAnilloMias(manda);
+
+    const ETAPA_LBL = {recibida: 'GTIC la recibió y está en cola',
+                       en_proceso: 'Un técnico la está atendiendo',
+                       atendida: 'Resuelta',
+                       anulada: 'Anulada por GTIC'};
     $('misResumen').textContent = abiertas.length
-      ? (abiertas.length === 1 ? 'Tu solicitud sigue abierta' : abiertas.length + ' solicitudes siguen abiertas')
+      ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio
       : 'Todo lo tuyo está atendido';
     $('misLista').innerHTML = filas.map(filaMiaHtml).join('');
     bloquearSiHayAbierta(abiertas[0] || null);
