@@ -148,6 +148,17 @@
     catch(e){ console.warn('No se pudieron recordar los datos:', e); }
   }
 
+  /* Se recuerda en cuanto la persona queda identificada, no al enviar.
+     Guardarlo solo tras un envío con éxito hacía que el nombre se perdiera si
+     no llegaba a enviar —o si el servidor rechazaba por tener ya una abierta—,
+     y volver a escribirlo es justo lo que esto venía a evitar. */
+  function guardarYoSiProcede(){
+    if(!$('recordarme').checked) return;
+    const completo = ['gerencia', 'usuario', 'piso', 'oficina']
+      .every(k => $(k).value.trim());
+    if(completo) guardarYo(recogerDatos());
+  }
+
   /* ---------- los tres estados de "quién solicita" ----------
      1. buscador  → un solo campo: escribe tu nombre y elígete de la lista
      2. recordado → el recuadro verde: ya sabemos quién eres, solo confirma
@@ -228,6 +239,13 @@
     pintarAvance();
   });
 
+  /* Desmarcar la casilla surte efecto ya: borra lo guardado en vez de esperar
+     al próximo envío. Volver a marcarla guarda lo que haya en pantalla. */
+  $('recordarme').addEventListener('change', () => {
+    if($('recordarme').checked) guardarYoSiProcede();
+    else localStorage.removeItem(LLAVE_YO);
+  });
+
   $('botonNoSoyYo').addEventListener('click', olvidarYo);
   $('botonCorregir').addEventListener('click', () => {
     /* deja los datos puestos y descubre los campos para retocar uno */
@@ -247,6 +265,9 @@
   const CIRCUNFERENCIA = 2 * Math.PI * 21;
 
   function pintarAvance(){
+    /* Aquí porque se llama con cada cambio de los campos obligatorios: cubre
+       tanto elegirse de la lista como escribir los seis a mano. */
+    guardarYoSiProcede();
     const listos = OBLIGATORIOS.filter(id => $(id).value.trim()).length;
     const total = OBLIGATORIOS.length;
     const faltan = total - listos;
