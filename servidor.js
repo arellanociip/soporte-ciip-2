@@ -354,6 +354,36 @@ async function atenderApi(req, res, url){
     return responder(res, 200, abrirSesion(cuerpo.email.toLowerCase().trim()));
   }
 
+  /* ---- mis datos ----
+     Cada quien corrige los suyos desde la bandeja, sin pasar por la línea de
+     comandos. Solo los cuatro que salen impresos: el correo no se toca (es la
+     llave de la cuenta) y la clave tiene su propio camino. */
+  if(url.pathname === '/auth/v1/user' && req.method === 'PATCH'){
+    const s = sesionDe(req);
+    if(!s) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
+
+    const cuerpo = await cuerpoDe(req);
+    const datos = cuerpo.data || cuerpo;
+    const usuarios = leerUsuarios();
+    const i = usuarios.findIndex(u => u.correo === s.correo);
+    if(i < 0) return responder(res, 404, {message: 'Esa cuenta ya no existe.'});
+
+    DATOS_TECNICO.forEach(k => {
+      if(!(k in datos)) return;
+      usuarios[i][k] = String(datos[k] == null ? '' : datos[k]).trim().slice(0, 120) || null;
+    });
+    /* sin nombre, la Hoja de Servicio saldría firmada por un correo */
+    if(!usuarios[i].nombre){
+      return responder(res, 400, {message: 'El nombre y apellido hace falta: sale impreso en la hoja.'});
+    }
+    escribirJson(F_USERS, usuarios);
+    console.log('  ~ datos de ' + s.correo + ' actualizados');
+
+    const quien = {email: s.correo};
+    DATOS_TECNICO.forEach(k => { if(usuarios[i][k]) quien[k] = usuarios[i][k]; });
+    return responder(res, 200, quien);
+  }
+
   /* ---- solicitudes ---- */
   if(url.pathname === '/rest/v1/solicitudes'){
     /* Dejar una solicitud: sin cuenta, como en la calle. */

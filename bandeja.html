@@ -18,6 +18,7 @@
     </div>
     <div class="der" id="cabDerecha" hidden>
       <a href="index.html">Nueva solicitud</a>
+      <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
     </div>
   </div>
@@ -84,6 +85,50 @@
 <!-- ===================== FICHA DE UNA SOLICITUD ===================== -->
 <div class="velo" id="velo" hidden>
   <div class="hoja" id="hojaFicha"></div>
+</div>
+
+<!-- ===================== MIS DATOS =====================
+     Lo que sale impreso junto a la firma del técnico. Se llena una vez y queda
+     guardado en la cuenta, no en este navegador: sirve desde cualquier equipo. -->
+<div class="velo" id="veloPerfil" hidden>
+  <div class="hoja" style="max-width:520px">
+    <button type="button" class="cerrar" id="cerrarPerfil" aria-label="Cerrar">✕</button>
+    <h2>Mis datos</h2>
+    <div class="bajada">Se imprimen en la Hoja de Servicio, junto a tu firma.
+      Se llenan una vez y quedan guardados en tu cuenta.</div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo">
+        <label for="pNombre">Nombre y apellido *</label>
+        <input type="text" id="pNombre" placeholder="Ej. Dan Moreno">
+        <div class="error"></div>
+      </div>
+      <div class="campo c6">
+        <label for="pCargo">Cargo</label>
+        <input type="text" id="pCargo" placeholder="Ej. Técnico de soporte">
+      </div>
+      <div class="campo c6">
+        <label for="pCedula">Cédula</label>
+        <input type="text" id="pCedula" placeholder="Ej. 26.610.022">
+      </div>
+      <div class="campo c6">
+        <label for="pTelefono">Teléfono</label>
+        <input type="text" id="pTelefono" placeholder="Ej. 0412-5425243">
+      </div>
+      <div class="campo c6">
+        <label>Correo</label>
+        <input type="text" id="pCorreo" disabled>
+        <div class="ayuda">Es la llave de tu cuenta; no se cambia desde aquí.</div>
+      </div>
+    </div>
+
+    <div class="aviso malo" id="avisoPerfil" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="guardarPerfil">Guardar</button>
+      <button type="button" class="boton plano" id="cancelarPerfil">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <!-- Lo que sale por la impresora: la Hoja de Servicio del Excel, rehecha. -->

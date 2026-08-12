@@ -286,8 +286,18 @@
 
   function tecnicoHtml(){
     const t = tecnicoFicha;
-    const linea = [t.cargo, t.cedula ? 'C.I. ' + t.cedula : ''].filter(Boolean).join(' · ')
-      || (t.manual ? 'Escrito a mano' : 'Tu cuenta no tiene cargo ni cédula');
+    const propios = [t.cargo, t.cedula ? 'C.I. ' + t.cedula : ''].filter(Boolean).join(' · ');
+    /* Cada dato que falte es una raya en blanco en la hoja impresa, así que se
+       avisa por cada uno, no solo cuando faltan todos. El aviso va aquí, donde
+       se nota, y con el atajo para arreglarlo de una vez. */
+    const faltan = [!t.cargo && 'cargo', !t.cedula && 'cédula'].filter(Boolean);
+    const linea = t.manual ? esc('Escrito a mano')
+      : (propios ? esc(propios) : '')
+        + (faltan.length
+            ? (propios ? ' · ' : '')
+              + '<button type="button" class="enlace" id="botonCompletarDatos">Falta tu '
+              + faltan.join(' y tu ') + '</button>'
+            : '');
 
     /* Sin nombre —cuenta sin nombre y solicitud sin atender— no hay nada que
        confirmar: se escribe y ya. */
@@ -295,7 +305,7 @@
     return `
       <div class="recordado" id="tecnicoRecuadro" ${hayNombre ? '' : 'hidden'}>
         <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg></div>
-        <div class="q"><b>${esc(t.nombre)}</b><span>${esc(linea)}</span></div>
+        <div class="q"><b>${esc(t.nombre)}</b><span>${linea}</span></div>
         <div class="acciones"><button type="button" id="botonOtroTecnico">Es otro</button></div>
       </div>
       <div id="tecnicoManual" ${hayNombre ? 'hidden' : ''}>
@@ -521,6 +531,77 @@
     window.print();
   }
 
+  /* ================= mis datos =================
+     Lo que sale impreso junto a la firma. Vive en la cuenta, en el servidor,
+     no en este navegador: se llena una vez y sirve desde cualquier equipo. */
+  function abrirPerfil(){
+    const s = sesion() || {};
+    $('pNombre').value   = s.nombre || '';
+    $('pCargo').value    = s.cargo || '';
+    $('pCedula').value   = s.cedula || '';
+    $('pTelefono').value = s.telefono || '';
+    $('pCorreo').value   = s.correo || '';
+    $('avisoPerfil').hidden = true;
+    $('pNombre').closest('.campo').classList.remove('mal');
+    $('veloPerfil').hidden = false;
+    (s.nombre ? $('pCargo') : $('pNombre')).focus();
+  }
+
+  function cerrarPerfil(){ $('veloPerfil').hidden = true; }
+
+  async function guardarPerfil(){
+    const campo = $('pNombre').closest('.campo');
+    const hueco = campo.querySelector('.error');
+    if(!$('pNombre').value.trim()){
+      campo.classList.add('mal');
+      hueco.textContent = 'Hace falta: es lo que sale firmando la hoja.';
+      $('pNombre').focus();
+      return;
+    }
+    campo.classList.remove('mal'); hueco.textContent = '';
+
+    const boton = $('guardarPerfil');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    try{
+      const r = await pedir('/auth/v1/user', {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({data: {
+          nombre:   $('pNombre').value.trim(),
+          cargo:    $('pCargo').value.trim(),
+          cedula:   $('pCedula').value.trim(),
+          telefono: $('pTelefono').value.trim(),
+        }}),
+      });
+      const u = await r.json();
+      /* la sesión guardada tiene que reflejarlo ya, o el recuadro del técnico
+         seguiría diciendo lo viejo hasta el próximo inicio de sesión */
+      const s = sesion();
+      guardarSesion(Object.assign({}, s, {
+        nombre: u.nombre || '', cargo: u.cargo || '',
+        cedula: u.cedula || '', telefono: u.telefono || '',
+      }));
+      cerrarPerfil();
+      /* si hay una ficha abierta y el técnico era yo, se repinta con lo nuevo */
+      if(abierta && tecnicoFicha && !tecnicoFicha.manual){
+        tecnicoFicha = resolverTecnico(abierta);
+        pintarFicha();
+      }
+    }catch(err){
+      console.error('No se pudieron guardar los datos:', err);
+      $('avisoPerfil').innerHTML = '<span>⚠</span><div><b>No se pudo guardar.</b> ' +
+        'Revisa la conexión y vuelve a intentar.</div>';
+      $('avisoPerfil').hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar';
+  }
+
+  $('botonMisDatos').addEventListener('click', e => { e.preventDefault(); abrirPerfil(); });
+  $('cerrarPerfil').addEventListener('click', cerrarPerfil);
+  $('cancelarPerfil').addEventListener('click', cerrarPerfil);
+  $('guardarPerfil').addEventListener('click', guardarPerfil);
+  $('veloPerfil').addEventListener('click', e => { if(e.target === $('veloPerfil')) cerrarPerfil(); });
+
   /* ================= gestos ================= */
   $('formAcceso').addEventListener('submit', async e => {
     e.preventDefault();
@@ -568,6 +649,9 @@
     if(e.target.id === 'botonGuardar') return guardar();
     if(e.target.id === 'botonImprimir') return imprimir();
 
+    /* el atajo del recuadro cuando a la cuenta le faltan cargo o cédula */
+    if(e.target.id === 'botonCompletarDatos'){ abrirPerfil(); return; }
+
     /* "Es otro": deja de confirmarse a sí mismo y escribe el nombre de quien
        de verdad atendió. Sin cargo ni cédula, porque no son suyos. */
     if(e.target.id === 'botonOtroTecnico'){
@@ -613,7 +697,10 @@
   });
 
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && !$('velo').hidden) cerrar();
+    if(e.key !== 'Escape') return;
+    /* el de arriba primero: si están los dos abiertos, Escape cierra el de encima */
+    if(!$('veloPerfil').hidden) cerrarPerfil();
+    else if(!$('velo').hidden) cerrar();
   });
 
   /* Vaciar el ensayo: solo existe en modo prueba, donde no hay nada real que

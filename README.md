@@ -41,6 +41,13 @@ porque las claves no se guardan, solo su huella, y no hay de donde recuperarlas.
 
 No se puede borrar al ultimo usuario: dejaria la bandeja cerrada para siempre.
 
+**Cada quien completa sus propios datos desde la bandeja.** En el enlace
+*Mis datos* de la barra azul se ponen nombre, cargo, cédula y teléfono — los
+cuatro que salen impresos junto a la firma del técnico. Se llenan una vez y
+quedan en la cuenta, no en el navegador, así que sirven desde cualquier equipo.
+Si falta alguno, el recuadro del técnico lo dice y ofrece el atajo, porque cada
+dato que falte es una raya en blanco en la hoja impresa.
+
 > **No hay roles.** Todo el que entra puede lo mismo: ver todas las solicitudes,
 > atenderlas, cambiar estados e imprimir hojas. Quien manda de verdad es quien
 > tiene acceso a esta carpeta, porque las cuentas solo se crean desde aqui — no
