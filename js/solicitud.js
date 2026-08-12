@@ -351,18 +351,17 @@
 
   async function mandarAlServidor(datos){
     const B = window.SOPORTE_BACKEND;
+    /* Con el servidor de casa, B.url va vacío: la petición sale al mismo sitio
+       que sirvió la página, que es exactamente lo que se quiere. */
     const r = await fetch(B.url + '/rest/v1/solicitudes', {
       method: 'POST',
-      headers: {
-        'apikey': B.anonKey,
-        'Authorization': 'Bearer ' + B.anonKey,
+      headers: Object.assign({
         'Content-Type': 'application/json',
-        'Content-Profile': 'gtic',
-        'Accept-Profile': 'gtic',
         /* La fila vuelve en la respuesta: es la única forma de conocer el
            número, porque quien envía no tiene permiso para releerla después. */
         'Prefer': 'return=representation',
-      },
+      }, soporteCabeceras(),
+         B.servidor === 'supabase' ? {'Authorization': 'Bearer ' + B.anonKey} : {}),
       body: JSON.stringify(datos),
     });
     if(!r.ok){

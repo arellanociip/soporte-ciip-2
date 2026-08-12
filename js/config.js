@@ -1,20 +1,23 @@
-/* ---------- Conexión al servidor ----------
-   Este es el ÚNICO archivo que hay que tocar para poner el sistema en marcha.
+/* ---------- Dónde se guardan las solicitudes ----------
+   Este es el ÚNICO archivo que hay que tocar para cambiar de sitio. Hay tres:
 
-   Los dos datos salen del panel de Supabase del proyecto de soporte, en
-   Project Settings → API:
-     url     → "Project URL"
-     anonKey → la clave "anon public"
+   'local'     El servidor de esta PC (servidor.js). Todas las máquinas de la
+               oficina escriben en el mismo archivo y la bandeja las ve al
+               instante. No necesita internet ni cuentas; sí necesita que esta
+               PC esté encendida y sirviendo.
 
-   La clave anon es pública por diseño: no es un secreto, solo identifica al
-   proyecto. Quien mande la solicitud desde la calle solo puede INSERTAR, nunca
-   leer lo de los demás: eso lo decide el servidor en sql/esquema.sql, no esta
-   clave. Ver el README.
+   'supabase'  El proyecto en la nube. Los datos viven fuera de esta PC y se
+               entra desde donde sea, aunque este equipo esté apagado. Hay que
+               llenar `url` y `anonKey` (panel de Supabase → Project Settings →
+               API) y seguir los pasos del README.
 
-   Mientras estos dos campos sigan vacíos la página funciona igual, pero avisa
-   que no hay servidor y guarda la solicitud en el propio navegador para que no
-   se pierda lo que la persona escribió. */
+   ''          Sin servidor: cada navegador guarda lo suyo. Sirve para ensayar
+               a solas; lo que mande un compañero NO llega a tu bandeja. */
 window.SOPORTE_BACKEND = {
+  servidor: 'local',
+
+  /* Solo para 'supabase'. Con 'local' se ignoran: la página habla con el mismo
+     sitio que la sirvió, así que no hace falta decirle dónde está. */
   url: '',
   anonKey: '',
 };
@@ -27,8 +30,23 @@ window.SOPORTE_CONTACTO = {
   correo: '',
 };
 
-/* ¿Está configurado el servidor? Lo consultan el formulario y la bandeja. */
+/* ¿Hay dónde guardar? Lo consultan el formulario y la bandeja. */
 window.soporteHayBackend = function(){
   const B = window.SOPORTE_BACKEND;
-  return !!(B && B.url && B.anonKey);
+  if(!B) return false;
+  if(B.servidor === 'local') return true;
+  if(B.servidor === 'supabase') return !!(B.url && B.anonKey);
+  return false;
+};
+
+/* Las cabeceras que exige Supabase para dar con el esquema `gtic`. Contra el
+   servidor de casa sobran, y mandarlas vacías solo ensucia la petición. */
+window.soporteCabeceras = function(){
+  const B = window.SOPORTE_BACKEND;
+  if(B.servidor !== 'supabase') return {};
+  return {
+    'apikey': B.anonKey,
+    'Accept-Profile': 'gtic',
+    'Content-Profile': 'gtic',
+  };
 };

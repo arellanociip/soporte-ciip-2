@@ -61,7 +61,7 @@
   async function entrar(correo, clave){
     const r = await fetch(B.url + '/auth/v1/token?grant_type=password', {
       method: 'POST',
-      headers: {'apikey': B.anonKey, 'Content-Type': 'application/json'},
+      headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
       body: JSON.stringify({email: correo, password: clave}),
     });
     if(!r.ok){
@@ -78,7 +78,7 @@
     if(!s || !s.refresco) return null;
     const r = await fetch(B.url + '/auth/v1/token?grant_type=refresh_token', {
       method: 'POST',
-      headers: {'apikey': B.anonKey, 'Content-Type': 'application/json'},
+      headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
       body: JSON.stringify({refresh_token: s.refresco}),
     });
     if(!r.ok){ borrarSesion(); return null; }
@@ -97,12 +97,8 @@
 
     opts = opts || {};
     const r = await fetch(B.url + ruta, Object.assign({}, opts, {
-      headers: Object.assign({
-        'apikey': B.anonKey,
-        'Authorization': 'Bearer ' + s.token,
-        'Accept-Profile': 'gtic',
-        'Content-Profile': 'gtic',
-      }, opts.headers || {}),
+      headers: Object.assign({'Authorization': 'Bearer ' + s.token},
+                             soporteCabeceras(), opts.headers || {}),
     }));
 
     if((r.status === 401 || r.status === 403) && !reintento){
