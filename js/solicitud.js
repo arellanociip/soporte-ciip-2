@@ -705,22 +705,33 @@
       return;
     }
     const abiertas = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso');
-    /* El anillo sigue a la que importa: la abierta si la hay, y si no la
-       última que se cerró. Con la regla de una a la vez, casi siempre es una. */
-    const manda = abiertas[0] || filas[0];
+
+    /* Aquí solo vive lo que sigue en curso. Las cerradas se van, que es lo que
+       uno espera de una bandeja de pendientes… con una excepción: si no queda
+       ninguna abierta, se deja la última cerrada. En ella está la respuesta
+       del técnico —qué se hizo con el equipo—, y borrarla en el mismo momento
+       en que aparece dejaría al usuario sin enterarse nunca. Se va sola en
+       cuanto pida algo nuevo. */
+    const visibles = abiertas.length ? abiertas : filas.slice(0, 1);
+
+    /* El resguardo se poda igual: sin esto, el navegador cargaría para siempre
+       con solicitudes de hace meses que ya nadie va a mirar. */
+    soporteMias.podar(visibles.map(s => s.id));
+
+    const manda = visibles[0];
     pintarAnilloMias(manda);
 
     const ETAPA_LBL = {recibida: 'GTIC la recibió y está en cola',
                        en_proceso: 'Un técnico la está atendiendo',
                        atendida: 'Resuelta',
                        anulada: 'Anulada por GTIC'};
-    /* Con la lista recortada, la cuenta tiene que estar arriba: si no, quien
-       tiene ocho solicitudes solo ve dos y no sabe cuántas hay. */
-    const cuantas = filas.length === 1 ? '1 solicitud' : filas.length + ' solicitudes';
     $('misResumen').textContent = abiertas.length
       ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio
-      : 'Todo lo tuyo está atendido · ' + cuantas;
-    $('misLista').innerHTML = filas.map(filaMiaHtml).join('');
+      : (manda.estado === 'anulada'
+          ? 'Tu última solicitud fue anulada'
+          : 'Ya está resuelta · así quedó');
+    $('misLista').innerHTML = visibles.map(filaMiaHtml).join('');
+    $('misLista').classList.toggle('una-sola', visibles.length === 1);
     $('misLista').scrollTop = 0;
     revisarVelo();
     bloquearSiHayAbierta(abiertas[0] || null);

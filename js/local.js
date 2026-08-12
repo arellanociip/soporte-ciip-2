@@ -100,6 +100,15 @@
       try{ localStorage.setItem(LLAVE_MIAS, JSON.stringify(mias.slice(0, 20))); }
       catch(e){ console.warn('No se pudo anotar la solicitud:', e); }
     },
+    /* Deja solo los id que se le pasen. Sirve para que el resguardo no cargue
+       para siempre con solicitudes ya cerradas que nadie va a volver a mirar. */
+    podar(ids){
+      const dejar = new Set(ids);
+      const quedan = window.soporteMias.leer().filter(m => dejar.has(m.id));
+      try{ localStorage.setItem(LLAVE_MIAS, JSON.stringify(quedan)); }
+      catch(e){ console.warn('No se pudo podar el resguardo:', e); }
+    },
+
     vaciar(){ localStorage.removeItem(LLAVE_MIAS); },
   };
 })();

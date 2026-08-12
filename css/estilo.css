@@ -186,6 +186,10 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
    que hay más— y rueda dentro de su propia caja, sin arrastrar la página.
    El tope es corto a propósito: lo que se viene a hacer aquí es pedir soporte,
    y el historial no debe robarle la pantalla a la planilla. */
+/* Con una sola solicitud a la vista no hay nada que recortar, y recortarla
+   escondería justo lo que se vino a leer: la respuesta del técnico. El tope
+   solo actúa cuando hay varias, que con la regla de una a la vez es raro. */
+.mis-lista.una-sola{max-height:none;}
 .mis-lista{
   max-height:168px; overflow-y:auto; overscroll-behavior:contain;
   /* el hueco de la barra sale del padding, no del ancho del contenido */
