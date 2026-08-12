@@ -1006,16 +1006,14 @@
       const i = solicitudes.findIndex(x => x.id === id);
       if(i >= 0) solicitudes[i] = guardada;
       pintar();
-      /* Los dos botones abren la ficha, porque los dos desembocan en la Hoja
-         de Servicio: al tomarla, para llevársela y que la firmen en el puesto;
-         al cerrarla, porque ahí la hoja ya está completa —observaciones,
-         técnico, renglones— y es el momento de imprimirla para el archivo.
-         Cerrar sin abrir imprimiría una hoja sin lo que se hizo. */
-      abrir(id);
-      /* Al cerrar, lo que se viene a hacer es imprimir: la ficha es larga y el
-         botón queda al fondo, así que se lleva a la vista en vez de obligar a
-         rodar hasta él. Al tomar no, que ahí primero se lee lo que pasa. */
+      /* Solo cerrar abre la ficha. Tomar es un gesto de paso —marcar que uno se
+         hace cargo mientras recorre la cola— y abrirle una ventana encima corta
+         ese recorrido; si hace falta ver el detalle, la fila se abre sola con
+         un clic. Al cerrar es distinto: ahí la Hoja de Servicio ya está
+         completa —observaciones, técnico, renglones— y es el momento de
+         imprimirla para el archivo. */
       if(estado === 'atendida'){
+        abrir(id);
         /* Los botones son lo último de la ficha, así que llevar el velo al
            fondo los deja a la vista. Se hace sobre el contenedor que de verdad
            rueda —el velo— en vez de pedirle al botón que se acerque: dentro de
