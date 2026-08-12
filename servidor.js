@@ -409,6 +409,38 @@ async function atenderApi(req, res, url){
     return responder(res, 200, quien);
   }
 
+  /* ---- retirar la propia solicitud, sin cuenta ----
+     Uno se equivoca al escribir, o resuelve el problema solo, y con la regla de
+     una a la vez se quedaría bloqueado esperando a que GTIC cierre algo que ya
+     no hace falta. Aquí puede retirarla.
+
+     La prueba de que es suya es el mismo id imposible de adivinar que sirve
+     para consultarla. Y solo mientras nadie la haya tomado: si ya está en
+     proceso, hay un técnico trabajando y borrarla por detrás sería dejarlo
+     atendiendo un caso que en el sistema no existe. */
+  if(url.pathname === '/rest/v1/rpc/retirar_solicitud' && req.method === 'POST'){
+    const {id} = await cuerpoDe(req);
+    if(!/^[0-9a-f-]{36}$/i.test(id || '')){
+      return responder(res, 400, {message: 'Falta el identificador de la solicitud.'});
+    }
+    const solicitudes = leerSolicitudes();
+    const i = solicitudes.findIndex(s => s.id === id);
+    if(i < 0) return responder(res, 404, {message: 'No existe esa solicitud.'});
+
+    const s = solicitudes[i];
+    if(s.estado !== 'recibida'){
+      return responder(res, 409, {message: s.estado === 'en_proceso'
+        ? 'Un técnico ya la tomó. Habla con GTIC para cerrarla.'
+        : 'Esa solicitud ya no está abierta.'});
+    }
+    s.estado = 'anulada';
+    s.anulada_por = 'usuario';
+    escribirJson(F_SOLIC, solicitudes);
+    console.log('  - retirada ' + String(s.numero).padStart(3,'0') + '-' + s.anio +
+                ' por ' + s.usuario);
+    return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
+  }
+
   /* ---- solicitudes ---- */
   if(url.pathname === '/rest/v1/solicitudes'){
     /* Dejar una solicitud: sin cuenta, como en la calle. */
@@ -439,6 +471,7 @@ async function atenderApi(req, res, url){
         descripcion: s.descripcion, tipo: s.tipo, detalle: s.detalle,
         creada_en: s.creada_en, atendida_en: s.atendida_en,
         tecnico: s.tecnico, observaciones: s.observaciones,
+        anulada_por: s.anulada_por || null,
       }]);
     }
 

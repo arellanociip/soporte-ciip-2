@@ -580,7 +580,9 @@
   function pasosHtml(s){
     /* anulada no recorrió el camino, así que dibujarlo mentiría */
     if(s.estado === 'anulada'){
-      return `<div class="mis-anulada">Esta solicitud fue anulada por GTIC.
+      return `<div class="mis-anulada">${s.anulada_por === 'usuario'
+        ? 'Retiraste esta solicitud.'
+        : 'Esta solicitud fue anulada por GTIC.'}
         Si sigues necesitando ayuda, puedes pedir una nueva.</div>`;
     }
     const donde = ETAPAS.findIndex(e => e.clave === s.estado);
@@ -612,6 +614,9 @@
       <span class="etiqueta ${escapar(s.estado)}">${escapar(ESTADO_LBL[s.estado] || s.estado)}</span>
       ${pasosHtml(s)}
       ${respuesta}
+      ${s.estado === 'recibida' ? `<div class="mis-acciones">
+        <button type="button" class="enlace retirar" data-retirar="${escapar(s.id)}"
+          >Me equivoqué, retirar esta solicitud</button></div>` : ''}
     </div>`;
   }
 
@@ -652,6 +657,50 @@
   }
   $('misLista').addEventListener('scroll', revisarVelo);
   window.addEventListener('resize', revisarVelo);
+
+  /* ---------- retirar una solicitud ----------
+     Solo mientras nadie la haya tomado. El servidor lo vuelve a comprobar: si
+     un técnico la agarró en el segundo que pasó entre pintar el botón y
+     pulsarlo, ahí se entera y no la retira. */
+  $('misLista').addEventListener('click', async e => {
+    const b = e.target.closest('[data-retirar]');
+    if(!b) return;
+    if(!confirm('¿Retirar esta solicitud? GTIC dejará de verla y podrás pedir otra.')) return;
+
+    b.disabled = true;
+    b.textContent = 'Retirando…';
+    try{
+      if(soporteHayBackend()){
+        const B = window.SOPORTE_BACKEND;
+        const r = await fetch(B.url + '/rest/v1/rpc/retirar_solicitud', {
+          method: 'POST',
+          headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
+          body: JSON.stringify({id: b.dataset.retirar}),
+        });
+        if(!r.ok){
+          const cuerpo = await r.json().catch(() => ({}));
+          throw new Error(cuerpo.message || ('HTTP ' + r.status));
+        }
+      }else{
+        soporteLocal.actualizar(b.dataset.retirar, {estado: 'anulada', anulada_por: 'usuario'});
+      }
+      await pintarMias();
+      const aviso = $('avisoUnaALaVez');
+      aviso.className = 'aviso bueno';
+      aviso.innerHTML = '<span>✓</span><div><b>Solicitud retirada.</b> ' +
+        'Ya puedes pedir lo que necesites.</div>';
+      aviso.hidden = false;
+    }catch(err){
+      console.error('No se pudo retirar:', err);
+      b.disabled = false;
+      b.textContent = 'Me equivoqué, retirar esta solicitud';
+      const aviso = $('avisoUnaALaVez');
+      aviso.className = 'aviso malo';
+      aviso.innerHTML = '<span>⚠</span><div><b>No se pudo retirar.</b> ' +
+        escapar(err.message) + '</div>';
+      aviso.hidden = false;
+    }
+  });
 
   /* Pulsar el anillo despliega el historial completo, y volver a pulsarlo
      regresa a lo que sigue en curso. */

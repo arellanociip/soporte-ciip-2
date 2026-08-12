@@ -195,6 +195,12 @@ pedido*: cada solicitud con su número, las tres etapas del trámite dibujadas
 —Recibida → En proceso → Atendida— y, cuando GTIC la cierra, la respuesta del
 técnico. No hace falta clave ni recordar el número.
 
+**Y puede retirar la suya.** Mientras nadie la haya tomado, en su fila hay un
+"Me equivoqué, retirar esta solicitud": la anula y deja libre para pedir otra.
+En cuanto un técnico la pasa a *En proceso* deja de poder — ya hay alguien
+trabajando, y borrarla por detrás lo dejaría atendiendo un caso que en el
+sistema no existe. El servidor lo comprueba otra vez al recibir la orden.
+
 **Una solicitud a la vez.** Con una abierta, la planilla se guarda y en su lugar
 queda el porqué y el estado de la que ya tiene. La regla la impone el servidor,
 no la pantalla: desde otro navegador el rechazo llega igual, con un 409 que el
