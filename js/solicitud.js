@@ -401,43 +401,23 @@
     return Array.isArray(filas) ? filas[0] : filas;
   }
 
-  /* Una pantalla se desvanece y la otra entra, en vez de saltar de golpe: el
-     cambio deja de sentirse como si la página se hubiera recargado sola. */
-  function cambiarPantalla(sale, entra){
-    const irArriba = () => window.scrollTo(
-      {top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
-
-    /* el medidor de la planilla solo tiene sentido con la planilla delante */
-    const alAcuse = entra === $('pantallaAcuse');
-    if(menosMovimiento){
-      sale.hidden = true; entra.hidden = false;
-      $('tarjetaAvance').hidden = alAcuse;
-      $('intro').hidden = alAcuse;
-      irArriba();
-      return;
-    }
-    sale.classList.add('pantalla-sale');
-    setTimeout(() => {
-      sale.hidden = true;
-      sale.classList.remove('pantalla-sale');
-      entra.hidden = false;
-      $('tarjetaAvance').hidden = alAcuse;
-      $('intro').hidden = alAcuse;
-      entra.classList.add('pantalla-entra');
-      irArriba();
-      setTimeout(() => entra.classList.remove('pantalla-entra'), 420);
-    }, 200);
-  }
-
-  function mostrarAcuse(fila){
+  /* Enviada la solicitud no se cambia de pantalla: se refleja en el panel de
+     seguimiento, que es donde vive el estado de todo lo demás. Abrir una
+     página aparte para decir "quedó registrada" obligaba a volver, y dejaba el
+     número en un sitio distinto del que luego habría que consultar. */
+  async function reflejarEnvio(fila){
+    soporteMias.anotar(fila);
+    await pintarMias();
     const numero = 'GTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
-    $('numeroAcuse').textContent = numero;
-    if(fila.prueba){
-      $('textoAcuse').innerHTML = '<b>Esto fue un ensayo.</b> Como todavía no hay servidor, la '
-        + 'solicitud quedó guardada solo en este navegador — nadie más la ve. '
-        + 'Ábrela en <a href="bandeja.html">la bandeja de soporte</a> para ver cómo le llega a GTIC.';
-    }
-    cambiarPantalla($('pantallaFormulario'), $('pantallaAcuse'));
+    const aviso = $('avisoUnaALaVez');
+    aviso.className = 'aviso bueno';
+    aviso.innerHTML = `<span>✓</span><div>
+      <b>Tu solicitud quedó registrada con el N° ${escapar(numero)}.</b>
+      Arriba puedes seguir en qué va.
+      ${fila.prueba ? ' <b>Ojo:</b> fue un ensayo, no hay servidor y nadie más la ve.' : ''}
+      <br>Podrás pedir otra en cuanto GTIC cierre esta.</div>`;
+    aviso.hidden = false;
+    window.scrollTo({top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
   }
 
   form.addEventListener('submit', async e => {
@@ -479,11 +459,10 @@
          guardado antes, que es lo que uno espera al decir "no me recuerdes". */
       if($('recordarme').checked) guardarYo(datos);
       else localStorage.removeItem(LLAVE_YO);
-      /* El resguardo para consultar su estado después. Va siempre, marque o no
+      /* El resguardo se anota dentro de reflejarEnvio. Va siempre, marque o no
          la casilla: eso decide si se recuerdan sus DATOS, no si puede seguir
          lo que acaba de pedir. */
-      soporteMias.anotar(fila);
-      mostrarAcuse(fila);
+      await reflejarEnvio(fila);
     }catch(err){
       enviar.disabled = false;
       enviar.textContent = 'Enviar solicitud';
@@ -550,10 +529,6 @@
   }
 
   $('botonLimpiar').addEventListener('click', limpiar);
-  $('botonOtra').addEventListener('click', () => {
-    limpiar();
-    cambiarPantalla($('pantallaAcuse'), $('pantallaFormulario'));
-  });
 
   /* ---------- el seguimiento de lo que uno pidió ----------
      Se consulta cada solicitud por su id, que es lo único que prueba que es
@@ -686,7 +661,15 @@
     pintarMias();
   });
 
+  /* Dos consultas pueden estar en vuelo a la vez —la del arranque y la que
+     dispara un envío— y no tienen por qué volver en orden. Sin esto, la vieja
+     termina la última y repinta encima de la nueva: el aviso verde de "quedó
+     registrada" desaparecía bajo el de "ya tienes una abierta". Cada corrida
+     toma un número y solo pinta si sigue siendo la última. */
+  let corridaMias = 0;
+
   async function pintarMias(){
+    const corrida = ++corridaMias;
     const mias = soporteMias.leer();
     $('misSolicitudes').hidden = false;
 
@@ -709,6 +692,9 @@
     const filas = (await Promise.all(mias.map(m =>
       consultarUna(m).catch(e => { console.warn('No se pudo consultar', m.id, e); return null; })
     ))).filter(Boolean);
+
+    /* llegó tarde: ya hay una consulta más nueva pintando */
+    if(corrida !== corridaMias) return;
 
     if(!filas.length){
       $('misResumen').textContent = 'No se pudo consultar el estado. Revisa la conexión.';
@@ -775,19 +761,19 @@
   function bloquearSiHayAbierta(abierta){
     const aviso = $('avisoUnaALaVez');
     if(!abierta){
-      const enAcuse = !$('pantallaAcuse').hidden;
-      $('pantallaFormulario').hidden = enAcuse;
-      /* el título y el medidor acompañan a la planilla: sin ella, uno invita a
-         algo que no se puede hacer y el otro no mide nada */
-      $('tarjetaAvance').hidden = enAcuse;
-      $('intro').hidden = enAcuse;
+      $('pantallaFormulario').hidden = false;
+      /* el título y el medidor acompañan a la planilla */
+      $('tarjetaAvance').hidden = false;
+      $('intro').hidden = false;
       aviso.hidden = true;
       return;
     }
     $('pantallaFormulario').hidden = true;
     $('tarjetaAvance').hidden = true;
     $('intro').hidden = true;
-    $('pantallaAcuse').hidden = true;
+    /* El recién llegado de reflejarEnvio ya trae su propio mensaje verde; este
+       es el de siempre, para cuando se vuelve a la página más tarde. */
+    aviso.className = 'aviso alerta';
     aviso.innerHTML = `<span>🕓</span><div>
       <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—
       así que no puedes pedir otra todavía. Arriba ves por dónde va.

@@ -65,8 +65,6 @@ a{color:var(--navy);}
 
 .intro{margin-bottom:16px;}
 .intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
-/* La regla del párrafo se queda aunque hoy no haya ninguno: el acuse la usa. */
-.intro p{color:var(--gray); margin-top:5px; max-width:62ch;}
 
 .seccion{
   font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
@@ -389,24 +387,6 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
 
-/* ===================== ACUSE DE RECIBO ===================== */
-.acuse{text-align:center; padding:40px 24px;}
-.acuse .marca{
-  width:58px; height:58px; margin:0 auto 18px; border-radius:50%;
-  background:var(--good-bg); color:var(--good);
-  display:flex; align-items:center; justify-content:center;
-}
-.acuse .marca svg{width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;}
-.acuse h2{font-size:19px; font-weight:700;}
-.acuse p{color:var(--gray); margin-top:7px; max-width:52ch; margin-left:auto; margin-right:auto;}
-.acuse .numero{
-  display:inline-block; margin:20px 0 4px; padding:12px 26px;
-  background:var(--navy-soft); border:1px solid #CFDDF3; border-radius:var(--r);
-  font-size:23px; font-weight:800; color:var(--navy); letter-spacing:.02em;
-}
-.acuse .numero small{display:block; font-size:10.5px; font-weight:700; letter-spacing:.09em;
-  text-transform:uppercase; color:var(--gray-soft); margin-bottom:3px;}
-
 /* ===================== BANDEJA ===================== */
 .barra{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;
@@ -531,10 +511,6 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .intro{animation:surgir .45s .11s ease both;}
 #formulario{animation:surgir .5s .17s ease both;}
 
-/* ---------- cambio de pantalla (planilla ⇄ acuse) ---------- */
-.pantalla-sale{animation:desvanecer .2s ease both;}
-.pantalla-entra{animation:surgir .4s ease both;}
-
 /* ---------- el avance de la planilla ---------- */
 /* Cuánto falta, sin regañar: solo cuenta los campos obligatorios. El anillo da
    la proporción de un vistazo y la frase de al lado la dice con palabras, para
@@ -584,16 +560,6 @@ select.despierta{animation:destello .7s ease;}
   animation:girar .6s linear infinite;
 }
 
-/* ---------- el acuse ---------- */
-/* Llega por partes, en el orden en que importa: el visto, el título, el número
-   —que es lo que la persona vino a buscar— y después la explicación. */
-.acuse .marca{animation:surgir .4s ease both;}
-.acuse .marca svg polyline{stroke-dasharray:24; stroke-dashoffset:24; animation:trazar .45s .25s ease forwards;}
-.acuse h2{animation:surgir .4s .1s ease both;}
-.acuse .numero{animation:surgir .45s .22s ease both;}
-.acuse p{animation:surgir .4s .34s ease both;}
-.acuse .botones{animation:surgir .4s .44s ease both;}
-
 /* ---------- la bandeja ---------- */
 .fila{transition:background .14s ease;}
 .velo{animation:surgirCorto .18s ease both;}
@@ -611,7 +577,6 @@ select.despierta{animation:destello .7s ease;}
     transition-duration:.01ms !important;
     scroll-behavior:auto !important;
   }
-  .acuse .marca svg polyline{stroke-dashoffset:0;}
 }
 
 /* ===================== IMPRESIÓN: la Hoja de Servicio ===================== */
