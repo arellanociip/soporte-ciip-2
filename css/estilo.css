@@ -300,7 +300,7 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 
 /* La salida para quien se equivocó al escribir: discreta, porque retirar es la
    excepción, no lo que se viene a hacer. */
-.mis-acciones{flex:1 1 100%; margin-top:4px;}
+.mis-acciones{flex:1 1 100%; margin-top:6px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
 .mis-acciones .retirar{color:var(--gray-soft); font-weight:600; text-decoration:underline;}
 .mis-acciones .retirar:hover{color:var(--rust);}
 .mis-acciones .retirar:disabled{color:var(--gray-soft); cursor:progress; text-decoration:none;}
@@ -662,10 +662,34 @@ select.despierta{animation:destello .7s ease;}
    reparten a los dos lados —lo tuyo a la derecha, lo del otro a la izquierda—
    porque es la convención que todo el mundo ya sabe leer sin que nadie se la
    explique. */
+/* La ventana del chat: más angosta que la ficha, porque una conversación se
+   lee mejor en columna estrecha, y con el alto fijo para que el hilo ruede por
+   dentro en vez de estirar la ventana. */
+.hoja-chat{max-width:560px; display:flex; flex-direction:column; max-height:78vh;}
+.hoja-chat .chat{border-top:none; margin-top:0; padding-top:0; flex:1; min-height:0;
+  display:flex; flex-direction:column;}
+.hoja-chat .chat-hilo{max-height:none; flex:1;}
+
+/* El botón que la abre: un globo de diálogo con la cuenta de mensajes. */
+.chat-boton{
+  display:inline-flex; align-items:center; gap:6px; flex:0 0 auto;
+  font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer;
+  border:1px solid var(--line); background:#fff; border-radius:20px;
+  padding:5px 11px; color:var(--gray);
+  transition:border-color .14s ease, color .14s ease, background .14s ease;
+}
+.chat-boton:hover{border-color:var(--navy); color:var(--navy); background:#FAFCFF;}
+.chat-boton:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.22);}
+.chat-boton svg{width:14px; height:14px; fill:none; stroke:currentColor;
+  stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
+/* con mensajes dentro, el botón deja de ser gris: hay algo que leer */
+.chat-boton.hay{border-color:var(--navy); color:var(--navy);}
+.chat-boton .n{
+  background:var(--navy); color:#fff; border-radius:20px; min-width:17px;
+  padding:0 5px; font-size:10.5px; line-height:17px; text-align:center;
+}
+
 .chat{border-top:1px solid var(--line-soft); margin-top:14px; padding-top:14px;}
-/* Dentro de la fila de seguimiento, que es un flex, la conversación toma el
-   ancho entero como los pasos: si no, se encajona en la columna del texto. */
-.mis-fila .chat{flex:1 1 100%; min-width:0;}
 .chat-h{
   display:flex; align-items:center; gap:9px; margin-bottom:12px;
 }

@@ -165,8 +165,13 @@
     try{
       linea = new EventSource(B.url + '/rest/v1/eventos');
       linea.onmessage = () => {
+        /* Con la ficha abierta se espera: cambiarle el suelo a quien escribe
+           observaciones le borraría lo que lleva. Con solo el chat abierto no,
+           que ahí lo que llega es justamente lo que se está esperando. */
         if(!$('velo').hidden || !$('veloPerfil').hidden){ pendienteDeRecargar = true; return; }
-        cargar().catch(e => console.warn('No se pudo actualizar sola:', e));
+        cargar()
+          .then(() => { if(!$('veloChat').hidden) pintarChat(); })
+          .catch(e => console.warn('No se pudo actualizar sola:', e));
       };
       linea.onerror = () => {};
     }catch(e){ linea = null; }
@@ -263,6 +268,7 @@
       <div class="der">
         ${edadHtml(s)}
         <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
+        ${chatBotonHtml(s)}
         ${accionesHtml(s)}
       </div>
     </div>`;
@@ -529,6 +535,18 @@
         d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'});
   };
 
+  const GLOBO = '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 9 9 0 01-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 013.6 11a8.4 8.4 0 018.4-8.4h.5a8.4 8.4 0 018.5 8.4z"/></svg>';
+
+  /* El botón que abre la conversación. Va en la fila y en la ficha; los dos
+     abren la misma ventana, para que no haya dos sitios donde hablar. */
+  function chatBotonHtml(s){
+    if(s.estado === 'anulada') return '';
+    const n = Array.isArray(s.mensajes) ? s.mensajes.length : 0;
+    return `<button type="button" class="chat-boton ${n ? 'hay' : ''}" data-chat="${esc(s.id)}"
+      title="${n ? 'Ver la conversación con ' + esc(s.usuario) : 'Escribirle a ' + esc(s.usuario)}"
+      >${GLOBO}${n ? `<span class="n">${n}</span>` : 'Escribir'}</button>`;
+  }
+
   function chatHtml(s){
     if(s.estado === 'anulada') return '';
     const msgs = Array.isArray(s.mensajes) ? s.mensajes : [];
@@ -536,9 +554,10 @@
       <div class="chat-h">
         <div class="ic">${esc(iniciales(s.usuario))}</div>
         <div>
-          <b>Conversación con ${esc(s.usuario)}</b>
-          <span>${msgs.length ? msgs.length + (msgs.length === 1 ? ' mensaje' : ' mensajes')
-                              : 'Todavía no se han escrito'}</span>
+          <b>${esc(s.usuario)}</b>
+          <span>N° ${esc(String(s.numero).padStart(3,'0'))}-${esc(String(s.anio))} ·
+            ${msgs.length ? msgs.length + (msgs.length === 1 ? ' mensaje' : ' mensajes')
+                          : 'Todavía no se han escrito'}</span>
         </div>
       </div>
       <div class="chat-hilo" id="chatHilo">
@@ -559,27 +578,75 @@
     </div>`;
   }
 
+  /* La solicitud cuya conversación está abierta. Es aparte de `abierta` (la de
+     la ficha) porque el chat se puede abrir desde la fila, sin ficha ninguna. */
+  let chatId = null;
+
+  function pintarChat(){
+    const s = solicitudes.find(x => x.id === chatId);
+    if(!s) return;
+    /* Puede llegar un mensaje mientras se escribe otro: se guarda lo tecleado,
+       el foco y por dónde iba el hilo, y se devuelve tras repintar. */
+    const vieja = $('chatTexto');
+    const g = vieja ? {
+      texto: vieja.value,
+      escribiendo: document.activeElement === vieja,
+      alFondo: (() => { const h = $('chatHilo');
+        return !h || h.scrollHeight - h.clientHeight - h.scrollTop < 24; })(),
+      donde: $('chatHilo') ? $('chatHilo').scrollTop : 0,
+    } : null;
+
+    $('chatCuerpo').innerHTML = chatHtml(s);
+
+    const caja = $('chatTexto');
+    if(caja && g){
+      caja.value = g.texto;
+      if(g.escribiendo){ caja.focus(); caja.setSelectionRange(caja.value.length, caja.value.length); }
+    }
+    const hilo = $('chatHilo');
+    /* si estaba mirando el final, se queda en el final —donde acaba de llegar
+       lo nuevo—; si había subido a leer, se respeta dónde estaba */
+    if(hilo) hilo.scrollTop = (!g || g.alFondo) ? hilo.scrollHeight : g.donde;
+  }
+
+  function abrirChat(id){
+    chatId = id;
+    pintarChat();
+    $('veloChat').hidden = false;
+    document.body.style.overflow = 'hidden';
+    const caja = $('chatTexto');
+    if(caja) caja.focus();
+  }
+
+  function cerrarChat(){
+    $('veloChat').hidden = true;
+    chatId = null;
+    /* si la ficha sigue detrás, el fondo no vuelve a rodar todavía */
+    if($('velo').hidden && $('veloPerfil').hidden) document.body.style.overflow = '';
+  }
+
   async function enviarMensaje(){
     const caja = $('chatTexto'), boton = $('chatEnviar');
     const texto = caja.value.trim();
-    if(!texto){ caja.focus(); return; }
+    if(!texto || !chatId){ caja.focus(); return; }
     boton.disabled = true; caja.disabled = true;
     try{
       const r = await pedir('/rest/v1/rpc/enviar_mensaje', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id: abierta.id, texto}),
+        body: JSON.stringify({id: chatId, texto}),
       });
       const nuevo = (await r.json())[0];
-      /* se añade a la copia de trabajo y se repinta: no hace falta volver a
+      /* se añade a lo que ya está cargado y se repinta: no hace falta volver a
          pedir la solicitud entera para ver el mensaje que uno acaba de poner */
-      if(!Array.isArray(abierta.mensajes)) abierta.mensajes = [];
-      abierta.mensajes.push(nuevo);
-      const i = solicitudes.findIndex(x => x.id === abierta.id);
-      if(i >= 0) solicitudes[i].mensajes = abierta.mensajes;
-      pintarFicha();
-      const hilo = $('chatHilo');
-      if(hilo) hilo.scrollTop = hilo.scrollHeight;
+      const i = solicitudes.findIndex(x => x.id === chatId);
+      if(i >= 0){
+        if(!Array.isArray(solicitudes[i].mensajes)) solicitudes[i].mensajes = [];
+        solicitudes[i].mensajes.push(nuevo);
+        if(abierta && abierta.id === chatId) abierta.mensajes = solicitudes[i].mensajes;
+      }
+      pintarChat();
+      pintar();                       /* la cuenta del botón de la fila cambia */
       $('chatTexto').focus();
     }catch(err){
       console.error('No se pudo enviar el mensaje:', err);
@@ -600,7 +667,8 @@
       <button type="button" class="cerrar" id="botonCerrarFicha" aria-label="Cerrar">✕</button>
       <h2>${esc(numeroDe(s))}</h2>
       <div class="bajada">Recibida el ${esc(fechaCorta(s.creada_en))} ·
-        <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span></div>
+        <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
+        ${chatBotonHtml(s)}</div>
 
       <div class="seccion" style="margin-top:20px">Lo que pidió el usuario</div>
       <div class="datos">
@@ -620,8 +688,6 @@
         <div class="campo"><label for="fObs">Observaciones <span class="opc">· sale impreso en la hoja</span></label>
           <textarea id="fObs" rows="4" placeholder="Qué se encontró y qué se hizo.">${esc(s.observaciones||'')}</textarea></div>
       </div>
-
-      ${chatHtml(s)}
 
       <div class="seccion">Renglones de equipo</div>
       <div id="renglones">${s.renglones.map(renglonHtml).join('')}</div>
@@ -966,6 +1032,10 @@
   }
 
   $('lista').addEventListener('click', e => {
+    /* el globo abre la conversación, no la ficha */
+    const globo = e.target.closest('[data-chat]');
+    if(globo){ e.stopPropagation(); abrirChat(globo.dataset.chat); return; }
+
     /* los botones de la fila no cuentan como "abrir la solicitud" */
     const accion = e.target.closest('[data-accion]');
     if(accion){
@@ -988,7 +1058,9 @@
     /* el atajo del recuadro cuando a la cuenta le faltan cargo o cédula */
     if(e.target.id === 'botonCompletarDatos'){ abrirPerfil(); return; }
 
-    if(e.target.id === 'chatEnviar'){ enviarMensaje(); return; }
+    /* el globo de la ficha abre la conversación encima de ella */
+    const globo = e.target.closest('[data-chat]');
+    if(globo){ abrirChat(globo.dataset.chat); return; }
 
     /* las tres etapas: mueven el campo oculto que lee guardar() */
     const etapa = e.target.closest('#segmEstado [data-estado]');
@@ -1056,8 +1128,14 @@
     }
   });
 
+  /* ---- la ventana del chat ---- */
+  $('cerrarChat').addEventListener('click', cerrarChat);
+  $('veloChat').addEventListener('click', e => {
+    if(e.target === $('veloChat')) return cerrarChat();
+    if(e.target.id === 'chatEnviar') enviarMensaje();
+  });
   /* Enter envía, Mayús+Enter hace línea nueva: lo que se espera de un chat. */
-  $('velo').addEventListener('keydown', e => {
+  $('veloChat').addEventListener('keydown', e => {
     if(e.target.id !== 'chatTexto') return;
     if(e.key === 'Enter' && !e.shiftKey){
       e.preventDefault();
@@ -1067,8 +1145,9 @@
 
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape') return;
-    /* el de arriba primero: si están los dos abiertos, Escape cierra el de encima */
-    if(!$('veloPerfil').hidden) cerrarPerfil();
+    /* el de encima primero: el chat puede estar sobre la ficha */
+    if(!$('veloChat').hidden) cerrarChat();
+    else if(!$('veloPerfil').hidden) cerrarPerfil();
     else if(!$('velo').hidden) cerrar();
   });
 

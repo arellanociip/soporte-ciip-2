@@ -628,6 +628,18 @@
         d.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'});
   };
 
+  const GLOBO = '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 9 9 0 01-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 013.6 11a8.4 8.4 0 018.4-8.4h.5a8.4 8.4 0 018.5 8.4z"/></svg>';
+
+  /* El botón que abre la conversación, en la fila. Sin técnico asignado no
+     aparece: hasta que alguien la toma no hay con quién hablar. */
+  function chatBotonHtml(s){
+    if(!s.tecnico || s.estado === 'anulada') return '';
+    const n = Array.isArray(s.mensajes) ? s.mensajes.length : 0;
+    return `<button type="button" class="chat-boton ${n ? 'hay' : ''}" data-chat="${escapar(s.id)}"
+      title="${n ? 'Ver la conversación con ' + escapar(s.tecnico) : 'Escribirle a ' + escapar(s.tecnico)}"
+      >${GLOBO}${n ? `<span class="n">${n}</span>` : 'Escribirle a ' + escapar(s.tecnico.split(' ')[0])}</button>`;
+  }
+
   function chatHtml(s){
     /* sin técnico asignado no hay interlocutor todavía */
     if(!s.tecnico || s.estado === 'anulada') return '';
@@ -674,10 +686,11 @@
       <span class="etiqueta ${escapar(s.estado)}">${escapar(ESTADO_LBL[s.estado] || s.estado)}</span>
       ${pasosHtml(s)}
       ${respuesta}
-      ${s.estado === 'recibida' ? `<div class="mis-acciones">
-        <button type="button" class="enlace retirar" data-retirar="${escapar(s.id)}"
-          >Me equivoqué, retirar esta solicitud</button></div>` : ''}
-      ${verHistorial ? '' : chatHtml(s)}
+      ${(s.estado === 'recibida' || (!verHistorial && s.tecnico)) ? `<div class="mis-acciones">
+        ${verHistorial ? '' : chatBotonHtml(s)}
+        ${s.estado === 'recibida' ? `<button type="button" class="enlace retirar" data-retirar="${escapar(s.id)}"
+          >Me equivoqué, retirar esta solicitud</button>` : ''}
+      </div>` : ''}
     </div>`;
   }
 
@@ -738,11 +751,55 @@
   $('misLista').addEventListener('scroll', revisarVelo);
   window.addEventListener('resize', revisarVelo);
 
-  /* ---------- escribirle al técnico ---------- */
-  async function enviarMensaje(id, boton){
+  /* ---------- la conversación, en su ventana ----------
+     Fuera del panel de seguimiento: hablar es otra cosa que mirar en qué va, y
+     el hilo dentro empujaba la planilla hacia abajo. */
+  let chatId = null;
+  /* lo último traído del servidor, para repintar el chat sin volver a pedirlo */
+  let ultimasFilas = [];
+
+  function pintarChat(){
+    const s = ultimasFilas.find(x => x.id === chatId);
+    if(!s) return;
+    const vieja = $('chatTexto');
+    const g = vieja ? {
+      texto: vieja.value,
+      escribiendo: document.activeElement === vieja,
+      alFondo: (() => { const h = $('chatHilo');
+        return !h || h.scrollHeight - h.clientHeight - h.scrollTop < 24; })(),
+      donde: $('chatHilo') ? $('chatHilo').scrollTop : 0,
+    } : null;
+
+    $('chatCuerpo').innerHTML = chatHtml(s);
+
     const caja = $('chatTexto');
+    if(caja && g){
+      caja.value = g.texto;
+      if(g.escribiendo){ caja.focus(); caja.setSelectionRange(caja.value.length, caja.value.length); }
+    }
+    const hilo = $('chatHilo');
+    if(hilo) hilo.scrollTop = (!g || g.alFondo) ? hilo.scrollHeight : g.donde;
+  }
+
+  function abrirChat(id){
+    chatId = id;
+    pintarChat();
+    $('veloChat').hidden = false;
+    document.body.style.overflow = 'hidden';
+    const caja = $('chatTexto');
+    if(caja) caja.focus();
+  }
+
+  function cerrarChat(){
+    $('veloChat').hidden = true;
+    chatId = null;
+    document.body.style.overflow = '';
+  }
+
+  async function enviarMensaje(){
+    const caja = $('chatTexto'), boton = $('chatEnviar');
     const texto = caja.value.trim();
-    if(!texto) { caja.focus(); return; }
+    if(!texto || !chatId){ caja.focus(); return; }
 
     boton.disabled = true; caja.disabled = true;
     try{
@@ -751,7 +808,7 @@
         const r = await fetch(B.url + '/rest/v1/rpc/enviar_mensaje', {
           method: 'POST',
           headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
-          body: JSON.stringify({id, texto}),
+          body: JSON.stringify({id: chatId, texto}),
         });
         if(!r.ok){
           const c = await r.json().catch(() => ({}));
@@ -759,12 +816,10 @@
         }
       }
       caja.value = '';
-      await pintarMias();
-      /* al fondo del hilo, que es donde está lo recién dicho */
-      const hilo = $('chatHilo');
-      if(hilo) hilo.scrollTop = hilo.scrollHeight;
+      await pintarMias();      /* trae el hilo al día y repinta la ventana */
       const nueva = $('chatTexto');
-      if(nueva) nueva.focus();
+      if(nueva){ nueva.disabled = false; nueva.focus(); }
+      if($('chatEnviar')) $('chatEnviar').disabled = false;
     }catch(err){
       console.error('No se pudo enviar el mensaje:', err);
       boton.disabled = false; caja.disabled = false;
@@ -773,19 +828,26 @@
   }
 
   $('misLista').addEventListener('click', e => {
-    const b = e.target.closest('#chatEnviar');
-    if(b) enviarMensaje(b.dataset.id, b);
+    const globo = e.target.closest('[data-chat]');
+    if(globo) abrirChat(globo.dataset.chat);
   });
 
+  $('cerrarChat').addEventListener('click', cerrarChat);
+  $('veloChat').addEventListener('click', e => {
+    if(e.target === $('veloChat')) return cerrarChat();
+    if(e.target.id === 'chatEnviar') enviarMensaje();
+  });
   /* Enter envía; Mayús+Enter hace una línea nueva. Es lo que la gente espera de
      un chat, y evita que un mensaje corto obligue a soltar el teclado. */
-  $('misLista').addEventListener('keydown', e => {
+  $('veloChat').addEventListener('keydown', e => {
     if(e.target.id !== 'chatTexto') return;
     if(e.key === 'Enter' && !e.shiftKey){
       e.preventDefault();
-      const b = $('chatEnviar');
-      if(b && !b.disabled) enviarMensaje(b.dataset.id, b);
+      if(!$('chatEnviar').disabled) enviarMensaje();
     }
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && !$('veloChat').hidden) cerrarChat();
   });
 
   /* ---------- retirar una solicitud ----------
@@ -928,6 +990,10 @@
 
     /* llegó tarde: ya hay una consulta más nueva pintando */
     if(corrida !== corridaMias) return;
+
+    /* lo recién traído, para que la ventana del chat se repinte con lo mismo */
+    ultimasFilas = filas;
+    if(chatId && !$('veloChat').hidden) pintarChat();
 
     if(!filas.length){
       $('misResumen').textContent = 'No se pudo consultar el estado. Revisa la conexión.';
