@@ -87,6 +87,10 @@
     /* volver a pulsar el mismo lo suelta: nadie queda atrapado en una opción */
     const a = (atajoElegido === id) ? null : CAT_ATAJOS.find(x => x.id === id);
     atajoElegido = a ? a.id : null;
+    /* el campo oculto es lo que ve la revisión y lo que cuenta el anillo */
+    $('atajo').value = atajoElegido || '';
+    if(revisandoAlSalir) revisarCampo('atajo');
+    pintarAvance();
 
     $('atajos').querySelectorAll('.atajo').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.id === atajoElegido)));
@@ -258,7 +262,7 @@
   /* ---------- cuánto falta ----------
      Solo lo obligatorio: si contara lo opcional, la barra nunca llegaría al
      final y diría que falta algo cuando ya no falta nada. */
-  const OBLIGATORIOS = ['gerencia', 'usuario', 'piso', 'oficina', 'descripcion'];
+  const OBLIGATORIOS = ['gerencia', 'usuario', 'piso', 'oficina', 'atajo', 'descripcion'];
 
   /* La vuelta completa del anillo: 2·π·r con el r=21 del <circle> en el HTML.
      Debe coincidir con el stroke-dasharray de .avance .arco en el CSS. */
@@ -308,6 +312,9 @@
     ['usuario',     v => v.trim().length >= 3 ? '' : 'Escribe tu nombre y apellido.'],
     ['piso',        v => v ? '' : 'Indica el piso.'],
     ['oficina',     v => v.trim() ? '' : 'Indica la oficina.'],
+    /* Sin esto, tres de cada diez solicitudes llegaban sin clasificar y el
+       técnico tenía que adivinar qué llevar. "Otra cosa" cuenta como elegir. */
+    ['atajo',       v => v ? '' : 'Elige con qué necesitas ayuda. Si no encaja en ninguna, marca «Otra cosa».'],
     ['descripcion', v => v.trim().length >= 10 ? '' : 'Cuenta un poco más: con diez caracteres el técnico no sabe qué llevar.'],
     /* La cédula es opcional, pero si la escriben debe parecer una cédula. */
     ['cedula',      v => (!v.trim() || /^[VEve]?[-\s.]?[\d.\s]{6,12}$/.test(v.trim())) ? '' : 'Revisa la cédula: solo números, por ejemplo 12.345.678.'],
@@ -440,7 +447,12 @@
           mostrarIdentidad('campos');
         }
       }
-      const primero = form.querySelector('.campo.mal input, .campo.mal select, .campo.mal textarea');
+      /* El atajo se guarda en un campo oculto, que no se puede enfocar: si es
+         lo que falta, se lleva el foco al primer cuadro, que es lo que la
+         persona tiene que pulsar. */
+      const primero = $('atajo').closest('.campo').classList.contains('mal')
+        ? $('atajos').querySelector('.atajo')
+        : form.querySelector('.campo.mal input:not([type=hidden]), .campo.mal select, .campo.mal textarea');
       if(primero) primero.focus();
       return;
     }

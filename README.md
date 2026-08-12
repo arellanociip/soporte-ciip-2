@@ -162,14 +162,12 @@ reúne todo en un solo sitio.
 no sirve", "Problema con la impresora"…—, cuenta qué le pasa y envía. Recibe un
 número tipo `GTIC-HS/007-2026`.
 
-Los atajos son los cinco detalles más pedidos del Excel y cubren el 78 % de los
-casos; "Otra cosa" abre los desplegables completos para el resto. No guardan nada
+Elegir uno es obligatorio: los cinco son los detalles más pedidos del Excel y
+cubren el 78 % de los casos, y "Otra cosa" abre los desplegables completos para
+el resto. Antes era opcional y tres de cada diez solicitudes llegaban sin
+clasificar, con el técnico adivinando qué llevar. No guardan nada
 por su cuenta: solo rellenan esos mismos desplegables, así que la Hoja de
-Servicio sale idéntica venga de donde venga. Clasificar sigue siendo opcional a
-propósito: quien tiene el problema no siempre sabe si es "asistencia" o "soporte
-técnico", y forzarlo solo ensucia la data.
-
-**Nadie escribe su gerencia ni su oficina.** El formulario abre con un solo campo:
+Servicio sale idéntica venga de donde venga. **Nadie escribe su gerencia ni su oficina.** El formulario abre con un solo campo:
 *¿Quién eres?*. Se escribe el nombre, se elige de la lista de la casa
 ([`js/directorio.js`](js/directorio.js), 89 personas sacadas de las hojas ya
 llenadas) y la gerencia, el piso y la oficina se llenan solas. Quien no aparezca

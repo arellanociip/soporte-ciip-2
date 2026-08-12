@@ -328,6 +328,14 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   stroke-linecap:round; stroke-linejoin:round;}
 .atajo .t{font-size:13px; font-weight:700; line-height:1.25;}
 .atajo .s{font-size:11px; color:var(--gray-soft); margin-top:3px;}
+/* Cuando falta elegir, el reclamo no puede ir sobre un campo oculto: se señala
+   el grupo entero, que es lo que hay que tocar. */
+.campo.mal .atajos{
+  outline:1.5px dashed var(--rust); outline-offset:6px; border-radius:var(--r);
+}
+/* el reclamo va debajo del recuadro punteado, no pegado a él */
+#atajo + .error{margin-top:9px;}
+
 /* "Otra cosa" se ve como lo que es: la salida, no una opción más. */
 .atajo.otra{border-style:dashed;}
 .atajo.otra .ic{color:var(--gray-soft);}

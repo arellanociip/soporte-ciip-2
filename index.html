@@ -206,8 +206,12 @@
       <!-- Los cinco atajos cubren el 78 % de lo que se pide. Solo rellenan los
            dos desplegables de abajo: no hay un camino de datos aparte. -->
       <div class="campo" style="margin-bottom:18px">
-        <label id="rotuloAtajos">¿Con qué necesitas ayuda? <span class="opc">· opcional</span></label>
+        <label id="rotuloAtajos">¿Con qué necesitas ayuda? *</label>
         <div class="atajos" id="atajos" role="group" aria-labelledby="rotuloAtajos"></div>
+        <!-- Guarda el atajo elegido para que la revisión lo trate como un campo
+             más: es lo que permite reclamarlo igual que a los otros. -->
+        <input type="hidden" id="atajo" name="atajo">
+        <div class="error"></div>
       </div>
 
       <div class="rejilla">
