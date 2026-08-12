@@ -80,7 +80,11 @@
         </div>
         <button type="button" class="boton plano chico" id="botonRefrescarMias">Actualizar</button>
       </div>
-      <div id="misLista"></div>
+      <!-- La caja envuelve a la lista para poder ponerle el velo del final:
+           un degradado sobre lo que rueda, no dentro de lo que rueda. -->
+      <div class="mis-lista-caja" id="misListaCaja">
+        <div class="mis-lista" id="misLista"></div>
+      </div>
     </div>
   </section>
 

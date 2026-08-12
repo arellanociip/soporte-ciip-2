@@ -668,6 +668,16 @@
     $('misAvance').setAttribute('aria-valuenow', pct);
   }
 
+  /* El velo del final se enciende solo si queda algo por ver, y se apaga al
+     llegar al fondo. Un degradado permanente mentiría diciendo que hay más. */
+  function revisarVelo(){
+    const caja = $('misLista');
+    const falta = caja.scrollHeight - caja.clientHeight - caja.scrollTop;
+    $('misListaCaja').classList.toggle('hay-mas', falta > 8);
+  }
+  $('misLista').addEventListener('scroll', revisarVelo);
+  window.addEventListener('resize', revisarVelo);
+
   async function pintarMias(){
     const mias = soporteMias.leer();
     $('misSolicitudes').hidden = false;
@@ -677,6 +687,7 @@
       $('misLista').innerHTML = caminoVacioHtml();
       $('botonRefrescarMias').hidden = true;
       pintarAnilloMias(null);
+      revisarVelo();
       bloquearSiHayAbierta(null);
       return;
     }
@@ -703,10 +714,15 @@
                        en_proceso: 'Un técnico la está atendiendo',
                        atendida: 'Resuelta',
                        anulada: 'Anulada por GTIC'};
+    /* Con la lista recortada, la cuenta tiene que estar arriba: si no, quien
+       tiene ocho solicitudes solo ve dos y no sabe cuántas hay. */
+    const cuantas = filas.length === 1 ? '1 solicitud' : filas.length + ' solicitudes';
     $('misResumen').textContent = abiertas.length
       ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio
-      : 'Todo lo tuyo está atendido';
+      : 'Todo lo tuyo está atendido · ' + cuantas;
     $('misLista').innerHTML = filas.map(filaMiaHtml).join('');
+    $('misLista').scrollTop = 0;
+    revisarVelo();
     bloquearSiHayAbierta(abiertas[0] || null);
   }
 

@@ -179,6 +179,34 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 /* al terminar, el rótulo no se pinta de verde: el que manda es el resumen */
 .mis-h .avance.completo .texto b{color:var(--ink);}
 
+/* ---------- la lista rueda por dentro ----------
+   Quien lleva meses pidiendo soporte acumula solicitudes, y sin un tope la
+   tarjeta crecería sin fin, empujando la planilla fuera de la pantalla. Se
+   corta a la altura de dos y media —el medio sirve de aviso de que hay más— y
+   rueda dentro de su propia caja, sin arrastrar la página. */
+.mis-lista{
+  max-height:290px; overflow-y:auto; overscroll-behavior:contain;
+  /* el hueco de la barra sale del padding, no del ancho del contenido */
+  padding-right:8px; margin-right:-8px;
+  position:relative;
+}
+.mis-lista::-webkit-scrollbar{width:7px;}
+.mis-lista::-webkit-scrollbar-track{background:transparent;}
+.mis-lista::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
+.mis-lista::-webkit-scrollbar-thumb:hover{background:var(--gray-soft);}
+/* Firefox */
+.mis-lista{scrollbar-width:thin; scrollbar-color:var(--line) transparent;}
+
+/* El velo del final: dice "sigue habiendo" sin ocupar sitio. Solo aparece
+   cuando de verdad hay más abajo, y se apaga al llegar al fondo. */
+.mis-lista-caja{position:relative;}
+.mis-lista-caja::after{
+  content:""; position:absolute; left:0; right:8px; bottom:0; height:34px;
+  background:linear-gradient(180deg, rgba(255,255,255,0), #fff 88%);
+  pointer-events:none; opacity:0; transition:opacity .2s ease;
+}
+.mis-lista-caja.hay-mas::after{opacity:1;}
+
 .mis-fila{
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   padding:11px 0; border-top:1px solid var(--line-soft);
