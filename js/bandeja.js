@@ -49,12 +49,31 @@
   function borrarSesion(){ localStorage.removeItem(LLAVE_SESION); }
 
   function desdeRespuesta(datos){
+    const u = datos.user || {};
     return {
       token: datos.access_token,
       refresco: datos.refresh_token,
       /* un minuto de margen: más vale refrescar de sobra que fallar justo al vencer */
       expira: Date.now() + ((datos.expires_in || 3600) - 60) * 1000,
-      correo: (datos.user && datos.user.email) || '',
+      correo: u.email || '',
+      /* quién es, para no volver a escribirlo en cada solicitud que atienda */
+      nombre: u.nombre || '',
+      cargo: u.cargo || '',
+      cedula: u.cedula || '',
+      telefono: u.telefono || '',
+    };
+  }
+
+  /* El técnico que atiende, tomado de la sesión. Contra Supabase no vienen
+     estos datos —allí las cuentas solo tienen correo—, así que se cae al
+     correo y el resto queda para escribir a mano. */
+  function yoTecnico(){
+    const s = sesion() || {};
+    return {
+      nombre: s.nombre || s.correo || '',
+      cargo: s.cargo || '',
+      cedula: s.cedula || '',
+      telefono: s.telefono || '',
     };
   }
 
@@ -226,6 +245,7 @@
     /* Copia de trabajo: lo que se edite en la ficha no toca la lista hasta que
        el servidor confirme el guardado. */
     abierta = JSON.parse(JSON.stringify(s));
+    tecnicoFicha = resolverTecnico(abierta);
     if(!Array.isArray(abierta.renglones) || !abierta.renglones.length){
       /* El primer renglón viene sembrado con lo que dijo el usuario, que es lo
          que el técnico casi siempre confirma tal cual. */
@@ -240,6 +260,48 @@
     $('velo').hidden = true;
     abierta = null;
     document.body.style.overflow = '';
+  }
+
+  /* ---------- el técnico que atiende ----------
+     Quien está atendiendo es quien inició sesión, así que no hay nada que
+     escribir: se confirma. Solo se ofrece escribirlo cuando se atiende en
+     nombre de otro, o cuando la solicitud ya venía atendida por un compañero.
+     El valor de verdad vive en el input oculto #fTecnico, que es lo que lee
+     guardar() y la hoja impresa: así el resto del código no cambia. */
+  /* Quién queda como técnico de la solicitud abierta. Vive aquí y no en un
+     campo de la pantalla porque la ficha se repinta entera y un valor a medio
+     escribir se perdería. Lo leen guardar() e imprimir(). */
+  let tecnicoFicha = null;
+
+  /* Al abrir una solicitud: si ya la atendía alguien, ese sigue; si no, yo. */
+  function resolverTecnico(s){
+    const yo = yoTecnico();
+    if(s.tecnico && s.tecnico !== yo.nombre){
+      return {nombre: s.tecnico, cargo: s.tecnico_cargo || '',
+              cedula: s.tecnico_cedula || '', telefono: s.tecnico_telefono || '',
+              manual: true};
+    }
+    return Object.assign({manual: false}, yo);
+  }
+
+  function tecnicoHtml(){
+    const t = tecnicoFicha;
+    const linea = [t.cargo, t.cedula ? 'C.I. ' + t.cedula : ''].filter(Boolean).join(' · ')
+      || (t.manual ? 'Escrito a mano' : 'Tu cuenta no tiene cargo ni cédula');
+
+    /* Sin nombre —cuenta sin nombre y solicitud sin atender— no hay nada que
+       confirmar: se escribe y ya. */
+    const hayNombre = !!t.nombre;
+    return `
+      <div class="recordado" id="tecnicoRecuadro" ${hayNombre ? '' : 'hidden'}>
+        <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg></div>
+        <div class="q"><b>${esc(t.nombre)}</b><span>${esc(linea)}</span></div>
+        <div class="acciones"><button type="button" id="botonOtroTecnico">Es otro</button></div>
+      </div>
+      <div id="tecnicoManual" ${hayNombre ? 'hidden' : ''}>
+        <input type="text" id="fTecnicoManual" value="${esc(t.manual ? t.nombre : '')}"
+               placeholder="Nombre y apellido del técnico">
+      </div>`;
   }
 
   function dato(rotulo, valor, completo){
@@ -274,8 +336,7 @@
             ${['recibida','en_proceso','atendida','anulada'].map(e =>
               `<option value="${e}" ${e===s.estado?'selected':''}>${esc(ESTADO_ETIQUETA[e])}</option>`).join('')}
           </select></div>
-        <div class="campo c6"><label for="fTecnico">Técnico que atiende</label>
-          <input type="text" id="fTecnico" value="${esc(s.tecnico||'')}" placeholder="Nombre y apellido"></div>
+        <div class="campo c6"><label>Técnico que atiende</label>${tecnicoHtml()}</div>
         <div class="campo"><label for="fObs">Observaciones <span class="opc">· sale impreso en la hoja</span></label>
           <textarea id="fObs" rows="4" placeholder="Qué se encontró y qué se hizo.">${esc(s.observaciones||'')}</textarea></div>
       </div>
@@ -306,12 +367,27 @@
     }).filter(r => Object.values(r).some(v => v));
   }
 
+  /* El técnico tal como está la pantalla ahora mismo. Si se escribió a mano,
+     manda lo escrito y no hay cargo ni cédula que imprimir. */
+  function tecnicoActual(){
+    const manual = $('tecnicoManual');
+    if(manual && !manual.hidden){
+      const nombre = $('fTecnicoManual').value.trim();
+      return {nombre, cargo: '', cedula: '', telefono: ''};
+    }
+    return tecnicoFicha || {nombre: '', cargo: '', cedula: '', telefono: ''};
+  }
+
   async function guardar(){
+    const t = tecnicoActual();
     const cambios = {
-      estado:        $('fEstado').value,
-      tecnico:       $('fTecnico').value.trim() || null,
-      observaciones: $('fObs').value.trim() || null,
-      renglones:     leerRenglones(),
+      estado:           $('fEstado').value,
+      tecnico:          t.nombre || null,
+      tecnico_cargo:    t.cargo || null,
+      tecnico_cedula:   t.cedula || null,
+      tecnico_telefono: t.telefono || null,
+      observaciones:    $('fObs').value.trim() || null,
+      renglones:        leerRenglones(),
     };
     /* La fecha de atención la pone la primera vez que se marca atendida, y se
        borra si vuelve a abrirse el caso. */
@@ -356,6 +432,7 @@
      para que el técnico pueda imprimir lo que acaba de escribir. */
   function imprimir(){
     const s = abierta;
+    const tec = tecnicoActual();
     const renglones = leerRenglones();
     const f = new Date();
     const RENGLONES_HOJA = 6;   /* la tabla del Excel siempre tuvo seis filas */
@@ -429,10 +506,10 @@
           <div class="hs-fh">TECNICO DE SOPORTE</div>
           <div class="hs-fila">
             <div class="hs-fb">
-              NOMBRE Y APELLIDO: ${esc($('fTecnico').value.trim())}<br>
-              C.I. N°.: <span class="lin"></span><br>
-              TELEFONO: <span class="lin"></span><br>
-              CARGO: <span class="lin"></span><br>
+              NOMBRE Y APELLIDO: ${esc(tec.nombre || '')}<br>
+              C.I. N°.: ${tec.cedula ? esc(tec.cedula) : '<span class="lin"></span>'}<br>
+              TELEFONO: ${tec.telefono ? esc(tec.telefono) : '<span class="lin"></span>'}<br>
+              CARGO: ${tec.cargo ? esc(tec.cargo) : '<span class="lin"></span>'}<br>
               FIRMA: <span class="lin"></span>
             </div>
             <div class="hs-sello">SELLO</div>
@@ -490,6 +567,16 @@
     if(e.target.id === 'botonCerrarFicha') return cerrar();
     if(e.target.id === 'botonGuardar') return guardar();
     if(e.target.id === 'botonImprimir') return imprimir();
+
+    /* "Es otro": deja de confirmarse a sí mismo y escribe el nombre de quien
+       de verdad atendió. Sin cargo ni cédula, porque no son suyos. */
+    if(e.target.id === 'botonOtroTecnico'){
+      $('tecnicoRecuadro').hidden = true;
+      $('tecnicoManual').hidden = false;
+      $('fTecnicoManual').value = '';
+      $('fTecnicoManual').focus();
+      return;
+    }
 
     if(e.target.id === 'botonAgregar'){
       abierta.renglones = leerRenglones();

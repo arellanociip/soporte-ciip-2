@@ -53,22 +53,118 @@ function huella(clave, sal){
   return crypto.scryptSync(clave, sal, 32).toString('hex');
 }
 
+/* Una clave que se pueda dictar por teléfono sin deletrear: sílabas y un
+   número. No es para guardar secretos de Estado, es para que el compañero
+   entre hoy y la cambie cuando quiera. */
+function claveLegible(){
+  const s = ['ba','ce','di','fo','gu','la','me','ni','po','ru','sa','te','vi','zo'];
+  const trozo = () => s[crypto.randomInt(s.length)];
+  return trozo() + trozo() + '-' + trozo() + trozo() + '-' + crypto.randomInt(10, 100);
+}
+
+/* Las banderas sueltas del comando: --nombre "Dan Moreno" --cargo "Técnico". */
+function bandera(nombre){
+  const i = process.argv.indexOf('--' + nombre);
+  return (i >= 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--'))
+    ? process.argv[i + 1].trim() : null;
+}
+
+/* Lo que sale impreso en el bloque "TECNICO DE SOPORTE" de la Hoja de Servicio.
+   Guardarlo en la cuenta es lo que permite que el técnico no lo reescriba en
+   cada solicitud, y que la hoja salga completa en vez de con rayas en blanco. */
+const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'];
+
 function crearUsuario(correo, clave){
-  if(!correo || !clave){
-    console.error('Uso: node servidor.js --crear-usuario correo@ciip.gob.ve suClave');
+  if(!correo){
+    console.error('Uso: node servidor.js --crear-usuario correo@ciip.gob.ve [clave] \\');
+    console.error('       --nombre "Dan Moreno" --cargo "Técnico de soporte" \\');
+    console.error('       --cedula 26.610.022 --telefono 0412-5425243');
+    console.error('');
+    console.error('  Sin clave, se inventa una y se muestra para que se la pases.');
+    console.error('  El nombre y el cargo salen impresos en la Hoja de Servicio.');
     process.exit(1);
   }
+  /* si la "clave" empieza por -- es en realidad la primera bandera */
+  if(clave && clave.startsWith('--')) clave = null;
+  const inventada = !clave;
+  if(inventada) clave = claveLegible();
   if(clave.length < 6){
     console.error('La clave es muy corta: pon al menos 6 caracteres.');
     process.exit(1);
   }
   const usuarios = leerUsuarios();
   const sal = crypto.randomBytes(16).toString('hex');
-  const fila = {correo: correo.toLowerCase().trim(), sal, hash: huella(clave, sal)};
-  const i = usuarios.findIndex(u => u.correo === fila.correo);
-  if(i >= 0){ usuarios[i] = fila; console.log('Clave cambiada para', fila.correo); }
-  else      { usuarios.push(fila); console.log('Usuario creado:', fila.correo); }
+  const buscado = correo.toLowerCase().trim();
+  const previo = usuarios.find(u => u.correo === buscado);
+
+  const fila = {correo: buscado, sal, hash: huella(clave, sal),
+                creado_en: (previo && previo.creado_en) || new Date().toISOString()};
+  /* lo que no se vuelva a indicar se conserva: cambiar la clave no debe borrar
+     el cargo de nadie */
+  DATOS_TECNICO.forEach(k => {
+    fila[k] = bandera(k) || (previo && previo[k]) || null;
+  });
+  /* sin nombre, el de la Hoja de Servicio sería un correo electrónico */
+  if(!fila.nombre) fila.nombre = buscado.split('@')[0].replace(/[._]/g, ' ');
+
+  const i = usuarios.findIndex(u => u.correo === buscado);
+  if(i >= 0){ usuarios[i] = fila; console.log('\n  Cuenta actualizada: ' + fila.correo); }
+  else      { usuarios.push(fila); console.log('\n  Usuario creado: ' + fila.correo); }
   escribirJson(F_USERS, usuarios);
+
+  console.log('  Nombre:   ' + fila.nombre);
+  if(fila.cargo)    console.log('  Cargo:    ' + fila.cargo);
+  if(fila.cedula)   console.log('  Cédula:   ' + fila.cedula);
+  if(fila.telefono) console.log('  Teléfono: ' + fila.telefono);
+  if(inventada){
+    console.log('  Clave:    ' + clave);
+    console.log('\n  Pásasela y que la cambie cuando quiera, con este mismo comando.');
+  }
+  if(!fila.cargo || !fila.cedula){
+    console.log('\n  Ojo: sin cargo ni cédula, la Hoja de Servicio sale con esas');
+    console.log('  rayas en blanco para llenar a mano. Se agregan así:');
+    console.log('    node servidor.js --crear-usuario ' + fila.correo + ' \\');
+    console.log('      --cargo "Técnico de soporte" --cedula 26.610.022');
+  }
+  console.log('');
+}
+
+function listarUsuarios(){
+  const usuarios = leerUsuarios();
+  if(!usuarios.length){
+    console.log('\n  No hay ningún usuario. Sin uno, nadie puede entrar a la bandeja:');
+    console.log('    node servidor.js --crear-usuario tu.correo@ciip.gob.ve\n');
+    return;
+  }
+  console.log('\n  Quién puede entrar a la bandeja (' + usuarios.length + '):');
+  usuarios.forEach(u => console.log('    · ' + u.correo +
+    (u.creado_en ? '   desde ' + u.creado_en.slice(0, 10) : '')));
+  console.log('\n  Las claves no se guardan: solo su huella. Si alguien la olvida,');
+  console.log('  no se puede recuperar — se le pone una nueva con --crear-usuario.\n');
+}
+
+function borrarUsuario(correo){
+  if(!correo){
+    console.error('Uso: node servidor.js --borrar-usuario correo@ciip.gob.ve');
+    process.exit(1);
+  }
+  const usuarios = leerUsuarios();
+  const buscado = correo.toLowerCase().trim();
+  const quedan = usuarios.filter(u => u.correo !== buscado);
+  if(quedan.length === usuarios.length){
+    console.error('\n  No existe ningún usuario con ese correo: ' + buscado + '\n');
+    process.exit(1);
+  }
+  /* Quedarse sin nadie deja la bandeja cerrada para siempre, y la única
+     salida sería volver a la línea de comandos. Mejor avisar que permitirlo. */
+  if(!quedan.length){
+    console.error('\n  Ese es el último usuario. Si lo borras, nadie puede entrar a la');
+    console.error('  bandeja. Crea antes al sustituto y vuelve a intentarlo.\n');
+    process.exit(1);
+  }
+  escribirJson(F_USERS, quedan);
+  console.log('\n  Usuario borrado: ' + buscado);
+  console.log('  Quedan ' + quedan.length + ': ' + quedan.map(u => u.correo).join(', ') + '\n');
 }
 
 function claveCorrecta(correo, clave){
@@ -94,8 +190,14 @@ function abrirSesion(correo){
   const refresco = crypto.randomBytes(32).toString('hex');
   sesiones.set(token, {correo, expira: Date.now() + UNA_HORA});
   refrescos.set(refresco, correo);
+  /* Van el nombre y el cargo, no solo el correo: la bandeja los necesita para
+     dar por atendida una solicitud sin que el técnico se reescriba cada vez.
+     La sal y la huella de la clave, evidentemente, no salen de aquí. */
+  const u = leerUsuarios().find(x => x.correo === correo) || {};
+  const quien = {email: correo};
+  DATOS_TECNICO.forEach(k => { if(u[k]) quien[k] = u[k]; });
   return {access_token: token, refresh_token: refresco, expires_in: 3600,
-          token_type: 'bearer', user: {email: correo}};
+          token_type: 'bearer', user: quien};
 }
 
 function sesionDe(req){
@@ -104,6 +206,14 @@ function sesionDe(req){
   const s = sesiones.get(token);
   if(!s) return null;
   if(Date.now() > s.expira){ sesiones.delete(token); return null; }
+  /* Dar de baja a alguien se hace desde la línea de comandos, en otro proceso,
+     que no puede tocar esta memoria. Sin esta comprobación, quien ya estuviera
+     dentro seguiría dentro hasta que venciera su hora. Se relee el archivo en
+     cada petición: son cuatro líneas de JSON, no cuesta nada. */
+  if(!leerUsuarios().some(u => u.correo === s.correo)){
+    sesiones.delete(token);
+    return null;
+  }
   return s;
 }
 
@@ -136,7 +246,9 @@ function cuerpoDe(req){
 /* ================= la API ================= */
 const CAMPOS_QUE_LLEGAN = ['gerencia','usuario','cedula','telefono','piso','oficina',
                            'descripcion','tipo','detalle'];
-const CAMPOS_QUE_ATIENDE = ['estado','tecnico','observaciones','renglones','atendida_en'];
+/* tecnico es el nombre; los tres de al lado salen impresos junto a su firma */
+const CAMPOS_QUE_ATIENDE = ['estado','tecnico','tecnico_cargo','tecnico_cedula',
+                            'tecnico_telefono','observaciones','renglones','atendida_en'];
 const ESTADOS = ['recibida','en_proceso','atendida','anulada'];
 
 /* El correlativo del año, igual que el disparador de sql/esquema.sql. Aquí no
@@ -282,9 +394,17 @@ function servirArchivo(res, pedido){
 }
 
 /* ================= arranque ================= */
-if(process.argv[2] === '--crear-usuario'){
-  crearUsuario(process.argv[3], process.argv[4]);
-  process.exit(0);
+const ORDEN = process.argv[2];
+if(ORDEN === '--crear-usuario'){ crearUsuario(process.argv[3], process.argv[4]); process.exit(0); }
+if(ORDEN === '--usuarios'){ listarUsuarios(); process.exit(0); }
+if(ORDEN === '--borrar-usuario'){ borrarUsuario(process.argv[3]); process.exit(0); }
+if(ORDEN && ORDEN.startsWith('--')){
+  console.log('\n  Órdenes disponibles:');
+  console.log('    node servidor.js                                   levanta el sitio');
+  console.log('    node servidor.js --usuarios                        quién puede entrar');
+  console.log('    node servidor.js --crear-usuario correo [clave]    alta, o cambio de clave');
+  console.log('    node servidor.js --borrar-usuario correo           baja\n');
+  process.exit(ORDEN === '--ayuda' ? 0 : 1);
 }
 
 const servidor = http.createServer(async (req, res) => {

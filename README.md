@@ -29,10 +29,23 @@ Mientras esa ventana esté abierta, la oficina puede pedir soporte.
 Antes de la primera vez, hay que crear un usuario para entrar a la bandeja:
 
 ```
-node servidor.js --crear-usuario tu.correo@ciip.gob.ve tuClave
+node servidor.js --usuarios                        quien puede entrar
+node servidor.js --crear-usuario correo [clave]    alta, o cambio de clave
+node servidor.js --borrar-usuario correo           baja
 ```
 
-El mismo comando con un correo que ya existe le cambia la clave.
+Si no le pones clave al crear a alguien, el servidor inventa una legible
+(`suvi-mete-47`) y la muestra para que se la pases. Con un correo que ya existe,
+**--crear-usuario le cambia la clave**: es tambien la forma de resolver un olvido,
+porque las claves no se guardan, solo su huella, y no hay de donde recuperarlas.
+
+No se puede borrar al ultimo usuario: dejaria la bandeja cerrada para siempre.
+
+> **No hay roles.** Todo el que entra puede lo mismo: ver todas las solicitudes,
+> atenderlas, cambiar estados e imprimir hojas. Quien manda de verdad es quien
+> tiene acceso a esta carpeta, porque las cuentas solo se crean desde aqui — no
+> hay registro por la web.
+
 
 Todo se guarda en `datos\solicitudes.json`, un archivo de texto de esta PC. Se
 puede abrir, leer y respaldar copiándolo. `datos\` no va al repositorio: son
