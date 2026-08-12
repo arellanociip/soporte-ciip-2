@@ -32,6 +32,11 @@
   CAT_OFICINAS.forEach(o => oficinas.append(opcion(o)));
   CAT_SERVICIOS.forEach(s => tipo.append(opcion(s.valor, s.etiqueta)));
 
+  /* ¿La persona pidió menos animación en su sistema? Entonces los cambios de
+     pantalla no esperan a ninguna transición. */
+  const menosMovimiento = window.matchMedia
+    && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   /* El detalle cuelga del tipo: al cambiar uno se rehace el otro. */
   tipo.addEventListener('change', () => {
     const elegido = CAT_SERVICIOS.find(s => s.valor === tipo.value);
@@ -46,11 +51,40 @@
     detalle.append(opcion('', 'Sin especificar'));
     elegido.detalles.forEach(d => detalle.append(opcion(d)));
     $('pistaTipo').textContent = elegido.pista;
+    /* El campo acaba de habilitarse; sin un destello, el cambio pasa
+       desapercibido y la gente no se entera de que ya puede usarlo.
+       Se reinicia la clase para que la animación vuelva a correr si cambia
+       de tipo varias veces seguidas. */
+    detalle.classList.remove('despierta');
+    void detalle.offsetWidth;
+    detalle.classList.add('despierta');
   });
 
   /* ---------- contador de la descripción ---------- */
   const contador = $('contadorDesc');
-  desc.addEventListener('input', () => { contador.textContent = desc.value.length; });
+  desc.addEventListener('input', () => {
+    contador.textContent = desc.value.length;
+    /* avisa al acercarse al tope, no cuando ya no cabe nada */
+    contador.classList.toggle('cerca', desc.value.length > 540);
+  });
+
+  /* ---------- cuánto falta ----------
+     Solo lo obligatorio: si contara lo opcional, la barra nunca llegaría al
+     final y diría que falta algo cuando ya no falta nada. */
+  const OBLIGATORIOS = ['gerencia', 'usuario', 'piso', 'oficina', 'descripcion'];
+
+  function pintarAvance(){
+    const listos = OBLIGATORIOS.filter(id => $(id).value.trim()).length;
+    const total = OBLIGATORIOS.length;
+    $('avanceBarra').style.width = (listos / total * 100) + '%';
+    $('avanceTexto').textContent = listos === total ? 'Listo para enviar' : listos + ' de ' + total;
+    $('avance').classList.toggle('completo', listos === total);
+  }
+
+  OBLIGATORIOS.forEach(id => {
+    $(id).addEventListener('input', pintarAvance);
+    $(id).addEventListener('change', pintarAvance);
+  });
 
   /* ---------- revisión ---------- */
   /* Cada regla dice qué campo mira y qué se le reclama. Se revisa al enviar, y
@@ -147,6 +181,27 @@
     return Array.isArray(filas) ? filas[0] : filas;
   }
 
+  /* Una pantalla se desvanece y la otra entra, en vez de saltar de golpe: el
+     cambio deja de sentirse como si la página se hubiera recargado sola. */
+  function cambiarPantalla(sale, entra){
+    const irArriba = () => window.scrollTo(
+      {top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
+
+    if(menosMovimiento){
+      sale.hidden = true; entra.hidden = false; irArriba();
+      return;
+    }
+    sale.classList.add('pantalla-sale');
+    setTimeout(() => {
+      sale.hidden = true;
+      sale.classList.remove('pantalla-sale');
+      entra.hidden = false;
+      entra.classList.add('pantalla-entra');
+      irArriba();
+      setTimeout(() => entra.classList.remove('pantalla-entra'), 420);
+    }, 200);
+  }
+
   function mostrarAcuse(fila){
     const numero = 'GTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
     $('numeroAcuse').textContent = numero;
@@ -155,9 +210,7 @@
         + 'solicitud quedó guardada solo en este navegador — nadie más la ve. '
         + 'Ábrela en <a href="bandeja.html">la bandeja de soporte</a> para ver cómo le llega a GTIC.';
     }
-    $('pantallaFormulario').hidden = true;
-    $('pantallaAcuse').hidden = false;
-    window.scrollTo(0, 0);
+    cambiarPantalla($('pantallaFormulario'), $('pantallaAcuse'));
   }
 
   form.addEventListener('submit', async e => {
@@ -173,7 +226,7 @@
 
     const datos = recogerDatos();
     enviar.disabled = true;
-    enviar.textContent = 'Enviando…';
+    enviar.innerHTML = '<span class="girador"></span>Enviando…';
 
     try{
       const fila = soporteHayBackend()
@@ -194,27 +247,41 @@
     enviar.textContent = 'Enviar solicitud';
   });
 
+  /* ---------- que la rueda no gire eternamente ----------
+     Si la persona vuelve con el botón "atrás" del navegador, Firefox y Safari
+     restauran la página tal como estaba —botón deshabilitado y girando— desde
+     su caché. Esto lo devuelve a su sitio. */
+  window.addEventListener('pageshow', e => {
+    if(!e.persisted) return;
+    enviar.disabled = false;
+    enviar.textContent = 'Enviar solicitud';
+  });
+
   /* ---------- limpiar y volver a empezar ---------- */
   function limpiar(){
     form.reset();
     revisandoAlSalir = false;
     contador.textContent = '0';
+    contador.classList.remove('cerca');
+    /* reset() deja el tipo vacío, pero el detalle conserva las opciones del
+       tipo anterior: hay que rehacerlo a mano. */
     tipo.dispatchEvent(new Event('change'));
+    detalle.classList.remove('despierta');
     form.querySelectorAll('.campo.mal').forEach(c => {
       c.classList.remove('mal');
       const hueco = c.querySelector('.error'); if(hueco) hueco.textContent = '';
     });
     avisoError('');
+    pintarAvance();
   }
 
   $('botonLimpiar').addEventListener('click', limpiar);
   $('botonOtra').addEventListener('click', () => {
     limpiar();
-    $('pantallaAcuse').hidden = true;
-    $('pantallaFormulario').hidden = false;
-    window.scrollTo(0, 0);
+    cambiarPantalla($('pantallaAcuse'), $('pantallaFormulario'));
   });
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
+  pintarAvance();
 })();

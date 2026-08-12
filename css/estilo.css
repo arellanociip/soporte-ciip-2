@@ -87,9 +87,12 @@ a{color:var(--navy);}
   .c3,.c4,.c6,.c8{grid-column:span 12;}
 }
 
-.campo label{font-size:12px; font-weight:700; color:var(--ink);}
+.campo label{font-size:12px; font-weight:700; color:var(--ink); transition:color .16s ease;}
 .campo label .opc{font-weight:400; color:var(--gray-soft);}
 .campo .ayuda{font-size:11.5px; color:var(--gray-soft);}
+/* La etiqueta acompaña al campo que se está llenando: sin mover nada de sitio,
+   sabes en cuál estás parado aunque el cursor no se vea. */
+.campo:focus-within label{color:var(--navy);}
 
 input[type=text], input[type=tel], select, textarea{
   width:100%; font-family:inherit; font-size:13.5px; color:var(--ink);
@@ -102,6 +105,9 @@ select{
   background-repeat:no-repeat; background-position:right 10px center; background-size:13px;
 }
 textarea{resize:vertical; min-height:96px; line-height:1.55;}
+input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled){
+  border-color:#C7CFDD;
+}
 input:focus, select:focus, textarea:focus{
   outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(0,64,144,.12);
 }
@@ -116,6 +122,9 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 }
 .campo .error{font-size:11.5px; color:var(--rust); font-weight:600;}
 .campo .error:empty{display:none;}
+/* Un campo con error que además está enfocado no debe quedar azul arriba y
+   rojo abajo: manda el error, que es lo que hay que resolver. */
+.campo.mal:focus-within label{color:var(--rust);}
 
 .contador{font-size:11px; color:var(--gray-soft); text-align:right;}
 
@@ -250,6 +259,112 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .renglon .quitar{
   margin-left:auto; border:none; background:none; cursor:pointer; font-family:inherit;
   color:var(--rust); font-size:11.5px; font-weight:700;
+}
+
+/* ===================== MOVIMIENTO =====================
+   Regla de la casa: el movimiento explica algo o no va. Aquí explica cuatro
+   cosas — que la página terminó de llegar, en qué campo estás parado, que algo
+   salió mal y dónde, y que el envío llegó a destino. Nada se mueve solo por
+   moverse, y nada se mueve más de medio segundo.
+   Al final de la sección se apaga todo para quien pidió menos animación. */
+
+@keyframes surgir{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+@keyframes surgirCorto{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;} }
+@keyframes desvanecer{ from{opacity:1; transform:none;} to{opacity:0; transform:translateY(-8px);} }
+@keyframes trazar{ to{stroke-dashoffset:0;} }
+@keyframes girar{ to{transform:rotate(360deg);} }
+/* Un temblor corto y de poca amplitud: suficiente para llevar el ojo al campo,
+   lejos del zarandeo que marea. */
+@keyframes temblor{
+  0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);}
+  40%{transform:translateX(4px);}  60%{transform:translateX(-2px);} 80%{transform:translateX(2px);}
+}
+/* El destello del campo que acaba de despertarse (el detalle, cuando eliges el
+   tipo de servicio): si no, se habilita en silencio y nadie lo nota. */
+@keyframes destello{
+  0%{box-shadow:0 0 0 0 rgba(32,176,240,.45);}
+  100%{box-shadow:0 0 0 9px rgba(32,176,240,0);}
+}
+
+/* ---------- la página llegando ---------- */
+/* Escalonado: encabezado, luego el aviso, luego el título, luego la planilla.
+   Es el orden en que se lee, y así el ojo no tiene que escoger por dónde entrar. */
+.cab{animation:surgir .45s ease both;}
+.envoltura .aviso{animation:surgir .45s .05s ease both;}
+.intro{animation:surgir .45s .11s ease both;}
+#formulario{animation:surgir .5s .17s ease both;}
+
+/* ---------- cambio de pantalla (planilla ⇄ acuse) ---------- */
+.pantalla-sale{animation:desvanecer .2s ease both;}
+.pantalla-entra{animation:surgir .4s ease both;}
+
+/* ---------- el avance de la planilla ---------- */
+/* Cuánto falta, sin regañar: solo cuenta los campos obligatorios. */
+.avance{display:flex; align-items:center; gap:11px; margin-bottom:20px;}
+.avance .barra{
+  flex:1; height:5px; border-radius:5px; background:var(--line-soft); overflow:hidden;
+}
+.avance .barra i{
+  display:block; height:100%; width:0; border-radius:5px;
+  background:linear-gradient(90deg, var(--navy), var(--cyan));
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.avance .texto{
+  font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--gray-soft); white-space:nowrap; transition:color .25s ease;
+}
+.avance.completo .texto{color:var(--good);}
+
+/* ---------- campos ---------- */
+.campo.mal input, .campo.mal select, .campo.mal textarea{animation:temblor .32s ease;}
+.campo .error{animation:surgirCorto .2s ease both;}
+select.despierta{animation:destello .7s ease;}
+/* El contador avisa antes de chocar con el tope, no cuando ya chocó. */
+.contador{transition:color .2s ease;}
+.contador.cerca{color:var(--amber); font-weight:700;}
+
+/* ---------- botones ---------- */
+.boton{transition:background .14s ease, border-color .14s ease, color .14s ease, transform .1s ease;}
+.boton:active:not(:disabled){transform:translateY(1px);}
+.boton.primario:focus-visible, .boton.plano:focus-visible{
+  outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.25);
+}
+/* La rueda del botón mientras se envía: dice "sigue trabajando", que es justo
+   lo que la palabra "Enviando…" sola no logra decir. */
+.girador{
+  display:inline-block; width:12px; height:12px; margin-right:8px; vertical-align:-1px;
+  border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%;
+  animation:girar .6s linear infinite;
+}
+
+/* ---------- el acuse ---------- */
+/* Llega por partes, en el orden en que importa: el visto, el título, el número
+   —que es lo que la persona vino a buscar— y después la explicación. */
+.acuse .marca{animation:surgir .4s ease both;}
+.acuse .marca svg polyline{stroke-dasharray:24; stroke-dashoffset:24; animation:trazar .45s .25s ease forwards;}
+.acuse h2{animation:surgir .4s .1s ease both;}
+.acuse .numero{animation:surgir .45s .22s ease both;}
+.acuse p{animation:surgir .4s .34s ease both;}
+.acuse .botones{animation:surgir .4s .44s ease both;}
+
+/* ---------- la bandeja ---------- */
+.fila{transition:background .14s ease;}
+.velo{animation:surgirCorto .18s ease both;}
+.hoja{animation:surgir .28s ease both;}
+
+/* ---------- menos animación ----------
+   Windows y los navegadores exponen esta preferencia; quien la activó por
+   mareo o por migraña no debería tener que aguantar nada de lo de arriba. No
+   se apaga del todo —un cambio instantáneo también desorienta—, se reduce a un
+   parpadeo imperceptible. */
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+  .acuse .marca svg polyline{stroke-dashoffset:0;}
 }
 
 /* ===================== IMPRESIÓN: la Hoja de Servicio ===================== */
