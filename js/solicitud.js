@@ -424,6 +424,7 @@
       ${fila.prueba ? ' <b>Ojo:</b> fue un ensayo, no hay servidor y nadie más la ve.' : ''}
       <br>Podrás pedir otra en cuanto GTIC cierre esta.</div>`;
     aviso.hidden = false;
+    avisoFijado = true;
     window.scrollTo({top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
   }
 
@@ -632,6 +633,25 @@
     </div>`;
   }
 
+  /* Lo que se dice cuando el estado cambia solo. Sustituye al aviso que
+     hubiera —el verde de "quedó registrada", por ejemplo— porque la novedad
+     manda sobre lo anterior. */
+  function avisarCambio(estado, s){
+    const num = s ? ' N° ' + String(s.numero).padStart(3,'0') + '-' + s.anio : '';
+    const dicho = {
+      en_proceso: ['bueno', '👋', '<b>Un técnico tomó tu solicitud' + num + '.</b> Va en camino.'],
+      atendida:   ['bueno', '✓',  '<b>Tu solicitud' + num + ' quedó atendida.</b> Abajo está lo que hicieron.'],
+      anulada:    ['alerta', '⚠', '<b>Tu solicitud' + num + ' fue anulada.</b> Si sigues necesitando ayuda, puedes pedir otra.'],
+      recibida:   ['alerta', '↩', '<b>Tu solicitud' + num + ' volvió a la cola.</b>'],
+    }[estado];
+    if(!dicho) return;
+    const aviso = $('avisoUnaALaVez');
+    aviso.className = 'aviso ' + dicho[0];
+    aviso.innerHTML = '<span>' + dicho[1] + '</span><div>' + dicho[2] + '</div>';
+    aviso.hidden = false;
+    avisoFijado = true;
+  }
+
   /* Sin nada que seguir todavía, el panel no se esconde: enseña el camino que
      va a recorrer la solicitud. Escondiéndolo, la función no existía para
      quien no hubiera pedido nunca — y era justo quien más necesitaba saber
@@ -714,6 +734,34 @@
     }
   });
 
+  /* ---------- que se entere solo ----------
+     Nadie debería tener que pulsar "Actualizar" para enterarse de que un
+     técnico ya tomó lo suyo. Se pregunta cada tanto, y de inmediato al volver
+     a la pestaña —que es cuando de verdad se viene a mirar—.
+
+     Se pregunta, no se escucha: el servidor podría empujar el cambio, pero eso
+     obliga a mantener una conexión abierta por persona y ata el código a este
+     servidor. Preguntar cada quince segundos son cuatro lecturas de un archivo
+     por minuto; para una oficina, ni se nota.
+
+     Con la pestaña de fondo no se pregunta nada: quien no está mirando no
+     necesita enterarse, y al volver se pregunta enseguida. */
+  const CADA = 15000;
+  let reloj = null;
+
+  function vigilar(){
+    clearInterval(reloj);
+    /* sin nada que seguir, no hay a qué estar pendiente */
+    if(!soporteMias.leer().length) return;
+    reloj = setInterval(() => {
+      if(!document.hidden) pintarMias();
+    }, CADA);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && soporteMias.leer().length) pintarMias();
+  });
+
   /* Pulsar el anillo despliega el historial completo, y volver a pulsarlo
      regresa a lo que sigue en curso. */
   let verHistorial = false;
@@ -728,6 +776,9 @@
      registrada" desaparecía bajo el de "ya tienes una abierta". Cada corrida
      toma un número y solo pinta si sigue siendo la última. */
   let corridaMias = 0;
+  /* El estado que se estaba mostrando, para saber si cambió sin que la persona
+     tocara nada y poder avisárselo. */
+  let estadoMostrado = null;
 
   async function pintarMias(){
     const corrida = ++corridaMias;
@@ -812,6 +863,15 @@
     $('misLista').scrollTop = 0;
     revisarVelo();
     bloquearSiHayAbierta(abiertas[0] || null);
+
+    /* ¿Cambió solo, mientras la persona miraba? Entonces se le dice: un
+       cambio silencioso en pantalla es un cambio que nadie ve. */
+    const ahora = manda ? manda.estado : (filas[0] ? filas[0].estado : null);
+    if(estadoMostrado && ahora && ahora !== estadoMostrado){
+      avisarCambio(ahora, manda || filas[0]);
+    }
+    estadoMostrado = ahora;
+    vigilar();
   }
 
   /* ---------- una a la vez ----------
@@ -819,9 +879,13 @@
      y en su lugar queda el porqué. La regla la impone el servidor —esto es
      solo no dejar escribir en balde— porque desde otro navegador la pantalla
      no sabría nada. */
+  /* Hay un mensaje que la persona acaba de recibir y que no se debe pisar. */
+  let avisoFijado = false;
+
   function bloquearSiHayAbierta(abierta){
     const aviso = $('avisoUnaALaVez');
     if(!abierta){
+      avisoFijado = false;
       $('pantallaFormulario').hidden = false;
       /* el título y el medidor acompañan a la planilla */
       $('tarjetaAvance').hidden = false;
@@ -832,8 +896,11 @@
     $('pantallaFormulario').hidden = true;
     $('tarjetaAvance').hidden = true;
     $('intro').hidden = true;
-    /* El recién llegado de reflejarEnvio ya trae su propio mensaje verde; este
-       es el de siempre, para cuando se vuelve a la página más tarde. */
+    /* Si ya hay un mensaje puesto por un envío recién hecho o por un cambio de
+       estado, se respeta: la consulta que corre cada quince segundos no puede
+       borrar la noticia que la persona acaba de recibir. Al recargar la página
+       vuelve a salir el de siempre. */
+    if(avisoFijado) return;
     aviso.className = 'aviso alerta';
     aviso.innerHTML = `<span>🕓</span><div>
       <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—
