@@ -73,12 +73,35 @@
      final y diría que falta algo cuando ya no falta nada. */
   const OBLIGATORIOS = ['gerencia', 'usuario', 'piso', 'oficina', 'descripcion'];
 
+  /* La vuelta completa del anillo: 2·π·r con el r=21 del <circle> en el HTML.
+     Debe coincidir con el stroke-dasharray de .avance .arco en el CSS. */
+  const CIRCUNFERENCIA = 2 * Math.PI * 21;
+
   function pintarAvance(){
     const listos = OBLIGATORIOS.filter(id => $(id).value.trim()).length;
     const total = OBLIGATORIOS.length;
-    $('avanceBarra').style.width = (listos / total * 100) + '%';
-    $('avanceTexto').textContent = listos === total ? 'Listo para enviar' : listos + ' de ' + total;
-    $('avance').classList.toggle('completo', listos === total);
+    const faltan = total - listos;
+    const pct = Math.round(listos / total * 100);
+
+    /* El arco se dibuja recortando el trazo: cuanto menos desplazamiento,
+       más vuelta pintada. */
+    $('avanceArco').style.strokeDashoffset = CIRCUNFERENCIA * (1 - listos / total);
+    $('avancePct').textContent = pct + '%';
+    $('avance').classList.toggle('completo', !faltan);
+    $('avance').setAttribute('aria-valuenow', pct);
+
+    if(!listos){
+      $('avanceTitulo').textContent = 'Vamos a empezar';
+      $('avanceSub').textContent = total + ' datos obligatorios';
+    }else if(faltan){
+      $('avanceTitulo').textContent = 'Vas por buen camino';
+      $('avanceSub').textContent = faltan === 1
+        ? 'Falta 1 dato obligatorio'
+        : 'Faltan ' + faltan + ' datos obligatorios';
+    }else{
+      $('avanceTitulo').textContent = 'Listo para enviar';
+      $('avanceSub').textContent = 'No falta nada';
+    }
   }
 
   OBLIGATORIOS.forEach(id => {

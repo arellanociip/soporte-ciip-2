@@ -39,10 +39,31 @@
 
     <form class="tarjeta" id="formulario" novalidate>
 
-      <!-- Cuánto falta. Solo cuenta lo obligatorio; lo llena js/solicitud.js. -->
-      <div class="avance" id="avance">
-        <div class="barra"><i id="avanceBarra"></i></div>
-        <div class="texto" id="avanceTexto">0 de 5</div>
+      <!-- Cuánto falta. Solo cuenta lo obligatorio; lo llena js/solicitud.js.
+           El anillo es decorativo para quien no ve: el porcentaje y la frase
+           de al lado ya lo dicen, y los atributos aria lo anuncian aparte. -->
+      <div class="avance" id="avance" role="progressbar"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+           aria-label="Avance de la planilla">
+        <div class="anillo">
+          <svg viewBox="0 0 52 52" aria-hidden="true">
+            <defs>
+              <linearGradient id="avanceDeg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#004090"/><stop offset="1" stop-color="#20B0F0"/>
+              </linearGradient>
+              <linearGradient id="avanceDegListo" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#1E7F5C"/><stop offset="1" stop-color="#3FB98A"/>
+              </linearGradient>
+            </defs>
+            <circle class="pista" cx="26" cy="26" r="21"/>
+            <circle class="arco" id="avanceArco" cx="26" cy="26" r="21"/>
+          </svg>
+          <div class="centro" id="avancePct">0%</div>
+        </div>
+        <div class="texto">
+          <b id="avanceTitulo">Vamos a empezar</b>
+          <span id="avanceSub">5 datos obligatorios</span>
+        </div>
       </div>
 
       <div class="seccion">Quién solicita</div>

@@ -299,21 +299,31 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .pantalla-entra{animation:surgir .4s ease both;}
 
 /* ---------- el avance de la planilla ---------- */
-/* Cuánto falta, sin regañar: solo cuenta los campos obligatorios. */
-.avance{display:flex; align-items:center; gap:11px; margin-bottom:20px;}
-.avance .barra{
-  flex:1; height:5px; border-radius:5px; background:var(--line-soft); overflow:hidden;
+/* Cuánto falta, sin regañar: solo cuenta los campos obligatorios. El anillo da
+   la proporción de un vistazo y la frase de al lado la dice con palabras, para
+   quien no lee porcentajes al vuelo. */
+.avance{display:flex; align-items:center; gap:14px; margin-bottom:22px;}
+.avance .anillo{width:52px; height:52px; flex:0 0 52px; position:relative;}
+/* girado para que el arco arranque arriba y no a las tres en punto */
+.avance .anillo svg{width:52px; height:52px; transform:rotate(-90deg);}
+.avance .pista{fill:none; stroke:var(--line-soft); stroke-width:5;}
+/* dasharray = la circunferencia del círculo de r=21 (2·π·21). Si cambia el
+   radio hay que cambiarla aquí y en CIRCUNFERENCIA, en js/solicitud.js. */
+.avance .arco{
+  fill:none; stroke:url(#avanceDeg); stroke-width:5; stroke-linecap:round;
+  stroke-dasharray:131.95; stroke-dashoffset:131.95;
+  transition:stroke-dashoffset .45s cubic-bezier(.4,0,.2,1);
 }
-.avance .barra i{
-  display:block; height:100%; width:0; border-radius:5px;
-  background:linear-gradient(90deg, var(--navy), var(--cyan));
-  transition:width .4s cubic-bezier(.4,0,.2,1);
+.avance .centro{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:12.5px; font-weight:800; color:var(--navy);
+  font-variant-numeric:tabular-nums; transition:color .25s ease;
 }
-.avance .texto{
-  font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
-  color:var(--gray-soft); white-space:nowrap; transition:color .25s ease;
-}
-.avance.completo .texto{color:var(--good);}
+.avance .texto b{display:block; font-size:13px; color:var(--ink); transition:color .25s ease;}
+.avance .texto span{font-size:11.5px; color:var(--gray-soft);}
+/* al completarse, el anillo y el rótulo pasan a verde */
+.avance.completo .arco{stroke:url(#avanceDegListo);}
+.avance.completo .centro, .avance.completo .texto b{color:var(--good);}
 
 /* ---------- campos ---------- */
 .campo.mal input, .campo.mal select, .campo.mal textarea{animation:temblor .32s ease;}
