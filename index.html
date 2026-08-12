@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitud de soporte · GTIC · CIIP</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23004090'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='800' fill='white' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<header class="cab">
+  <div class="cab-in">
+    <img src="assets/logo_ciip.png" alt="CIIP">
+    <div>
+      <div class="tit">Solicitud de soporte</div>
+      <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
+    </div>
+  </div>
+</header>
+
+<main class="envoltura">
+
+  <!-- Aviso de que falta configurar el servidor. Lo enciende js/solicitud.js. -->
+  <div class="aviso alerta" id="avisoSinServidor" hidden>
+    <span>⚠</span>
+    <div><b>Sin conexión con el servidor.</b> Falta llenar <code>js/config.js</code> con los datos
+    del proyecto de Supabase. Puedes probar el formulario: lo que envíes se guardará en este
+    navegador, pero no le llegará a nadie.</div>
+  </div>
+
+  <!-- ===================== EL FORMULARIO ===================== -->
+  <section id="pantallaFormulario">
+    <div class="intro">
+      <h1>Cuéntanos qué necesitas</h1>
+      <p>Llena esta planilla y la solicitud entra de una vez a la cola de GTIC. Al terminar
+      recibes un número para hacerle seguimiento. Solo toma un minuto.</p>
+    </div>
+
+    <form class="tarjeta" id="formulario" novalidate>
+
+      <div class="seccion">Quién solicita</div>
+      <div class="rejilla">
+        <div class="campo c8">
+          <label for="gerencia">Gerencia solicitante *</label>
+          <select id="gerencia" name="gerencia" required>
+            <option value="">Selecciona tu gerencia…</option>
+          </select>
+          <div class="error"></div>
+        </div>
+        <div class="campo c4">
+          <label for="usuario">Nombre y apellido *</label>
+          <input type="text" id="usuario" name="usuario" required autocomplete="name"
+                 placeholder="Ej. María Rodríguez">
+          <div class="error"></div>
+        </div>
+
+        <div class="campo c3">
+          <label for="cedula">Cédula <span class="opc">· opcional</span></label>
+          <input type="text" id="cedula" name="cedula" inputmode="numeric"
+                 placeholder="Ej. 12.345.678">
+          <div class="error"></div>
+        </div>
+        <div class="campo c3">
+          <label for="telefono">Teléfono <span class="opc">· opcional</span></label>
+          <input type="tel" id="telefono" name="telefono" autocomplete="tel"
+                 placeholder="Ej. 0412-1234567">
+          <div class="ayuda">Por si el técnico necesita ubicarte.</div>
+        </div>
+        <div class="campo c3">
+          <label for="piso">Piso *</label>
+          <select id="piso" name="piso" required>
+            <option value="">…</option>
+          </select>
+          <div class="error"></div>
+        </div>
+        <div class="campo c3">
+          <label for="oficina">Oficina *</label>
+          <input type="text" id="oficina" name="oficina" required list="listaOficinas"
+                 placeholder="Ej. 4-01">
+          <datalist id="listaOficinas"></datalist>
+          <div class="error"></div>
+        </div>
+      </div>
+
+      <div class="seccion">Qué está pasando</div>
+      <div class="rejilla">
+        <div class="campo">
+          <label for="descripcion">Describe la situación *</label>
+          <textarea id="descripcion" name="descripcion" required maxlength="600"
+                    placeholder="Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado."></textarea>
+          <div class="contador"><span id="contadorDesc">0</span> / 600</div>
+          <div class="error"></div>
+        </div>
+
+        <div class="campo c6">
+          <label for="tipo">Tipo de servicio <span class="opc">· opcional</span></label>
+          <select id="tipo" name="tipo">
+            <option value="">No sé / que decida GTIC</option>
+          </select>
+          <div class="ayuda" id="pistaTipo">Si no estás seguro, déjalo así: el técnico lo clasifica.</div>
+        </div>
+        <div class="campo c6">
+          <label for="detalle">Detalle del servicio <span class="opc">· opcional</span></label>
+          <select id="detalle" name="detalle" disabled>
+            <option value="">Elige primero el tipo de servicio</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="botones">
+        <button type="submit" class="boton primario" id="botonEnviar">Enviar solicitud</button>
+        <button type="button" class="boton plano" id="botonLimpiar">Limpiar</button>
+      </div>
+
+      <div class="aviso malo" id="avisoError" hidden style="margin:18px 0 0"></div>
+    </form>
+  </section>
+
+  <!-- ===================== EL ACUSE ===================== -->
+  <section id="pantallaAcuse" hidden>
+    <div class="tarjeta acuse">
+      <div class="marca">
+        <svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>
+      </div>
+      <h2>Tu solicitud quedó registrada</h2>
+      <div class="numero"><small>Número de solicitud</small><span id="numeroAcuse">—</span></div>
+      <p id="textoAcuse">GTIC ya la tiene en su cola. Anota el número: con él puedes preguntar
+      por el estado de tu caso.</p>
+      <div class="botones" style="justify-content:center">
+        <button type="button" class="boton plano" id="botonOtra">Enviar otra solicitud</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/catalogo.js"></script>
+<script src="js/solicitud.js"></script>
+</body>
+</html>

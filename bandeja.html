@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bandeja de soporte · GTIC · CIIP</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23004090'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='800' fill='white' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<header class="cab">
+  <div class="cab-in">
+    <img src="assets/logo_ciip.png" alt="CIIP">
+    <div>
+      <div class="tit">Bandeja de soporte</div>
+      <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
+    </div>
+    <div class="der" id="cabDerecha" hidden>
+      <a href="index.html">Nueva solicitud</a>
+      <a href="#" id="botonSalir">Salir</a>
+    </div>
+  </div>
+</header>
+
+<main class="envoltura ancha">
+
+  <div class="aviso alerta" id="avisoSinServidor" hidden>
+    <span>⚠</span>
+    <div><b>Sin conexión con el servidor.</b> Falta llenar <code>js/config.js</code> con los datos
+    del proyecto de Supabase. Hasta entonces la bandeja no puede mostrar nada.</div>
+  </div>
+
+  <!-- ===================== ACCESO ===================== -->
+  <section id="pantallaAcceso" hidden>
+    <div class="tarjeta" style="max-width:400px; margin:40px auto;">
+      <div class="intro" style="margin-bottom:20px">
+        <h1>Acceso de GTIC</h1>
+        <p>Esta bandeja es solo para el personal de la gerencia.</p>
+      </div>
+      <form id="formAcceso">
+        <div class="rejilla">
+          <div class="campo">
+            <label for="correo">Correo</label>
+            <input type="text" id="correo" autocomplete="username" placeholder="tu.correo@ciip.gob.ve">
+          </div>
+          <div class="campo">
+            <label for="clave">Contraseña</label>
+            <input type="password" id="clave" autocomplete="current-password">
+          </div>
+        </div>
+        <div class="aviso malo" id="avisoAcceso" hidden style="margin:16px 0 0"></div>
+        <div class="botones">
+          <button type="submit" class="boton primario" id="botonEntrar">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== LA BANDEJA ===================== -->
+  <section id="pantallaBandeja" hidden>
+    <div class="intro">
+      <h1>Solicitudes recibidas</h1>
+      <p>Lo que la casa ha pedido. Abre una para atenderla, dejar la constancia e imprimir
+      la Hoja de Servicio para firmar y sellar.</p>
+    </div>
+
+    <div class="barra">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="buscar" placeholder="Buscar por número, nombre, gerencia u oficina">
+      </div>
+      <div class="fichas" id="fichas"></div>
+      <button type="button" class="boton plano chico" id="botonRecargar">Actualizar</button>
+    </div>
+
+    <div id="lista"></div>
+  </section>
+
+</main>
+
+<!-- ===================== FICHA DE UNA SOLICITUD ===================== -->
+<div class="velo" id="velo" hidden>
+  <div class="hoja" id="hojaFicha"></div>
+</div>
+
+<!-- Lo que sale por la impresora: la Hoja de Servicio del Excel, rehecha. -->
+<div id="impresion"></div>
+
+<script src="js/config.js"></script>
+<script src="js/catalogo.js"></script>
+<script src="js/bandeja.js"></script>
+</body>
+</html>

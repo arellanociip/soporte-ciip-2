@@ -1,0 +1,301 @@
+/* ---------- Solicitudes de soporte · GTIC · CIIP ----------
+   Hoja única para las dos páginas: el formulario que llena la casa y la
+   bandeja donde GTIC atiende. Al final va lo de impresión, que es lo que
+   reconstruye la Hoja de Servicio tal como salía del Excel.
+   El azul y el cian son los del logo del CIIP. */
+
+:root{
+  --navy:#004090; --navy-deep:#00336d; --navy-soft:#e8effa;
+  --cyan:#20B0F0;
+  --ink:#0E1424; --gray:#5B6478; --gray-soft:#8A93A6;
+  --line:#E4E7EE; --line-soft:#EEF1F6;
+  --bg:#F4F7FB; --card:#FFFFFF;
+  --good:#1E7F5C; --good-bg:#E7F4EE;
+  --amber:#B7791F; --amber-bg:#FBF3E2;
+  --rust:#B4502E; --rust-bg:#FBEEE9;
+  --r:10px; --r-sm:7px;
+  --shadow:0 1px 2px rgba(14,20,36,.04), 0 6px 18px rgba(14,20,36,.06);
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+/* Va primero y con !important a propósito: casi todo lo que esta hoja esconde
+   con el atributo "hidden" tiene además una clase que le fija un display
+   (.aviso es flex, .velo es flex), y esa clase le gana al display:none que el
+   navegador trae de fábrica para [hidden]. Sin esta línea, un aviso "oculto"
+   se ve como una barra de color vacía. */
+[hidden]{display:none !important;}
+html,body{
+  font-family:'Helvetica Neue',Arial,sans-serif;
+  color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+body{font-size:14px; line-height:1.5;}
+svg{display:block;}
+a{color:var(--navy);}
+.tnum{font-variant-numeric:tabular-nums;}
+
+/* ===================== ENCABEZADO ===================== */
+.cab{
+  background:linear-gradient(180deg,#003a82 0%, var(--navy-deep) 100%);
+  color:#fff; padding:18px 0;
+}
+.cab-in{
+  max-width:940px; margin:0 auto; padding:0 20px;
+  display:flex; align-items:center; gap:14px;
+}
+.cab img{height:38px; width:auto; flex:0 0 auto;}
+.cab .tit{font-size:17px; font-weight:700; line-height:1.2;}
+.cab .sub{font-size:12px; color:rgba(255,255,255,.68); margin-top:2px;}
+.cab .der{margin-left:auto; display:flex; align-items:center; gap:10px;}
+.cab .der a{
+  color:rgba(255,255,255,.85); font-size:12.5px; text-decoration:none;
+  border:1px solid rgba(255,255,255,.24); border-radius:var(--r-sm); padding:6px 12px;
+}
+.cab .der a:hover{background:rgba(255,255,255,.10); color:#fff;}
+
+/* ===================== ARMAZÓN ===================== */
+.envoltura{max-width:940px; margin:0 auto; padding:24px 20px 64px;}
+.envoltura.ancha{max-width:1200px;}
+
+.tarjeta{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); box-shadow:var(--shadow); padding:22px 24px;
+}
+.tarjeta + .tarjeta{margin-top:16px;}
+
+.intro{margin-bottom:18px;}
+.intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
+.intro p{color:var(--gray); margin-top:5px; max-width:62ch;}
+
+.seccion{
+  font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--gray-soft); padding-bottom:8px; margin:26px 0 14px;
+  border-bottom:1px solid var(--line-soft);
+}
+.seccion:first-of-type{margin-top:0;}
+
+/* ===================== CAMPOS ===================== */
+.rejilla{display:grid; grid-template-columns:repeat(12,1fr); gap:14px 16px;}
+.campo{grid-column:span 12; display:flex; flex-direction:column; gap:5px; min-width:0;}
+.c3{grid-column:span 3;} .c4{grid-column:span 4;} .c6{grid-column:span 6;} .c8{grid-column:span 8;}
+/* Cuatro columnas dejan de caber mucho antes que dos: los c3 se parten a la
+   mitad primero, y solo abajo del todo va cada campo en su propia línea. */
+@media (max-width:860px){
+  .c3{grid-column:span 6;} .c4{grid-column:span 6;} .c8{grid-column:span 12;}
+}
+@media (max-width:560px){
+  .c3,.c4,.c6,.c8{grid-column:span 12;}
+}
+
+.campo label{font-size:12px; font-weight:700; color:var(--ink);}
+.campo label .opc{font-weight:400; color:var(--gray-soft);}
+.campo .ayuda{font-size:11.5px; color:var(--gray-soft);}
+
+input[type=text], input[type=tel], select, textarea{
+  width:100%; font-family:inherit; font-size:13.5px; color:var(--ink);
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:9px 11px; transition:border-color .14s ease, box-shadow .14s ease;
+}
+select{
+  appearance:none; cursor:pointer; padding-right:32px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6478' stroke-width='2.4' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; background-size:13px;
+}
+textarea{resize:vertical; min-height:96px; line-height:1.55;}
+input:focus, select:focus, textarea:focus{
+  outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(0,64,144,.12);
+}
+input:disabled, select:disabled, textarea:disabled{
+  background:var(--line-soft); color:var(--gray-soft); cursor:not-allowed;
+}
+input::placeholder, textarea::placeholder{color:#B4BBC9;}
+
+/* Un campo que no pasó la revisión, y el porqué debajo. */
+.campo.mal input, .campo.mal select, .campo.mal textarea{
+  border-color:var(--rust); box-shadow:0 0 0 3px rgba(180,80,46,.10);
+}
+.campo .error{font-size:11.5px; color:var(--rust); font-weight:600;}
+.campo .error:empty{display:none;}
+
+.contador{font-size:11px; color:var(--gray-soft); text-align:right;}
+
+/* ===================== BOTONES ===================== */
+.botones{display:flex; align-items:center; gap:12px; margin-top:26px; flex-wrap:wrap;}
+.boton{
+  font-family:inherit; font-size:13.5px; font-weight:700;
+  border:1px solid transparent; border-radius:var(--r-sm); padding:10px 20px;
+  cursor:pointer; transition:background .14s ease, border-color .14s ease, color .14s ease;
+}
+.boton.primario{background:var(--navy); color:#fff;}
+.boton.primario:hover{background:var(--navy-deep);}
+.boton.plano{background:#fff; color:var(--ink); border-color:var(--line);}
+.boton.plano:hover{background:var(--line-soft);}
+.boton:disabled{opacity:.55; cursor:progress;}
+.boton.chico{font-size:12px; padding:6px 13px;}
+
+/* ===================== AVISOS ===================== */
+.aviso{
+  border-radius:var(--r-sm); padding:11px 14px; font-size:12.5px;
+  display:flex; gap:9px; align-items:flex-start; margin-bottom:18px;
+}
+.aviso b{font-weight:700;}
+.aviso.alerta{background:var(--amber-bg); color:var(--amber); border:1px solid #F0DFBC;}
+.aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
+.aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
+
+/* ===================== ACUSE DE RECIBO ===================== */
+.acuse{text-align:center; padding:40px 24px;}
+.acuse .marca{
+  width:58px; height:58px; margin:0 auto 18px; border-radius:50%;
+  background:var(--good-bg); color:var(--good);
+  display:flex; align-items:center; justify-content:center;
+}
+.acuse .marca svg{width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;}
+.acuse h2{font-size:19px; font-weight:700;}
+.acuse p{color:var(--gray); margin-top:7px; max-width:52ch; margin-left:auto; margin-right:auto;}
+.acuse .numero{
+  display:inline-block; margin:20px 0 4px; padding:12px 26px;
+  background:var(--navy-soft); border:1px solid #CFDDF3; border-radius:var(--r);
+  font-size:23px; font-weight:800; color:var(--navy); letter-spacing:.02em;
+}
+.acuse .numero small{display:block; font-size:10.5px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--gray-soft); margin-bottom:3px;}
+
+/* ===================== BANDEJA ===================== */
+.barra{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+}
+.buscador{position:relative; flex:1 1 240px; min-width:200px;}
+.buscador svg{position:absolute; left:11px; top:50%; transform:translateY(-50%);
+  width:15px; height:15px; fill:none; stroke:var(--gray-soft); stroke-width:2; stroke-linecap:round;}
+.buscador input{padding-left:33px;}
+
+.fichas{display:flex; gap:6px; flex-wrap:wrap;}
+.ficha{
+  font-size:12px; font-weight:600; color:var(--gray);
+  background:#fff; border:1px solid var(--line); border-radius:20px;
+  padding:6px 13px; cursor:pointer; font-family:inherit;
+}
+.ficha:hover{border-color:var(--gray-soft); color:var(--ink);}
+.ficha.on{background:var(--navy); border-color:var(--navy); color:#fff;}
+.ficha .n{opacity:.7; margin-left:5px; font-variant-numeric:tabular-nums;}
+
+.lista{display:flex; flex-direction:column; gap:1px; background:var(--line-soft);
+  border:1px solid var(--line); border-radius:var(--r); overflow:hidden;}
+.fila{
+  background:#fff; padding:13px 16px; cursor:pointer;
+  display:grid; grid-template-columns:88px 1fr auto; gap:14px; align-items:center;
+}
+.fila:hover{background:#FAFCFF;}
+.fila .num{font-size:12.5px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
+.fila .num small{display:block; font-size:10px; font-weight:600; color:var(--gray-soft);}
+.fila .quien{font-weight:700; font-size:13.5px;}
+.fila .donde{font-size:11.5px; color:var(--gray-soft); margin-top:1px;}
+.fila .que{font-size:12.5px; color:var(--gray); margin-top:3px;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;}
+.fila .der{display:flex; align-items:center; gap:10px;}
+@media (max-width:720px){
+  .fila{grid-template-columns:1fr; gap:6px;}
+  .fila .der{justify-content:flex-start;}
+}
+
+.etiqueta{
+  font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  border-radius:20px; padding:3px 10px; white-space:nowrap;
+}
+.etiqueta.recibida{background:var(--amber-bg); color:var(--amber);}
+.etiqueta.en_proceso{background:var(--navy-soft); color:var(--navy);}
+.etiqueta.atendida{background:var(--good-bg); color:var(--good);}
+.etiqueta.anulada{background:var(--line-soft); color:var(--gray-soft);}
+
+.vacio{
+  background:#fff; border:1px dashed var(--line); border-radius:var(--r);
+  padding:44px 24px; text-align:center; color:var(--gray-soft); font-size:13px;
+}
+
+/* La ficha de una solicitud, sobre la lista */
+.velo{
+  position:fixed; inset:0; background:rgba(14,20,36,.45); z-index:50;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:36px 20px; overflow-y:auto;
+}
+.velo[hidden]{display:none;}
+.hoja{
+  background:#fff; border-radius:var(--r); box-shadow:0 20px 60px rgba(14,20,36,.28);
+  width:100%; max-width:800px; padding:26px 28px; position:relative;
+}
+.hoja .cerrar{
+  position:absolute; top:14px; right:14px; width:30px; height:30px;
+  border:none; background:var(--line-soft); border-radius:50%; cursor:pointer;
+  color:var(--gray); font-size:16px; line-height:1; font-family:inherit;
+}
+.hoja .cerrar:hover{background:var(--line); color:var(--ink);}
+.hoja h2{font-size:18px; font-weight:700; padding-right:40px;}
+.hoja .bajada{color:var(--gray-soft); font-size:12.5px; margin-top:3px;}
+
+.datos{display:grid; grid-template-columns:repeat(2,1fr); gap:12px 20px; margin:18px 0;}
+@media (max-width:600px){ .datos{grid-template-columns:1fr;} }
+.dato .r{font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gray-soft);}
+.dato .v{font-size:13.5px; margin-top:1px; word-break:break-word;}
+.dato.completo{grid-column:1 / -1;}
+.dato .v.parrafo{white-space:pre-wrap; line-height:1.55;}
+
+/* Los renglones de equipo que llena el técnico */
+.renglon{
+  border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:12px 14px; margin-bottom:10px; background:#FCFDFF;
+}
+.renglon .enc{display:flex; align-items:center; margin-bottom:10px;}
+.renglon .enc b{font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--gray-soft);}
+.renglon .quitar{
+  margin-left:auto; border:none; background:none; cursor:pointer; font-family:inherit;
+  color:var(--rust); font-size:11.5px; font-weight:700;
+}
+
+/* ===================== IMPRESIÓN: la Hoja de Servicio ===================== */
+/* Reconstruye el formato del Excel para firmar y sellar. En pantalla vive
+   oculta; solo existe al imprimir. */
+#impresion{display:none;}
+
+@media print{
+  /* Fuera todo lo de la pantalla: queda la hoja sola. */
+  body > *:not(#impresion){display:none !important;}
+  body{background:#fff; font-size:9pt;}
+  #impresion{display:block !important;}
+  @page{size:letter portrait; margin:12mm 10mm;}
+}
+
+.hs{color:#000; font-family:Arial,Helvetica,sans-serif;}
+.hs .hs-cab{display:flex; align-items:flex-start; gap:12px; border-bottom:2px solid #004090; padding-bottom:6px;}
+.hs .hs-cab img{height:34px;}
+.hs .hs-cab .hs-n{
+  margin-left:auto; text-align:center; border:1px solid #000; padding:3px 8px; font-size:8.5pt;
+}
+.hs .hs-cab .hs-n b{display:block; font-size:11pt;}
+.hs h1{text-align:center; font-size:14pt; font-weight:bold; margin:9px 0 7px; letter-spacing:.04em;}
+
+.hs table{width:100%; border-collapse:collapse; margin-bottom:7px;}
+.hs th, .hs td{border:1px solid #000; padding:3px 5px; font-size:8pt; vertical-align:top;}
+.hs th{background:#DCE6F2; font-weight:bold; text-align:center; font-size:7.5pt; letter-spacing:.02em;}
+.hs td.rot{background:#F2F2F2; font-weight:bold; width:1%; white-space:nowrap;}
+.hs .hs-titulo{
+  background:#DCE6F2; text-align:center; font-weight:bold; font-size:8.5pt;
+  border:1px solid #000; padding:3px; margin-bottom:0;
+}
+.hs .hs-caja{border:1px solid #000; border-top:none; padding:6px 7px; min-height:52px;
+  font-size:8.5pt; white-space:pre-wrap; margin-bottom:7px;}
+.hs .hs-nota{font-size:7.5pt; text-align:center; margin:9px 0; font-style:italic;}
+.hs .hs-firmas{display:flex; gap:10px; margin-top:6px;}
+.hs .hs-firmas > .hs-bloque{flex:1; border:1px solid #000; display:flex; flex-direction:column;}
+.hs .hs-firmas .hs-fh{background:#DCE6F2; text-align:center; font-weight:bold; font-size:8pt;
+  border-bottom:1px solid #000; padding:3px;}
+/* Los datos a la izquierda y el recuadro del sello a la derecha, como en el
+   Excel: allí el sello era una celda combinada al costado de cada firma. */
+.hs .hs-firmas .hs-fila{display:flex; flex:1;}
+.hs .hs-firmas .hs-fb{padding:6px 7px; font-size:8pt; line-height:1.9; flex:1;}
+.hs .hs-firmas .hs-fb .lin{border-bottom:1px solid #000; display:inline-block; min-width:110px;}
+.hs .hs-firmas .hs-sello{
+  width:64px; flex:0 0 64px; border-left:1px solid #000;
+  display:flex; align-items:center; justify-content:center;
+  font-size:7pt; font-weight:bold; letter-spacing:.08em; color:#666;
+}
