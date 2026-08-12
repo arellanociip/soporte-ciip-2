@@ -717,29 +717,24 @@
     }
     const abiertas = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso');
 
-    /* Aquí solo vive lo que sigue en curso. Las cerradas se van, que es lo que
-       uno espera de una bandeja de pendientes… con una excepción: si no queda
-       ninguna abierta, se deja la última cerrada. En ella está la respuesta
-       del técnico —qué se hizo con el equipo—, y borrarla en el mismo momento
-       en que aparece dejaría al usuario sin enterarse nunca. Se va sola en
-       cuanto pida algo nuevo. */
-    const enCurso = abiertas.length ? abiertas : filas.slice(0, 1);
-    /* …salvo que se pida el historial pulsando el anillo. */
+    /* Aquí solo vive lo que sigue en curso. En cuanto GTIC cierra una, se va:
+       lo terminado no es un pendiente. No se pierde nada —la respuesta del
+       técnico incluida— porque el anillo abre el historial completo. */
+    const enCurso = abiertas;
     const visibles = verHistorial ? filas : enCurso;
 
     /* Se poda contra lo que el servidor todavía tiene, no contra lo que se ve:
        lo cerrado se esconde, no se pierde — es lo que sostiene el historial. */
     soporteMias.podar(filas.map(s => s.id));
 
-    /* El anillo sigue a la que está en curso aunque se esté viendo el
-       historial: mide en qué va lo tuyo, no cuántas llevas. */
-    const manda = enCurso[0];
+    /* El anillo mide lo que está en curso, aunque se esté viendo el historial:
+       en qué va lo tuyo, no cuántas llevas. Sin nada en curso, se queda en
+       cero, que es lo honesto: no hay trámite andando. */
+    const manda = enCurso[0] || null;
     pintarAnilloMias(manda);
 
     const ETAPA_LBL = {recibida: 'GTIC la recibió y está en cola',
-                       en_proceso: 'Un técnico la está atendiendo',
-                       atendida: 'Resuelta',
-                       anulada: 'Anulada por GTIC'};
+                       en_proceso: 'Un técnico la está atendiendo'};
     /* Cuántas quedan escondidas: sin decirlo, el anillo no invita a pulsarlo. */
     const ocultas = filas.length - enCurso.length;
     const cola = ocultas
@@ -749,11 +744,9 @@
     $('misResumen').textContent = verHistorial
       ? 'Todo lo que has pedido · ' + filas.length +
         (filas.length === 1 ? ' solicitud' : ' solicitudes')
-      : (abiertas.length
+      : (manda
           ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio + cola
-          : (manda.estado === 'anulada'
-              ? 'Tu última solicitud fue anulada' + cola
-              : 'Ya está resuelta · así quedó' + cola));
+          : 'No tienes nada pendiente' + cola);
 
     /* El anillo solo se ofrece si hay algo más detrás. */
     const boton = $('misAnilloBoton');
@@ -762,8 +755,13 @@
       ? 'Volver a lo que sigue en curso'
       : (ocultas ? 'Ver todas tus solicitudes' : 'No tienes solicitudes anteriores');
     boton.setAttribute('aria-pressed', String(verHistorial));
-    $('misLista').innerHTML = visibles.map(filaMiaHtml).join('');
-    $('misLista').classList.toggle('una-sola', visibles.length === 1);
+    /* Sin nada en curso se enseña el camino apagado, igual que a quien nunca
+       ha pedido: dice qué va a pasar cuando pida, en vez de un hueco. Lo ya
+       resuelto está a un toque del anillo. */
+    $('misLista').innerHTML = visibles.length
+      ? visibles.map(filaMiaHtml).join('')
+      : caminoVacioHtml();
+    $('misLista').classList.toggle('una-sola', visibles.length <= 1);
     $('misLista').scrollTop = 0;
     revisarVelo();
     bloquearSiHayAbierta(abiertas[0] || null);
