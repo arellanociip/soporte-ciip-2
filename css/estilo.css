@@ -212,6 +212,11 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   box-shadow:0 0 0 4px rgba(0,64,144,.14);}
 .paso.ahora .rot{color:var(--navy); font-weight:700;}
 
+/* Todavía sin pedir nada: el camino se enseña apagado, como un plano de lo que
+   va a pasar. Ninguna etapa se marca cumplida porque ninguna lo está. */
+.vacio-pasos{margin-top:4px; opacity:.75;}
+.vacio-pasos .rot{color:var(--gray);}
+
 /* anulada: el trámite no siguió el camino, así que no se dibuja el camino */
 .mis-anulada{
   flex:1 1 100%; background:var(--line-soft); border-radius:var(--r-sm);

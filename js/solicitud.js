@@ -560,10 +560,17 @@
      Las tres etapas del trámite dibujadas: entra, la toma un técnico, se
      cierra. Ver el camino tranquiliza más que leer una palabra suelta, porque
      dice cuánto falta y no solo dónde está. */
+  /* Las mismas tres que GTIC usa en su bandeja: lo que ellos ven como fichas
+     para filtrar, aquí se ve como el camino de una sola solicitud. Nombrarlas
+     igual a los dos lados evita que la casa y la gerencia hablen distinto de
+     lo mismo. */
   const ETAPAS = [
-    {clave: 'recibida',   rot: 'Recibida',   pie: s => fechaCorta(s.creada_en)},
-    {clave: 'en_proceso', rot: 'En proceso', pie: () => 'Un técnico la toma'},
-    {clave: 'atendida',   rot: 'Atendida',   pie: s => s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta'},
+    {clave: 'recibida',   rot: 'Recibida',   guia: 'Entra a la cola de GTIC',
+     pie: s => fechaCorta(s.creada_en)},
+    {clave: 'en_proceso', rot: 'En proceso', guia: 'Un técnico la toma',
+     pie: () => 'Un técnico la toma'},
+    {clave: 'atendida',   rot: 'Atendida',   guia: 'Resuelta y firmada',
+     pie: s => s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta'},
   ];
   const VISTO = '<svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>';
 
@@ -605,11 +612,31 @@
     </div>`;
   }
 
+  /* Sin nada que seguir todavía, el panel no se esconde: enseña el camino que
+     va a recorrer la solicitud. Escondiéndolo, la función no existía para
+     quien no hubiera pedido nunca — y era justo quien más necesitaba saber
+     que existe. */
+  function caminoVacioHtml(){
+    return '<div class="pasos vacio-pasos">' + ETAPAS.map(e =>
+      `<div class="paso">
+         <div class="bola"></div>
+         <div class="rot">${escapar(e.rot)}</div>
+         <div class="cuando">${escapar(e.guia)}</div>
+       </div>`).join('') + '</div>';
+  }
+
   async function pintarMias(){
     const mias = soporteMias.leer();
-    if(!mias.length){ $('misSolicitudes').hidden = true; return; }
-
     $('misSolicitudes').hidden = false;
+
+    if(!mias.length){
+      $('misResumen').textContent = 'Aquí seguirás tu solicitud en cuanto la envíes';
+      $('misLista').innerHTML = caminoVacioHtml();
+      $('botonRefrescarMias').hidden = true;
+      bloquearSiHayAbierta(null);
+      return;
+    }
+    $('botonRefrescarMias').hidden = false;
     $('misResumen').textContent = 'Consultando…';
 
     /* Todas a la vez: son pocas y así no se espera una detrás de otra. */
