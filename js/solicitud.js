@@ -123,26 +123,6 @@
     };
   }
 
-  /* Sin servidor: la solicitud se queda en este navegador con un número local
-     marcado para que nadie lo confunda con un correlativo de verdad. */
-  const LLAVE_LOCAL = 'soporte_solicitudes_locales';
-
-  function guardarLocal(datos){
-    let guardadas = [];
-    try{ guardadas = JSON.parse(localStorage.getItem(LLAVE_LOCAL)) || []; }catch(e){ guardadas = []; }
-    const fila = Object.assign({}, datos, {
-      numero: guardadas.length + 1,
-      anio: new Date().getFullYear(),
-      estado: 'recibida',
-      creada_en: new Date().toISOString(),
-      local: true,
-    });
-    guardadas.push(fila);
-    try{ localStorage.setItem(LLAVE_LOCAL, JSON.stringify(guardadas)); }
-    catch(e){ console.warn('No se pudo guardar en este navegador:', e); }
-    return fila;
-  }
-
   async function mandarAlServidor(datos){
     const B = window.SOPORTE_BACKEND;
     const r = await fetch(B.url + '/rest/v1/solicitudes', {
@@ -170,9 +150,10 @@
   function mostrarAcuse(fila){
     const numero = 'GTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
     $('numeroAcuse').textContent = numero;
-    if(fila.local){
-      $('textoAcuse').innerHTML = '<b>Ojo: esto fue una prueba.</b> No hay servidor configurado, '
-        + 'así que la solicitud quedó guardada solo en este navegador y GTIC no la ha recibido.';
+    if(fila.prueba){
+      $('textoAcuse').innerHTML = '<b>Esto fue un ensayo.</b> Como todavía no hay servidor, la '
+        + 'solicitud quedó guardada solo en este navegador — nadie más la ve. '
+        + 'Ábrela en <a href="bandeja.html">la bandeja de soporte</a> para ver cómo le llega a GTIC.';
     }
     $('pantallaFormulario').hidden = true;
     $('pantallaAcuse').hidden = false;
@@ -197,7 +178,7 @@
     try{
       const fila = soporteHayBackend()
         ? await mandarAlServidor(datos)
-        : guardarLocal(datos);
+        : soporteLocal.agregar(datos);
       mostrarAcuse(fila);
     }catch(err){
       console.error('No se pudo enviar la solicitud:', err);

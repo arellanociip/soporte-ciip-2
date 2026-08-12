@@ -27,8 +27,10 @@
 
   <div class="aviso alerta" id="avisoSinServidor" hidden>
     <span>⚠</span>
-    <div><b>Sin conexión con el servidor.</b> Falta llenar <code>js/config.js</code> con los datos
-    del proyecto de Supabase. Hasta entonces la bandeja no puede mostrar nada.</div>
+    <div><b>Modo prueba.</b> Todavía no hay servidor (falta llenar <code>js/config.js</code>),
+    así que la bandeja muestra solo las solicitudes enviadas desde
+    <a href="index.html">este mismo navegador</a> y se entra sin clave. Sirve para ver cómo
+    funciona todo de punta a punta; nada de esto lo ve nadie más.</div>
   </div>
 
   <!-- ===================== ACCESO ===================== -->
@@ -89,6 +91,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/catalogo.js"></script>
+<script src="js/local.js"></script>
 <script src="js/bandeja.js"></script>
 </body>
 </html>

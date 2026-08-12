@@ -98,8 +98,38 @@ En Edge, desde PowerShell:
 **Por qué un servidor y no abrir el archivo directamente:** con `file://` el
 navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
 
-Sin `js/config.js` lleno la página funciona igual, avisa que no hay servidor y
-guarda lo enviado en el propio navegador. Sirve para probar; nadie lo recibe.
+---
+
+## Probarlo entero sin haber montado nada
+
+Mientras `js/config.js` esté vacío, las dos páginas entran en **modo prueba**:
+guardan en el propio navegador en vez de en el servidor. Como las dos se sirven
+desde la misma dirección, comparten ese almacén — así que el circuito completo
+se puede recorrer hoy mismo:
+
+1. Levanta el servidor (`python -m http.server 8123`).
+2. Abre <http://localhost:8123/index.html>, llena la planilla y envía.
+   Te da un número, `GTIC-HS/001-2026`.
+3. Abre <http://localhost:8123/bandeja.html>. **Ahí está tu solicitud**, con su
+   número, su gerencia y su oficina. No pide clave: sin servidor no hay nada de
+   nadie más que proteger.
+4. Ábrela, pon quién la atiende, escribe las observaciones, llena el renglón de
+   equipo, cambia el estado a *Atendida* y guarda. Verás moverse los contadores.
+5. Dale **Imprimir Hoja de Servicio**: sale la hoja completa, con el formato de
+   siempre, lista para firmar y sellar.
+
+El botón **Vaciar el ensayo**, en la bandeja, borra lo de prueba y te deja la
+pizarra limpia para volver a empezar.
+
+**Los dos límites de este modo, para no llevarse sorpresas:**
+
+- **Vive en un solo navegador.** Lo que envíes desde tu máquina no lo ve nadie
+  más, ni desde otra computadora ni desde otro navegador en la misma. Es un
+  ensayo para ver el circuito y enseñárselo a alguien, no un piloto con la
+  oficina.
+- **No hay claves.** La bandeja entra directo. Con Supabase montado vuelve a
+  pedir correo y contraseña, y este modo desaparece solo — no hay que apagar
+  nada, basta con llenar `js/config.js`.
 
 ---
 
@@ -160,6 +190,7 @@ bandeja.html        la cola de GTIC
 css/estilo.css      todo el diseño, incluida la hoja impresa
 js/config.js        ← el único archivo que hay que tocar para arrancar
 js/catalogo.js      gerencias, tipos, detalles, equipos y marcas
+js/local.js         el modo prueba: el almacén del navegador mientras no haya servidor
 js/solicitud.js     la lógica del formulario
 js/bandeja.js       acceso, cola, atención e impresión
 sql/esquema.sql     la tabla, el correlativo y los permisos

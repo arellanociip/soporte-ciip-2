@@ -33,6 +33,12 @@
   let busqueda = '';
   let abierta = null;   /* la solicitud que está en la ficha */
 
+  /* Sin servidor configurado, la bandeja trabaja contra el almacén del propio
+     navegador (js/local.js), el mismo donde escribe el formulario. Sirve para
+     recorrer el circuito completo antes de montar Supabase. No hay clave que
+     pedir, porque no hay nada de nadie más que proteger. */
+  const enPrueba = !soporteHayBackend();
+
   /* ================= sesión ================= */
   const LLAVE_SESION = 'soporte_sesion';
 
@@ -125,8 +131,12 @@
 
   /* ================= traer y pintar ================= */
   async function cargar(){
-    const r = await pedir('/rest/v1/solicitudes?select=*&order=creada_en.desc', {});
-    solicitudes = await r.json();
+    if(enPrueba){
+      solicitudes = soporteLocal.leer();
+    }else{
+      const r = await pedir('/rest/v1/solicitudes?select=*&order=creada_en.desc', {});
+      solicitudes = await r.json();
+    }
     pintar();
   }
 
@@ -316,13 +326,18 @@
     const boton = $('botonGuardar');
     boton.disabled = true; boton.textContent = 'Guardando…';
     try{
-      const r = await pedir('/rest/v1/solicitudes?id=eq.' + encodeURIComponent(abierta.id), {
-        method: 'PATCH',
-        headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
-        body: JSON.stringify(cambios),
-      });
-      const filas = await r.json();
-      const guardada = Array.isArray(filas) ? filas[0] : filas;
+      let guardada;
+      if(enPrueba){
+        guardada = soporteLocal.actualizar(abierta.id, cambios);
+      }else{
+        const r = await pedir('/rest/v1/solicitudes?id=eq.' + encodeURIComponent(abierta.id), {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+          body: JSON.stringify(cambios),
+        });
+        const filas = await r.json();
+        guardada = Array.isArray(filas) ? filas[0] : filas;
+      }
       const i = solicitudes.findIndex(x => x.id === abierta.id);
       if(i >= 0) solicitudes[i] = guardada;
       abierta = JSON.parse(JSON.stringify(guardada));
@@ -518,10 +533,31 @@
     if(e.key === 'Escape' && !$('velo').hidden) cerrar();
   });
 
+  /* Vaciar el ensayo: solo existe en modo prueba, donde no hay nada real que
+     perder. Con servidor de verdad este botón no se pinta. */
+  function vaciarPrueba(){
+    if(!enPrueba) return;
+    if(!confirm('Se borran las solicitudes de ensayo de este navegador. ¿Seguimos?')) return;
+    soporteLocal.vaciar();
+    solicitudes = [];
+    pintar();
+  }
+
   /* ================= arranque ================= */
   (async function(){
-    if(!soporteHayBackend()){
+    if(enPrueba){
+      /* Sin servidor no hay a quién pedirle una clave: se entra directo, con el
+         cartel bien visible de que esto es un ensayo. */
       $('avisoSinServidor').hidden = false;
+      $('botonSalir').hidden = true;
+      const botonVaciar = document.createElement('button');
+      botonVaciar.type = 'button';
+      botonVaciar.className = 'boton plano chico';
+      botonVaciar.textContent = 'Vaciar el ensayo';
+      botonVaciar.addEventListener('click', vaciarPrueba);
+      $('botonRecargar').after(botonVaciar);
+      mostrarBandeja();
+      await cargar();
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
