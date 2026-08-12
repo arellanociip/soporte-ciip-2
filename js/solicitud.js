@@ -678,6 +678,14 @@
   $('misLista').addEventListener('scroll', revisarVelo);
   window.addEventListener('resize', revisarVelo);
 
+  /* Pulsar el anillo despliega el historial completo, y volver a pulsarlo
+     regresa a lo que sigue en curso. */
+  let verHistorial = false;
+  $('misAnilloBoton').addEventListener('click', () => {
+    verHistorial = !verHistorial;
+    pintarMias();
+  });
+
   async function pintarMias(){
     const mias = soporteMias.leer();
     $('misSolicitudes').hidden = false;
@@ -686,6 +694,9 @@
       $('misResumen').textContent = 'Aquí seguirás tu solicitud en cuanto la envíes';
       $('misLista').innerHTML = caminoVacioHtml();
       $('botonRefrescarMias').hidden = true;
+      /* sin nada pedido no hay historial que abrir */
+      $('misAnilloBoton').disabled = true;
+      $('misAnilloBoton').title = 'Todavía no has pedido nada';
       pintarAnilloMias(null);
       revisarVelo();
       bloquearSiHayAbierta(null);
@@ -712,24 +723,45 @@
        del técnico —qué se hizo con el equipo—, y borrarla en el mismo momento
        en que aparece dejaría al usuario sin enterarse nunca. Se va sola en
        cuanto pida algo nuevo. */
-    const visibles = abiertas.length ? abiertas : filas.slice(0, 1);
+    const enCurso = abiertas.length ? abiertas : filas.slice(0, 1);
+    /* …salvo que se pida el historial pulsando el anillo. */
+    const visibles = verHistorial ? filas : enCurso;
 
-    /* El resguardo se poda igual: sin esto, el navegador cargaría para siempre
-       con solicitudes de hace meses que ya nadie va a mirar. */
-    soporteMias.podar(visibles.map(s => s.id));
+    /* Se poda contra lo que el servidor todavía tiene, no contra lo que se ve:
+       lo cerrado se esconde, no se pierde — es lo que sostiene el historial. */
+    soporteMias.podar(filas.map(s => s.id));
 
-    const manda = visibles[0];
+    /* El anillo sigue a la que está en curso aunque se esté viendo el
+       historial: mide en qué va lo tuyo, no cuántas llevas. */
+    const manda = enCurso[0];
     pintarAnilloMias(manda);
 
     const ETAPA_LBL = {recibida: 'GTIC la recibió y está en cola',
                        en_proceso: 'Un técnico la está atendiendo',
                        atendida: 'Resuelta',
                        anulada: 'Anulada por GTIC'};
-    $('misResumen').textContent = abiertas.length
-      ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio
-      : (manda.estado === 'anulada'
-          ? 'Tu última solicitud fue anulada'
-          : 'Ya está resuelta · así quedó');
+    /* Cuántas quedan escondidas: sin decirlo, el anillo no invita a pulsarlo. */
+    const ocultas = filas.length - enCurso.length;
+    const cola = ocultas
+      ? ' · ' + ocultas + (ocultas === 1 ? ' anterior' : ' anteriores')
+      : '';
+
+    $('misResumen').textContent = verHistorial
+      ? 'Todo lo que has pedido · ' + filas.length +
+        (filas.length === 1 ? ' solicitud' : ' solicitudes')
+      : (abiertas.length
+          ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio + cola
+          : (manda.estado === 'anulada'
+              ? 'Tu última solicitud fue anulada' + cola
+              : 'Ya está resuelta · así quedó' + cola));
+
+    /* El anillo solo se ofrece si hay algo más detrás. */
+    const boton = $('misAnilloBoton');
+    boton.disabled = !ocultas && !verHistorial;
+    boton.title = verHistorial
+      ? 'Volver a lo que sigue en curso'
+      : (ocultas ? 'Ver todas tus solicitudes' : 'No tienes solicitudes anteriores');
+    boton.setAttribute('aria-pressed', String(verHistorial));
     $('misLista').innerHTML = visibles.map(filaMiaHtml).join('');
     $('misLista').classList.toggle('una-sola', visibles.length === 1);
     $('misLista').scrollTop = 0;

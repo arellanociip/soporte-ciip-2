@@ -66,13 +66,16 @@
         <div class="avance" id="misAvance" role="progressbar"
              aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
              aria-label="Avance de tu solicitud">
-          <div class="anillo">
+          <!-- El anillo es el botón del historial: pulsarlo despliega todas las
+               solicitudes, incluidas las ya cerradas que aquí no se listan. -->
+          <button type="button" class="anillo anillo-boton" id="misAnilloBoton"
+                  aria-pressed="false" title="Ver todas tus solicitudes">
             <svg viewBox="0 0 52 52" aria-hidden="true">
               <circle class="pista" cx="26" cy="26" r="21"/>
               <circle class="arco" id="misArco" cx="26" cy="26" r="21"/>
             </svg>
-            <div class="centro" id="misPct">0%</div>
-          </div>
+            <span class="centro" id="misPct">0%</span>
+          </button>
           <div class="texto">
             <b class="mis-t">Lo que has pedido</b>
             <span class="mis-s" id="misResumen"></span>

@@ -179,6 +179,20 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 /* al terminar, el rótulo no se pinta de verde: el que manda es el resumen */
 .mis-h .avance.completo .texto b{color:var(--ink);}
 
+/* El anillo del seguimiento es además el botón del historial. Se comporta como
+   botón —foco, teclado, deshabilitado— sin dejar de parecer un anillo. */
+.anillo-boton{
+  border:none; background:none; padding:0; font-family:inherit; cursor:pointer;
+  border-radius:50%; transition:transform .12s ease, box-shadow .15s ease;
+}
+.anillo-boton:hover:not(:disabled){transform:scale(1.06);}
+.anillo-boton:active:not(:disabled){transform:scale(1);}
+.anillo-boton:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.28);}
+/* sin nada detrás no hay nada que abrir: deja de ofrecerse */
+.anillo-boton:disabled{cursor:default;}
+/* mientras se ve el historial, el anillo queda marcado como pulsado */
+.anillo-boton[aria-pressed="true"]{box-shadow:0 0 0 3px rgba(0,64,144,.18);}
+
 /* ---------- la lista rueda por dentro ----------
    Quien lleva meses pidiendo soporte acumula solicitudes, y sin un tope la
    tarjeta crecería sin fin, empujando la planilla fuera de la pantalla. Se
