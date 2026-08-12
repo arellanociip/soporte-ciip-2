@@ -45,6 +45,15 @@
        Solo sale si has enviado alguna desde este navegador. El estado se
        consulta al servidor por el id de cada una, que es lo único que prueba
        que son tuyas. Lo llena js/solicitud.js. -->
+  <!-- Encabeza la página: lo primero es saber a qué se vino. Se retira cuando
+       no hay planilla que llenar —en el acuse y con una solicitud abierta—
+       porque entonces invitaría a algo que no se puede hacer. -->
+  <div class="intro" id="intro">
+    <h1>Cuéntanos qué necesitas</h1>
+    <p>Llena esta planilla y la solicitud entra de una vez a la cola de GTIC. Al terminar
+    recibes un número para hacerle seguimiento. Solo toma un minuto.</p>
+  </div>
+
   <!-- Los dos medidores, uno al lado del otro: a la izquierda en qué va lo que
        ya pediste, a la derecha cuánto te falta para pedir lo siguiente. -->
   <div class="tira">
@@ -103,12 +112,6 @@
 
   <!-- ===================== EL FORMULARIO ===================== -->
   <section id="pantallaFormulario">
-    <div class="intro">
-      <h1>Cuéntanos qué necesitas</h1>
-      <p>Llena esta planilla y la solicitud entra de una vez a la cola de GTIC. Al terminar
-      recibes un número para hacerle seguimiento. Solo toma un minuto.</p>
-    </div>
-
     <form class="tarjeta" id="formulario" novalidate>
 
       <div class="seccion">Quién solicita</div>

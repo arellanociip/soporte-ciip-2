@@ -391,6 +391,7 @@
     if(menosMovimiento){
       sale.hidden = true; entra.hidden = false;
       $('tarjetaAvance').hidden = alAcuse;
+      $('intro').hidden = alAcuse;
       irArriba();
       return;
     }
@@ -400,6 +401,7 @@
       sale.classList.remove('pantalla-sale');
       entra.hidden = false;
       $('tarjetaAvance').hidden = alAcuse;
+      $('intro').hidden = alAcuse;
       entra.classList.add('pantalla-entra');
       irArriba();
       setTimeout(() => entra.classList.remove('pantalla-entra'), 420);
@@ -697,13 +699,16 @@
     if(!abierta){
       const enAcuse = !$('pantallaAcuse').hidden;
       $('pantallaFormulario').hidden = enAcuse;
-      /* el medidor de la planilla acompaña a la planilla: sin ella no mide nada */
+      /* el título y el medidor acompañan a la planilla: sin ella, uno invita a
+         algo que no se puede hacer y el otro no mide nada */
       $('tarjetaAvance').hidden = enAcuse;
+      $('intro').hidden = enAcuse;
       aviso.hidden = true;
       return;
     }
     $('pantallaFormulario').hidden = true;
     $('tarjetaAvance').hidden = true;
+    $('intro').hidden = true;
     $('pantallaAcuse').hidden = true;
     aviso.innerHTML = `<span>🕓</span><div>
       <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—
