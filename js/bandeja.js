@@ -192,6 +192,36 @@
           : 'Todavía no ha entrado ninguna solicitud.'}</div>`;
   }
 
+  /* Cuánto lleva esperando, en palabras. Se cuenta por días de calendario, no
+     por horas cumplidas: lo que entró anoche a las once es "ayer" a las ocho de
+     la mañana, aunque no hayan pasado veinticuatro horas. Así lo cuenta quien
+     lo espera. */
+  function edadHtml(s){
+    if(s.estado === 'atendida' || s.estado === 'anulada'){
+      return `<span class="edad fin">${esc(fechaCorta(s.creada_en))}</span>`;
+    }
+    const dia = x => { const d = new Date(x); d.setHours(0,0,0,0); return d.getTime(); };
+    const dias = Math.round((dia(Date.now()) - dia(s.creada_en)) / 86400000);
+    const txt = dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : 'hace ' + dias + ' días';
+    const clase = dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : 'viejo';
+    return `<span class="edad ${clase}">${esc(txt)}</span>`;
+  }
+
+  /* Lo que se hace veinte veces al día, en la propia fila: tomarla o cerrarla.
+     Abrir la ficha sigue estando para lo demás —renglones, observaciones,
+     imprimir— pero deja de ser obligatorio para lo de siempre. */
+  function accionesHtml(s){
+    if(s.estado === 'recibida'){
+      return `<div class="acc"><button type="button" data-accion="en_proceso"
+        data-id="${esc(s.id)}" title="Marcarla como tuya y ponerla en proceso">Tomar</button></div>`;
+    }
+    if(s.estado === 'en_proceso'){
+      return `<div class="acc"><button type="button" class="cerrar-r" data-accion="atendida"
+        data-id="${esc(s.id)}" title="Darla por resuelta">Cerrar</button></div>`;
+    }
+    return '';
+  }
+
   function filaHtml(s){
     return `<div class="fila" data-id="${esc(s.id)}">
       <div class="num">${String(s.numero).padStart(3,'0')}<small>${esc(String(s.anio))}</small></div>
@@ -201,8 +231,9 @@
         <div class="que">${esc(s.descripcion)}</div>
       </div>
       <div class="der">
-        <span style="font-size:11.5px; color:var(--gray-soft)">${esc(fechaCorta(s.creada_en))}</span>
+        ${edadHtml(s)}
         <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
+        ${accionesHtml(s)}
       </div>
     </div>`;
   }
@@ -260,6 +291,27 @@
     $('velo').hidden = true;
     abierta = null;
     document.body.style.overflow = '';
+  }
+
+  /* ---------- el estado, como el camino que es ----------
+     Las tres etapas a la vista y en orden, como las ve quien pidió. El valor
+     sigue viviendo en un input oculto llamado fEstado: así guardar() e
+     imprimir() no se enteran del cambio.
+     Anular queda aparte, porque no es una etapa del camino sino salirse de él;
+     mezclarla entre las tres invitaría a pulsarla por error. */
+  const ETAPAS_GTIC = ['recibida', 'en_proceso', 'atendida'];
+
+  function estadoHtml(s){
+    const anulada = s.estado === 'anulada';
+    return `<input type="hidden" id="fEstado" value="${esc(s.estado)}">
+      <div class="segm" id="segmEstado" role="group" aria-label="Estado de la solicitud">
+        ${ETAPAS_GTIC.map(e => `<button type="button" data-estado="${e}"
+          class="${!anulada && e === s.estado ? 'on' : ''}"
+          aria-pressed="${!anulada && e === s.estado}">${esc(ESTADO_ETIQUETA[e])}</button>`).join('')}
+      </div>
+      ${anulada
+        ? '<div style="font-size:12px;color:var(--rust);font-weight:700;margin-top:8px">Esta solicitud está anulada.</div>'
+        : '<button type="button" class="anular" id="botonAnular">Anular esta solicitud</button>'}`;
   }
 
   /* ---------- el técnico que atiende ----------
@@ -341,11 +393,7 @@
 
       <div class="seccion">Atención de GTIC</div>
       <div class="rejilla">
-        <div class="campo c6"><label for="fEstado">Estado</label>
-          <select id="fEstado">
-            ${['recibida','en_proceso','atendida','anulada'].map(e =>
-              `<option value="${e}" ${e===s.estado?'selected':''}>${esc(ESTADO_ETIQUETA[e])}</option>`).join('')}
-          </select></div>
+        <div class="campo c6"><label>Estado</label>${estadoHtml(s)}</div>
         <div class="campo c6"><label>Técnico que atiende</label>${tecnicoHtml()}</div>
         <div class="campo"><label for="fObs">Observaciones <span class="opc">· sale impreso en la hoja</span></label>
           <textarea id="fObs" rows="4" placeholder="Qué se encontró y qué se hizo.">${esc(s.observaciones||'')}</textarea></div>
@@ -388,6 +436,19 @@
     return tecnicoFicha || {nombre: '', cargo: '', cedula: '', telefono: ''};
   }
 
+  /* El único sitio que escribe cambios en una solicitud. Lo usan la ficha y los
+     botones de la fila, para que no haya dos caminos que puedan divergir. */
+  async function guardarCambios(id, cambios){
+    if(enPrueba) return soporteLocal.actualizar(id, cambios);
+    const r = await pedir('/rest/v1/solicitudes?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+      body: JSON.stringify(cambios),
+    });
+    const filas = await r.json();
+    return Array.isArray(filas) ? filas[0] : filas;
+  }
+
   async function guardar(){
     const t = tecnicoActual();
     const cambios = {
@@ -408,18 +469,7 @@
     const boton = $('botonGuardar');
     boton.disabled = true; boton.textContent = 'Guardando…';
     try{
-      let guardada;
-      if(enPrueba){
-        guardada = soporteLocal.actualizar(abierta.id, cambios);
-      }else{
-        const r = await pedir('/rest/v1/solicitudes?id=eq.' + encodeURIComponent(abierta.id), {
-          method: 'PATCH',
-          headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
-          body: JSON.stringify(cambios),
-        });
-        const filas = await r.json();
-        guardada = Array.isArray(filas) ? filas[0] : filas;
-      }
+      const guardada = await guardarCambios(abierta.id, cambios);
       const i = solicitudes.findIndex(x => x.id === abierta.id);
       if(i >= 0) solicitudes[i] = guardada;
       abierta = JSON.parse(JSON.stringify(guardada));
@@ -636,7 +686,51 @@
     pintar();
   });
 
+  /* Tomar o cerrar desde la fila. Al tomarla queda a nombre de quien la toma,
+     que es lo que uno espera de "tomar": si no, dos técnicos podrían estar en
+     lo mismo sin saberlo. */
+  async function accionRapida(id, estado, boton){
+    const s = solicitudes.find(x => x.id === id);
+    if(!s) return;
+    const yo = yoTecnico();
+    const cambios = {estado};
+    if(!s.tecnico && yo.nombre){
+      cambios.tecnico = yo.nombre;
+      cambios.tecnico_cargo = yo.cargo || null;
+      cambios.tecnico_cedula = yo.cedula || null;
+      cambios.tecnico_telefono = yo.telefono || null;
+    }
+    if(estado === 'atendida') cambios.atendida_en = s.atendida_en || new Date().toISOString();
+
+    boton.disabled = true;
+    boton.textContent = estado === 'atendida' ? 'Cerrando…' : 'Tomando…';
+    try{
+      const guardada = await guardarCambios(id, cambios);
+      const i = solicitudes.findIndex(x => x.id === id);
+      if(i >= 0) solicitudes[i] = guardada;
+      pintar();
+      /* Tomar una solicitud es el momento de ir a atenderla, y para eso hace
+         falta la Hoja de Servicio impresa: se firma y se sella en el puesto.
+         Así que la ficha se abre sola, con el botón de imprimir a mano.
+         Cerrar no la abre: ahí ya se tiene la hoja y lo que se busca es
+         despachar varias seguidas. */
+      if(estado === 'en_proceso') abrir(id);
+    }catch(err){
+      console.error('No se pudo ' + estado + ':', err);
+      boton.disabled = false;
+      boton.textContent = estado === 'atendida' ? 'Cerrar' : 'Tomar';
+      alert('No se pudo guardar el cambio. Revisa la conexión y vuelve a intentar.');
+    }
+  }
+
   $('lista').addEventListener('click', e => {
+    /* los botones de la fila no cuentan como "abrir la solicitud" */
+    const accion = e.target.closest('[data-accion]');
+    if(accion){
+      e.stopPropagation();
+      accionRapida(accion.dataset.id, accion.dataset.accion, accion);
+      return;
+    }
     const fila = e.target.closest('.fila');
     if(fila) abrir(fila.dataset.id);
   });
@@ -651,6 +745,28 @@
 
     /* el atajo del recuadro cuando a la cuenta le faltan cargo o cédula */
     if(e.target.id === 'botonCompletarDatos'){ abrirPerfil(); return; }
+
+    /* las tres etapas: mueven el campo oculto que lee guardar() */
+    const etapa = e.target.closest('#segmEstado [data-estado]');
+    if(etapa){
+      $('fEstado').value = etapa.dataset.estado;
+      $('segmEstado').querySelectorAll('[data-estado]').forEach(b => {
+        const on = b === etapa;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      return;
+    }
+    if(e.target.id === 'botonAnular'){
+      if(!confirm('¿Anular esta solicitud? Quien la pidió verá que fue anulada.')) return;
+      $('fEstado').value = 'anulada';
+      $('segmEstado').querySelectorAll('[data-estado]').forEach(b => {
+        b.classList.remove('on'); b.setAttribute('aria-pressed', 'false');
+      });
+      e.target.textContent = 'Quedará anulada al guardar';
+      e.target.disabled = true;
+      return;
+    }
 
     /* "Es otro": deja de confirmarse a sí mismo y escribe el nombre de quien
        de verdad atendió. Sin cargo ni cédula, porque no son suyos. */
