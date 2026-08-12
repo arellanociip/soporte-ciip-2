@@ -709,12 +709,29 @@
       const i = solicitudes.findIndex(x => x.id === id);
       if(i >= 0) solicitudes[i] = guardada;
       pintar();
-      /* Tomar una solicitud es el momento de ir a atenderla, y para eso hace
-         falta la Hoja de Servicio impresa: se firma y se sella en el puesto.
-         Así que la ficha se abre sola, con el botón de imprimir a mano.
-         Cerrar no la abre: ahí ya se tiene la hoja y lo que se busca es
-         despachar varias seguidas. */
-      if(estado === 'en_proceso') abrir(id);
+      /* Los dos botones abren la ficha, porque los dos desembocan en la Hoja
+         de Servicio: al tomarla, para llevársela y que la firmen en el puesto;
+         al cerrarla, porque ahí la hoja ya está completa —observaciones,
+         técnico, renglones— y es el momento de imprimirla para el archivo.
+         Cerrar sin abrir imprimiría una hoja sin lo que se hizo. */
+      abrir(id);
+      /* Al cerrar, lo que se viene a hacer es imprimir: la ficha es larga y el
+         botón queda al fondo, así que se lleva a la vista en vez de obligar a
+         rodar hasta él. Al tomar no, que ahí primero se lee lo que pasa. */
+      if(estado === 'atendida'){
+        /* Los botones son lo último de la ficha, así que llevar el velo al
+           fondo los deja a la vista. Se hace sobre el contenedor que de verdad
+           rueda —el velo— en vez de pedirle al botón que se acerque: dentro de
+           una ventana emergente, scrollIntoView no siempre encuentra a quién
+           mover. */
+        /* Sin animar: la ficha acaba de aparecer, así que no hay un "antes"
+           del que mover a nadie, y un desplazamiento suave sobre algo recién
+           pintado a veces no llega a ejecutarse. */
+        requestAnimationFrame(() => {
+          const velo = $('velo');
+          velo.scrollTop = velo.scrollHeight;
+        });
+      }
     }catch(err){
       console.error('No se pudo ' + estado + ':', err);
       boton.disabled = false;
