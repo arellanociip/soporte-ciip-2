@@ -214,6 +214,9 @@ function hojaPdf(s){
   y += 24;
 
   /* ---- las dos firmas ---- */
+  /* Cada dato en su renglón y con su raya de punta a punta, tenga valor o no:
+     así se sabe dónde escribir lo que falte y el bloque no queda cojo. Sin
+     firma ni sello: esta hoja se archiva, no se firma dos veces. */
   const mitad = (CAJA - 12) / 2;
   const bloque = (bx, titulo, datos) => {
     let by = y;
@@ -221,18 +224,18 @@ function hojaPdf(s){
     caja(bx, by, mitad, 13);
     texto(bx + 4, by + 9, titulo, 7.5, true);
     by += 13;
-    caja(bx, by, mitad, 78);
+    caja(bx, by, mitad, 66);
     datos.forEach((d, i) => {
-      const t = d[0] + ' ' + (d[1] || '');
+      const fy = by + 15 + i * 14;
+      const anchoRotulo = ancho(d[0], 7.5, false);
+      texto(bx + 6, fy, d[0], 7.5, false);
+      const desde = bx + 8 + anchoRotulo;
+      const hasta = bx + mitad - 8;
+      linea(desde, fy + 2, hasta, fy + 2);
       let tam = 7.5;
-      while(tam > 5.5 && ancho(t, tam, false) > mitad - 60) tam -= 0.25;
-      texto(bx + 4, by + 13 + i * 12, t, tam, false);
-      if(!d[1]) linea(bx + 6 + ancho(d[0] + ' ', tam, false), by + 14 + i * 12,
-                      bx + mitad - 62, by + 14 + i * 12);
+      while(tam > 5 && ancho(d[1] || '', tam, true) > hasta - desde - 4) tam -= 0.25;
+      texto(desde + 3, fy, d[1] || '', tam, true);
     });
-    /* el recuadro del sello, a la derecha del bloque */
-    caja(bx + mitad - 58, by + 6, 52, 52);
-    texto(bx + mitad - 58, by + 34, 'SELLO', 7, false, true, 52);
   };
 
   bloque(MARGEN, 'DATOS DEL USUARIO', [
@@ -240,14 +243,12 @@ function hojaPdf(s){
     ['C.I. N°.:', s.cedula || ''],
     ['TELEFONO:', s.telefono || ''],
     ['CARGO:', s.cargo || ''],
-    ['FIRMA:', ''],
   ]);
   bloque(MARGEN + mitad + 12, 'TECNICO DE SOPORTE', [
     ['NOMBRE Y APELLIDO:', s.tecnico || ''],
     ['C.I. N°.:', s.tecnico_cedula || ''],
     ['TELEFONO:', s.tecnico_telefono || ''],
     ['CARGO:', s.tecnico_cargo || ''],
-    ['FIRMA:', ''],
   ]);
 
   return armar(trozos.join('\n'));

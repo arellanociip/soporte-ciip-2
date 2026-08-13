@@ -33,7 +33,14 @@
       </tr>`;
     }).join('');
 
-    const raya = v => v ? esc(v) : '<span class="lin"></span>';
+    /* Cada dato sobre su raya, esté lleno o vacío. En el papel del Excel las
+       rayas están siempre: son las que dicen dónde escribir lo que falte y las
+       que hacen que la hoja se lea como un formulario y no como una lista.
+       Antes solo salía la raya cuando el dato faltaba, y el bloque quedaba
+       cojo —unos renglones subrayados y otros no—. */
+    const renglon = (rotulo, valor) =>
+      `<div class="hs-r"><span class="et">${esc(rotulo)}</span>` +
+      `<span class="va">${esc(valor || '')}</span></div>`;
 
     return `<div class="hs">
       <div class="hs-cab">
@@ -79,28 +86,20 @@
       <div class="hs-firmas">
         <div class="hs-bloque">
           <div class="hs-fh">DATOS DEL USUARIO</div>
-          <div class="hs-fila">
-            <div class="hs-fb">
-              NOMBRE Y APELLIDO: ${esc(s.usuario)}<br>
-              C.I. N°.: ${esc(s.cedula||'S/N')}<br>
-              TELEFONO: ${esc(s.telefono||'S/N')}<br>
-              CARGO: ${raya(s.cargo)}<br>
-              FIRMA: <span class="lin"></span>
-            </div>
-            <div class="hs-sello">SELLO</div>
+          <div class="hs-fb">
+            ${renglon('NOMBRE Y APELLIDO:', s.usuario)}
+            ${renglon('C.I. N°.:', s.cedula)}
+            ${renglon('TELEFONO:', s.telefono)}
+            ${renglon('CARGO:', s.cargo)}
           </div>
         </div>
         <div class="hs-bloque">
           <div class="hs-fh">TECNICO DE SOPORTE</div>
-          <div class="hs-fila">
-            <div class="hs-fb">
-              NOMBRE Y APELLIDO: ${esc(tec.nombre || '')}<br>
-              C.I. N°.: ${raya(tec.cedula)}<br>
-              TELEFONO: ${raya(tec.telefono)}<br>
-              CARGO: ${raya(tec.cargo)}<br>
-              FIRMA: <span class="lin"></span>
-            </div>
-            <div class="hs-sello">SELLO</div>
+          <div class="hs-fb">
+            ${renglon('NOMBRE Y APELLIDO:', tec.nombre)}
+            ${renglon('C.I. N°.:', tec.cedula)}
+            ${renglon('TELEFONO:', tec.telefono)}
+            ${renglon('CARGO:', tec.cargo)}
           </div>
         </div>
       </div>

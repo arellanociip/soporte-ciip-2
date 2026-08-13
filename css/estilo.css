@@ -1222,13 +1222,17 @@ select.despierta{animation:destello .7s ease;}
 .hs .hs-firmas > .hs-bloque{flex:1; border:1px solid #000; display:flex; flex-direction:column;}
 .hs .hs-firmas .hs-fh{background:#DCE6F2; text-align:center; font-weight:bold; font-size:8pt;
   border-bottom:1px solid #000; padding:3px;}
-/* Los datos a la izquierda y el recuadro del sello a la derecha, como en el
-   Excel: allí el sello era una celda combinada al costado de cada firma. */
-.hs .hs-firmas .hs-fila{display:flex; flex:1;}
-.hs .hs-firmas .hs-fb{padding:6px 7px; font-size:8pt; line-height:1.9; flex:1;}
-.hs .hs-firmas .hs-fb .lin{border-bottom:1px solid #000; display:inline-block; min-width:110px;}
-.hs .hs-firmas .hs-sello{
-  width:64px; flex:0 0 64px; border-left:1px solid #000;
-  display:flex; align-items:center; justify-content:center;
-  font-size:7pt; font-weight:bold; letter-spacing:.08em; color:#666;
+/* Cada dato en su renglón, con la raya de punta a punta: el rótulo a la
+   izquierda y el valor escrito sobre la línea, como en cualquier planilla. La
+   raya sale siempre, tenga dato o no —así se sabe dónde escribir lo que falte
+   y el bloque no queda cojo—, y llega hasta el borde para que un nombre largo
+   quepa sin partirse. */
+.hs .hs-firmas .hs-fb{padding:8px 9px 10px; font-size:8pt; flex:1;}
+.hs .hs-firmas .hs-r{display:flex; align-items:flex-end; gap:5px; margin-bottom:9px;}
+.hs .hs-firmas .hs-r:last-child{margin-bottom:2px;}
+.hs .hs-firmas .hs-r .et{flex:0 0 auto; white-space:nowrap;}
+.hs .hs-firmas .hs-r .va{
+  flex:1; min-width:0; border-bottom:1px solid #000;
+  padding:0 2px 1px; font-weight:bold;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
