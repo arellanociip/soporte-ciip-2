@@ -90,8 +90,11 @@ const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'];
 function crearUsuario(correo, clave){
   if(!correo){
     console.error('Uso: node servidor.js --crear-usuario correo@ciip.gob.ve [clave] \\');
-    console.error('       --nombre "Dan Moreno" --cargo "Técnico de soporte" \\');
-    console.error('       --cedula 26.610.022 --telefono 0412-5425243');
+    /* El ejemplo va con datos inventados a propósito: esto se lee en pantalla
+       y se lee en el repositorio, y la cédula y el teléfono de alguien no son
+       una muestra de cómo se escribe un comando. */
+    console.error('       --nombre "Nombre Apellido" --cargo "Técnico de soporte" \\');
+    console.error('       --cedula 12.345.678 --telefono 0412-1234567');
     console.error('');
     console.error('  Sin clave, se inventa una y se muestra para que se la pases.');
     console.error('  El nombre y el cargo salen impresos en la Hoja de Servicio.');

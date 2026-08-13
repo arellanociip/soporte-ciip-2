@@ -21,6 +21,45 @@ servicio y los detalles que cuelgan de cada uno son exactamente sus listas.
 
 ---
 
+## Si acabas de clonarlo
+
+Hace falta **Node** y nada más: ni `npm install`, ni compilar, ni base de datos.
+No hay una sola dependencia — el servidor es la biblioteca estándar de Node y
+las páginas son HTML, CSS y JavaScript a secas, sin marco de trabajo. Se probó
+con Node 24; sirve cualquiera reciente.
+
+```
+node servidor.js --crear-usuario tu.correo@ejemplo.com          crea la cuenta de la bandeja
+node servidor.js                                                lo levanta en el puerto 8123
+```
+
+Y ya: `http://localhost:8123/index.html` para pedir soporte,
+`http://localhost:8123/bandeja.html` para atenderlo. El puerto se cambia con la
+variable `PUERTO`.
+
+**Lo que no viene en el repositorio** es la carpeta `datos/`: ahí viven las
+solicitudes, las cuentas de la bandeja y los archivos que la gente adjunta. Se
+crea sola en cuanto se guarda la primera cosa, y está fuera a propósito —son
+datos de la casa, no código—. Por eso un clon recién bajado arranca vacío y lo
+primero que dice es que hay que crear un usuario.
+
+Lo demás que conviene saber antes de tocarlo:
+
+- **Los `.cmd`, el `.vbs` y el `.ps1` son de Windows.** Levantan esto como
+  servicio sin ventana, vigilan que siga vivo y lo vuelven a arrancar si se
+  cae. En Linux o Mac no hacen falta: `node servidor.js` y ya.
+- **La Hoja de Servicio en PDF la imprime Edge** sin ventana, si está instalado.
+  Si no está, el servidor arma un PDF más sencillo él mismo. Nadie se queda sin
+  su comprobante.
+- **`js/directorio.js` y `js/inventario.js` son los datos de esta casa** —quién
+  trabaja dónde y qué equipo tiene cada quien—. Para montarlo en otro sitio se
+  sustituyen por los propios, o se dejan vacíos: el formulario tiene *"No
+  aparezco en la lista"* y funciona igual escribiéndolo todo a mano.
+- **`js/config.js` decide dónde se guarda:** en el servidor de la casa
+  (`servidor.js`), en Supabase, o en el navegador para ensayar a solas.
+
+---
+
 ## Arrancarlo (lo de todos los días)
 
 **No hay que arrancar nada:** el servidor y el vigía se levantan solos al

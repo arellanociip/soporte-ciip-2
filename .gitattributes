@@ -1,0 +1,24 @@
+# ---------- Cómo se guardan los finales de línea ----------
+# Windows termina cada línea con dos caracteres y el resto del mundo con uno.
+# Sin esta hoja, dos personas trabajando en máquinas distintas se devuelven el
+# archivo entero cambiado aunque no hayan tocado nada: git ve mil líneas
+# distintas donde solo cambió una.
+#
+# Aquí adentro todo se guarda con el final corto (LF), que es lo que espera
+# cualquiera que clone esto.
+* text=auto eol=lf
+
+# Menos lo que ejecuta Windows: un .cmd o un .vbs se lo come el intérprete de
+# comandos, y ese sí quiere los dos caracteres.
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.vbs  text eol=crlf
+*.ps1  text eol=crlf
+
+# Y lo que no es texto, que git no lo toque.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.ico   binary
+*.pdf   binary
+*.xlsx  binary
