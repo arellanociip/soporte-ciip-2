@@ -146,6 +146,36 @@ navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
 
 ---
 
+## El vigía: que la bandeja salte sola
+
+Doble clic en **`vigia.cmd`**. Se queda escuchando al servidor y, en cuanto entra
+una solicitud, trae la bandeja al frente de la pantalla; si no estaba abierta, la
+abre en su propia ventana. Deja esa ventanita negra abierta: para apagarlo, se
+cierra.
+
+Para que arranque solo con Windows, doble clic en **`vigia-al-encender.cmd`** una
+vez. Se quita borrando el acceso directo: `Windows+R`, escribe `shell:startup`, y
+borra "Vigia de la bandeja".
+
+**En la máquina de otro compañero funciona igual**: copia la carpeta —bastan
+`vigia.cmd` y `vigia.ps1`— y doble clic allí. Va en PowerShell a propósito, que
+ya viene con Windows: no hay que instalarle nada. Node solo hace falta en esta
+máquina, la del servidor. Si el servidor cambia de IP, la dirección se corrige en
+la primera línea de `vigia.cmd`.
+
+Solo salta con las solicitudes **nuevas**, no cada vez que un técnico toma o
+cierra una: el servidor distingue las dos cosas en el aviso que manda. Ese aviso
+no lleva ningún dato dentro —solo dice "entró una"—, así que quien lo escuche
+desde la red no se entera de quién pidió ni de qué.
+
+Traer una ventana al frente es lo único delicado de todo esto: Windows no deja
+que un programa de segundo plano robe el foco, y el truco que lo consigue —
+engancharse al hilo de la ventana que lo tiene y tocar la tecla Alt— falla de vez
+en cuando. Si un día no salta, la ventana igual queda levantada y su botón
+parpadeando en la barra de tareas.
+
+---
+
 ## El modo prueba (sin servidor)
 
 Si `js/config.js` tuviera `servidor: ''`, las dos páginas guardarían en el propio

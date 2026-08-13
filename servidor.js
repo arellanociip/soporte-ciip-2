@@ -250,9 +250,16 @@ function sesionDe(req){
    ruta— las páginas siguen preguntando cada tanto por su cuenta. */
 const oyentes = new Set();
 
-function avisarCambio(){
+/* El aviso dice de qué se trata —"nueva" o "cambio"— y nada más. Las páginas
+   ni lo miran: ellas vuelven a pedir la lista con su sesión, que es lo que
+   decide qué puede ver cada quien. Quien lo usa es el vigía (vigia.ps1), que
+   solo tiene que traer la bandeja al frente cuando entra algo nuevo y no cada
+   vez que un técnico toma o cierra una. Saber que entró una solicitud, sin
+   saber de quién ni de qué, es lo único que viaja por ahí. */
+function avisarCambio(que){
+  const linea = 'data: ' + (que || 'cambio') + '\n\n';
   for(const res of oyentes){
-    try{ res.write('data: cambio\n\n'); }
+    try{ res.write(linea); }
     catch(e){ oyentes.delete(res); }
   }
 }
@@ -546,7 +553,7 @@ async function atenderApi(req, res, url){
       const fila = crearSolicitud(await cuerpoDe(req));
       console.log('  + solicitud', String(fila.numero).padStart(3,'0') + '-' + fila.anio,
                   '·', fila.usuario, '·', fila.gerencia);
-      avisarCambio();
+      avisarCambio('nueva');
       return responder(res, 201, [fila]);
     }
     /* ---- consultar el estado de LA PROPIA solicitud, sin cuenta ----
