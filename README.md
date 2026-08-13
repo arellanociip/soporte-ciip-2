@@ -119,6 +119,12 @@ Lo que sigue abierto, a sabiendas:
   explicada en la cabecera de cada archivo.
 - **La Hoja en PDF se baja con el `id` de la solicitud**, sin clave: es lo que
   permite que quien pidió el soporte se la lleve. Ese id no se adivina.
+- **El rastro queda en la máquina.** El id que prueba que una solicitud es tuya
+  vive en el navegador desde el que la enviaste, y con él se ve su estado, se
+  habla con el técnico y se baja la Hoja con tu cédula y tu teléfono. En la
+  computadora de uno da igual; en una prestada, no. Por eso el formulario tiene
+  abajo *"No es mi computadora · borrar mi rastro"*, y por eso lo atendido hace
+  más de dos meses se suelta solo.
 
 ---
 

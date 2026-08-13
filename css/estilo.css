@@ -871,6 +871,14 @@ select.despierta{animation:destello .7s ease;}
 }
 .inv-tiene .enlace{margin-left:auto;}
 
+/* La nota de que esto vive en el navegador, con su botón de borrar. Discreta:
+   es cierto siempre, pero solo importa en una máquina prestada. */
+.mis-pie{
+  display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  margin:2px 0 10px; font-size:11px; color:var(--gray-soft);
+}
+.mis-pie .enlace{font-size:11px; margin-left:auto;}
+
 /* ===================== EN EL TELÉFONO =====================
    Todo lo de arriba está pensado para el monitor de una oficina y ahí funciona;
    este bloque —y solo este— es lo que cambia en una pantalla de mano. No toca

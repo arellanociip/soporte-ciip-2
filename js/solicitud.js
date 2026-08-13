@@ -307,6 +307,9 @@
   /* al cambiar de problema vuelve a ofrecerse: es otra pregunta */
   detalle.addEventListener('change', () => { yaLaVio = false; pintarAntes(true); });
 
+  /* lo atendido hace más de dos meses se suelta solo de este navegador */
+  if(window.soporteMias && soporteMias.olvidarViejas) soporteMias.olvidarViejas(60);
+
   traerGuiasPublicas();
   /* lo que GTIC fue apuntando desde la bandeja se suma a lo que trajo el
      cuadro de Patrimonio: por eso se pide al servidor al abrir la página */
@@ -1393,6 +1396,20 @@
   }
 
   $('botonRefrescarMias').addEventListener('click', () => pintarMias());
+
+  /* Borrar el rastro de esta máquina. Se pregunta antes porque no tiene vuelta
+     atrás: sin los id guardados no hay forma de volver a ver esas solicitudes
+     —el servidor no las entrega por nombre, justamente para que nadie pueda
+     leer las de otro—. Lo que ya se envió sigue en GTIC, intacto. */
+  $('botonOlvidar').addEventListener('click', () => {
+    const cuantas = soporteMias.leer().length;
+    if(!confirm('Se borra de esta computadora el seguimiento de ' +
+                (cuantas === 1 ? 'tu solicitud' : 'tus ' + cuantas + ' solicitudes') +
+                ' y tus datos guardados.\n\nLo que ya enviaste sigue en GTIC: esto solo quita ' +
+                'el rastro de este navegador, y no se puede deshacer.')) return;
+    soporteOlvidarTodo();
+    location.reload();
+  });
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();

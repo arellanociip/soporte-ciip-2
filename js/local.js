@@ -110,5 +110,25 @@
     },
 
     vaciar(){ localStorage.removeItem(LLAVE_MIAS); },
+
+    /* Lo viejo se suelta solo. El resguardo sirve para seguir lo que está en
+       curso y para bajar la hoja de lo que se acaba de cerrar; una solicitud
+       atendida hace tres meses no tiene por qué seguir en el navegador de una
+       máquina que a lo mejor usan tres personas. */
+    olvidarViejas(dias){
+      const tope = Date.now() - (dias || 60) * 86400000;
+      const quedan = window.soporteMias.leer()
+        .filter(m => !m.enviada_en || new Date(m.enviada_en).getTime() > tope);
+      try{ localStorage.setItem(LLAVE_MIAS, JSON.stringify(quedan)); }
+      catch(e){}
+    },
+  };
+
+  /* Borrar el rastro de esta máquina: lo que se pidió y quién lo pidió. Para
+     la computadora prestada, la de recepción o la de la sala de reuniones.
+     Vive aquí, con el almacén, porque toca las dos llaves. */
+  window.soporteOlvidarTodo = function(){
+    localStorage.removeItem(LLAVE_MIAS);
+    localStorage.removeItem('soporte_yo');
   };
 })();
