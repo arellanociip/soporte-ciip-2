@@ -434,6 +434,57 @@ function pdfDelNavegador(id){
   });
 }
 
+/* ================= frenos =================
+   Una clave de ocho letras se adivina en un rato si se pueden probar veinte
+   por segundo, que es lo que este servidor aguantaba. El freno no impide nada
+   a quien sabe su clave —los primeros intentos pasan sin espera— pero convierte
+   un ataque de minutos en uno de meses.
+
+   Se cuenta por máquina y cuenta: quien se equivoca tres veces no le cierra la
+   puerta a los demás, y quien prueba con veinte correos distintos desde el
+   mismo sitio tampoco pasa desapercibido. Vive en memoria: al reiniciar el
+   servidor se olvida, que es justo lo que uno quiere si se le fue la mano. */
+const intentos = new Map();
+const ESPERA_TRAS = 5;          /* los primeros cinco fallos son gratis */
+const OLVIDO = 15 * 60 * 1000;  /* y a los quince minutos de calma, borrón */
+
+function deDonde(req){
+  return (req.socket && req.socket.remoteAddress) || 'desconocido';
+}
+
+function frenado(llave){
+  const x = intentos.get(llave);
+  if(!x) return 0;
+  if(Date.now() - x.ultimo > OLVIDO){ intentos.delete(llave); return 0; }
+  if(x.veces < ESPERA_TRAS) return 0;
+  /* 1s, 2s, 4s, 8s… hasta un minuto: la espera crece con la insistencia */
+  const espera = Math.min(60000, 1000 * Math.pow(2, x.veces - ESPERA_TRAS));
+  const falta = x.ultimo + espera - Date.now();
+  return falta > 0 ? Math.ceil(falta / 1000) : 0;
+}
+
+function apuntarFallo(llave){
+  const x = intentos.get(llave) || {veces: 0, ultimo: 0};
+  x.veces++; x.ultimo = Date.now();
+  intentos.set(llave, x);
+}
+
+const olvidarFallos = llave => intentos.delete(llave);
+
+/* Lo mismo para lo que se puede hacer sin cuenta: mandar solicitudes. La regla
+   de una abierta por persona ya frena a quien pide de más, pero no a quien se
+   inventa un nombre distinto cada vez. */
+const creadas = new Map();
+const TOPE_POR_HORA = 20;
+
+function demasiadas(ip){
+  const ahora = Date.now();
+  const lista = (creadas.get(ip) || []).filter(t => ahora - t < 3600 * 1000);
+  creadas.set(ip, lista);
+  return lista.length >= TOPE_POR_HORA;
+}
+const apuntarCreada = ip => creadas.set(ip, (creadas.get(ip) || []).concat(Date.now()));
+
 /* ================= la API ================= */
 const CAMPOS_QUE_LLEGAN = ['gerencia','usuario','cedula','telefono','piso','oficina','cargo',
                            'descripcion','tipo','detalle'];
@@ -575,12 +626,37 @@ async function atenderApi(req, res, url){
       refrescos.delete(cuerpo.refresh_token);
       return responder(res, 200, abrirSesion(correo));
     }
+    /* El freno va por máquina y cuenta, y antes de comprobar nada: si no,
+       cada intento cuesta el tiempo de scrypt y eso ya es un ataque. */
+    const llave = deDonde(req) + '|' + String(cuerpo.email || '').toLowerCase().trim();
+    const falta = frenado(llave);
+    if(falta){
+      /* el intento frenado también cuenta: si no, se puede seguir probando una
+         vez por segundo para siempre, que son tres mil intentos por hora */
+      apuntarFallo(llave);
+      return responder(res, 429, {error_description:
+        'Demasiados intentos. Espera ' + falta + ' segundo' + (falta === 1 ? '' : 's') +
+        ' y vuelve a probar.'});
+    }
     if(!claveCorrecta(cuerpo.email, cuerpo.password)){
+      apuntarFallo(llave);
       /* el mismo mensaje para correo inexistente y clave mala: decir cuál de
          los dos falló es regalar la mitad del trabajo */
       return responder(res, 400, {error_description: 'Correo o contraseña incorrectos.'});
     }
+    olvidarFallos(llave);
     return responder(res, 200, abrirSesion(cuerpo.email.toLowerCase().trim()));
+  }
+
+  /* ---- salir ----
+     Cerrar sesión borraba el testigo del navegador y ya; el del servidor seguía
+     siendo válido hasta cumplir su hora. Si alguien lo copió, tenía una hora.
+     Ahora se anula aquí. */
+  if(url.pathname === '/auth/v1/logout' && req.method === 'POST'){
+    const cab = req.headers.authorization || '';
+    const token = cab.startsWith('Bearer ') ? cab.slice(7) : '';
+    sesiones.delete(token);
+    return responder(res, 200, {});
   }
 
   /* ---- mis datos ----
@@ -891,7 +967,16 @@ async function atenderApi(req, res, url){
   if(url.pathname === '/rest/v1/solicitudes'){
     /* Dejar una solicitud: sin cuenta, como en la calle. */
     if(req.method === 'POST'){
+      /* sin cuenta se puede pedir soporte, y está bien; lo que no se puede es
+         llenar la cola desde una máquina a golpe de guión */
+      const ip = deDonde(req);
+      if(demasiadas(ip)){
+        return responder(res, 429, {message:
+          'Han entrado demasiadas solicitudes desde este equipo en la última hora. ' +
+          'Si es un error, llama a GTIC por teléfono.'});
+      }
       const fila = crearSolicitud(await cuerpoDe(req));
+      apuntarCreada(ip);
       console.log('  + solicitud', String(fila.numero).padStart(3,'0') + '-' + fila.anio,
                   '·', fila.usuario, '·', fila.gerencia);
       avisarCambio('nueva');
@@ -986,6 +1071,20 @@ function servirArchivo(res, pedido){
   if(!destino.startsWith(RAIZ)) return responder(res, 403, 'Fuera de sitio', 'text/plain');
   /* datos/ guarda las solicitudes y las huellas de las claves: no se sirve */
   if(destino.startsWith(DATOS)) return responder(res, 403, 'Prohibido', 'text/plain');
+
+  /* Solo lo que el navegador necesita para pintar las páginas. Lo demás de esta
+     carpeta —el propio servidor, el vigía, los .cmd, el README— se podía bajar
+     escribiendo su nombre. No hay secretos ahí dentro, pero es el plano de la
+     casa: dice qué rutas existen, dónde se guardan los datos y cómo se
+     comprueban las cosas. Al que quiera leerlo se lo damos nosotros, no el
+     servidor. */
+  const relativo = destino.slice(RAIZ.length + 1).replace(/\\/g, '/');
+  const permitido =
+    /^[\w.-]+\.html$/.test(relativo) ||        /* las páginas, en la raíz */
+    /^js\/[\w.-]+\.js$/.test(relativo) ||      /* lo que las hace andar */
+    /^css\/[\w.-]+\.css$/.test(relativo) ||
+    /^assets\/[\w.-]+\.(png|jpe?g|svg|ico|webp)$/i.test(relativo);
+  if(!permitido) return responder(res, 404, 'No está aquí', 'text/plain');
 
   enviarArchivo(res, destino);
 }

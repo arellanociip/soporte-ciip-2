@@ -80,6 +80,48 @@ datos de la casa y las huellas de las claves, no código.
 
 ---
 
+## Qué tan seguro es esto
+
+Se auditó atacándolo desde fuera, como lo haría alguien de la red de la oficina
+sin clave. Lo que aguantó:
+
+- **Leer las solicitudes de los demás**: la lista completa pide sesión (401); por
+  número no se puede; solo se ve una dando su `id`, que son 122 bits al azar.
+- **Cambiar lo ajeno**: cerrar una solicitud o tocarle los datos a un técnico da
+  401 sin sesión.
+- **Entrar con clave ajena**: mismo mensaje para correo inexistente y clave mala;
+  mandar un objeto en vez de una clave no cuela.
+- **Salirse de la carpeta**: `datos/`, `..`, `%2e%2e` — todo 403 o 404.
+- **Subir cosas raras**: un ejecutable renombrado a `.jpg` se rechaza mirando sus
+  primeros bytes; los adjuntos no se pueden listar ni adivinar.
+- **Texto con trampa**: se guardó una solicitud con etiquetas `script` e `img
+  onerror` dentro y se abrió en la bandeja — cero ejecuciones, se ve como texto.
+
+Lo que había que arreglar, y se arregló:
+
+- **No había freno a los intentos de clave**: veinte por segundo. Ahora los cinco
+  primeros son gratis y a partir de ahí la espera se dobla —1s, 2s, 4s, 8s…— por
+  máquina y cuenta, y se olvida a los quince minutos de calma.
+- **Se podía llenar la cola** con un guión. Ahora, veinte solicitudes por hora
+  desde la misma máquina.
+- **El servidor entregaba su propio código** a quien escribiera su nombre. Ahora
+  solo sirve las páginas, `js/`, `css/` y `assets/`.
+- **Salir no anulaba la sesión en el servidor**: un testigo copiado servía una
+  hora más. Ahora se anula al salir.
+
+Lo que sigue abierto, a sabiendas:
+
+- **Va por `http://`, no `https`.** Quien pueda ver el tráfico de la red lee las
+  claves de GTIC al entrar. Es lo más serio que queda y solo se arregla con un
+  certificado.
+- **`js/directorio.js` lleva 224 cédulas** y `js/inventario.js` 233 seriales: los
+  sirve el servidor a cualquiera que abra el formulario. Fue una decisión, y está
+  explicada en la cabecera de cada archivo.
+- **La Hoja en PDF se baja con el `id` de la solicitud**, sin clave: es lo que
+  permite que quien pidió el soporte se la lleve. Ese id no se adivina.
+
+---
+
 ## Montarlo en Supabase (el día que haga falta)
 
 Con el servidor de esta PC ya no es urgente, pero sigue siendo el destino: los

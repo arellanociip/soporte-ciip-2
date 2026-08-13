@@ -1510,6 +1510,14 @@
 
   $('botonSalir').addEventListener('click', e => {
     e.preventDefault();
+    /* que el servidor lo anule también: borrarlo solo aquí dejaba el testigo
+       vivo hasta cumplir su hora */
+    const s = sesion();
+    if(s && s.token && !enPrueba){
+      fetch(B.url + '/auth/v1/logout', {method: 'POST',
+        headers: Object.assign({'Authorization': 'Bearer ' + s.token}, soporteCabeceras())})
+        .catch(() => {});
+    }
     borrarSesion();
     solicitudes = [];
     /* quien entre después empieza de cero: si no, la primera carga del
