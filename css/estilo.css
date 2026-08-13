@@ -894,6 +894,10 @@ select.despierta{animation:destello .7s ease;}
   stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
 /* con mensajes dentro, el botón deja de ser gris: hay algo que leer */
 .chat-boton.hay{border-color:var(--navy); color:var(--navy);}
+/* el de la hoja es un enlace, no un botón: se le quita lo de enlace */
+.chat-boton.hoja{text-decoration:none;}
+/* un enlace haciendo de botón dentro de la ficha: la misma caja que los demás */
+.botones a.boton{display:inline-flex; align-items:center; text-decoration:none;}
 .chat-boton .n{
   background:var(--navy); color:#fff; border-radius:20px; min-width:17px;
   padding:0 5px; font-size:10.5px; line-height:17px; text-align:center;

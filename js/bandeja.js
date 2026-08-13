@@ -459,6 +459,7 @@
       <div class="der">
         ${edadHtml(s)}
         <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
+        ${hojaBotonHtml(s)}
         ${chatBotonHtml(s)}
         ${accionesHtml(s)}
       </div>
@@ -977,6 +978,21 @@
   };
 
   const GLOBO = '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 9 9 0 01-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 013.6 11a8.4 8.4 0 018.4-8.4h.5a8.4 8.4 0 018.5 8.4z"/></svg>';
+  const PAPEL = '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><polyline points="14 3 14 8 19 8"/><polyline points="9 14 12 17 15 14"/><line x1="12" y1="11" x2="12" y2="17"/></svg>';
+
+  /* La Hoja de Servicio en PDF, desde la propia cola: para archivar sin abrir
+     la ficha ni pasar por la impresora. Solo en las atendidas, que es cuando el
+     documento está completo —con sus observaciones y su técnico— y es la misma
+     que se lleva quien pidió el soporte.
+
+     Es un enlace y no un botón porque eso es: el navegador se encarga de
+     bajarlo, sin que esta página tenga que hacer nada. */
+  function hojaBotonHtml(s){
+    if(s.estado !== 'atendida') return '';
+    return `<a class="chat-boton hoja" href="${esc(B.url)}/rest/v1/hoja?id=eq.${esc(s.id)}"
+      download title="Descargar la Hoja de Servicio N° ${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))} en PDF"
+      >${PAPEL}PDF</a>`;
+  }
 
   /* El botón que abre la conversación. Va en la fila y en la ficha; los dos
      abren la misma ventana, para que no haya dos sitios donde hablar. */
@@ -1198,6 +1214,8 @@
       <div class="botones">
         <button type="button" class="boton primario" id="botonGuardar">Guardar</button>
         <button type="button" class="boton plano" id="botonImprimir">Imprimir Hoja de Servicio</button>
+        ${s.estado === "atendida" ? `<a class="boton plano" download
+           href="${esc(B.url)}/rest/v1/hoja?id=eq.${esc(s.id)}">Descargar en PDF</a>` : ""}
       </div>`;
   }
 
@@ -1481,6 +1499,9 @@
     /* el globo abre la conversación, no la ficha */
     const globo = e.target.closest('[data-chat]');
     if(globo){ e.stopPropagation(); abrirChat(globo.dataset.chat); return; }
+
+    /* bajar el PDF tampoco es abrir la solicitud: el enlace es del navegador */
+    if(e.target.closest('a[download]')) return;
 
     /* los botones de la fila no cuentan como "abrir la solicitud" */
     const accion = e.target.closest('[data-accion]');

@@ -202,6 +202,9 @@ Cuando una solicitud queda atendida, a quien la pidió le sale junto al camino
 de su solicitud un enlace: **Hoja de Servicio**. Baja el mismo documento que
 GTIC imprime y firma, en PDF, sin pasar por el diálogo de imprimir.
 
+En la bandeja está en los dos sitios: un botón **PDF** en cada fila atendida —para
+archivar sin abrir nada— y otro dentro de la ficha, al lado de Imprimir.
+
 No es una segunda versión hecha a mano: la hoja se arma una sola vez
 () y de ahí salen las dos cosas —lo que va a la impresora desde la
 bandeja y lo que se convierte en PDF—. Para convertirla, el servidor abre
