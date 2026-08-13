@@ -551,19 +551,83 @@
     return {horas, sobre: cerradas.length};
   }
 
-  function pintarStats(){
-    const hoy = new Date();
-    const esteMes = s => {
-      const d = new Date(s.creada_en);
-      return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
-    };
-    const delMes = solicitudes.filter(esteMes);
-    const abiertas = solicitudes.filter(s => ['recibida','en_proceso'].includes(s.estado));
-    const atendidasMes = delMes.filter(s => s.estado === 'atendida');
-    const t = tiempoMedio(solicitudes);
+  /* ---------- el tramo de tiempo ----------
+     La misma pregunta —cuánto entró y de dónde— cambia de respuesta según se
+     mire el día, la semana, el mes o el año, y son cuatro preguntas distintas
+     que se hacen en momentos distintos: el día para saber cómo va la jornada,
+     el año para el informe. Se elige arriba y todo lo demás se recalcula.
 
-    const mes = hoy.toLocaleDateString('es-VE', {month: 'long', year: 'numeric'});
-    $('statsPeriodo').textContent = 'Todo lo que ha entrado, con el detalle de ' + mes + '.';
+     El corte es por fecha de entrada, no por fecha de cierre: lo que se está
+     contando es lo que la casa pidió en ese tramo. */
+  const PERIODOS = [
+    ['hoy',    'Hoy'],
+    ['semana', 'Esta semana'],
+    ['mes',    'Este mes'],
+    ['anio',   'Este año'],
+    ['todo',   'Todo'],
+  ];
+  let periodo = 'mes';
+
+  function desdeDe(cual){
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    if(cual === 'hoy') return d;
+    if(cual === 'semana'){
+      /* la semana empieza el lunes, no el domingo como cuenta el navegador */
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      return d;
+    }
+    if(cual === 'mes')  return new Date(d.getFullYear(), d.getMonth(), 1);
+    if(cual === 'anio') return new Date(d.getFullYear(), 0, 1);
+    return null;   /* todo */
+  }
+
+  /* Las anuladas quedan fuera de todas las cuentas: una solicitud que se
+     retiró —porque se resolvió sola o se mandó por error— no fue trabajo de
+     nadie, y contarla infla lo que entró y hunde el porcentaje de resueltas.
+     Siguen en la cola, en su pestaña, que ahí sí hacen falta. */
+  function delPeriodo(){
+    const desde = desdeDe(periodo);
+    const vivas = solicitudes.filter(s => s.estado !== 'anulada');
+    if(!desde) return vivas;
+    return vivas.filter(s => s.creada_en && new Date(s.creada_en) >= desde);
+  }
+
+  /* Antes de que la lista del personal llenara este campo sola, cada quien
+     escribía su oficina como le parecía: "2-1" y "2-01" son la misma puerta.
+     Sin emparejarlas, la misma oficina sale en dos barras y ninguna de las dos
+     dice la verdad. */
+  function oficinaPareja(v){
+    const m = String(v || '').trim().match(/^(\d+)\s*-\s*(\d+)$/);
+    return m ? m[1] + '-' + m[2].padStart(2, '0') : String(v || '').trim().toUpperCase();
+  }
+
+  function rotuloPeriodo(){
+    const hoy = new Date();
+    const dm = {day: 'numeric', month: 'long'};
+    if(periodo === 'hoy')    return 'hoy, ' + hoy.toLocaleDateString('es-VE', dm);
+    if(periodo === 'semana') return 'esta semana, desde el lunes ' +
+                                    desdeDe('semana').toLocaleDateString('es-VE', dm);
+    if(periodo === 'mes')    return hoy.toLocaleDateString('es-VE', {month:'long', year:'numeric'});
+    if(periodo === 'anio')   return 'el año ' + hoy.getFullYear();
+    return 'desde el principio';
+  }
+
+  function pintarStats(){
+    const lista = delPeriodo();
+    const atendidas = lista.filter(s => s.estado === 'atendida');
+    /* Lo que está sin resolver es de ahora mismo, no del tramo: una solicitud
+       de la semana pasada que sigue abierta sigue siendo trabajo de hoy. */
+    const abiertas = solicitudes.filter(s => ['recibida','en_proceso'].includes(s.estado));
+    const t = tiempoMedio(lista);
+
+    $('statsPeriodos').innerHTML = PERIODOS.map(([k, l]) => {
+      const n = k === periodo ? lista.length : null;
+      return `<button type="button" class="ficha ${k===periodo?'on':''}" data-periodo="${k}">${l}` +
+             (n ? `<span class="n">${n}</span>` : '') + '</button>';
+    }).join('');
+
+    $('statsPeriodo').textContent = 'Lo que entró ' + rotuloPeriodo() + '.';
 
     const tiempo = !t ? '—'
       : t.horas < 1 ? Math.round(t.horas * 60) + '<small>min</small>'
@@ -571,37 +635,48 @@
       : (t.horas / 24).toFixed(1).replace('.', ',') + '<small>días</small>';
 
     $('statsKpis').innerHTML = `
-      <div class="kpi ${abiertas.length ? 'urge' : ''}">
-        <div class="r">Sin resolver</div>
-        <div class="v">${abiertas.length}</div>
-        <div class="s">${abiertas.filter(s => s.estado === 'en_proceso').length} ya en proceso</div>
+      <div class="kpi">
+        <div class="r">Entraron</div>
+        <div class="v">${lista.length}</div>
+        <div class="s">${esc(rotuloPeriodo())}</div>
       </div>
       <div class="kpi">
-        <div class="r">Entraron en ${esc(mes.split(' ')[0])}</div>
-        <div class="v">${delMes.length}</div>
-        <div class="s">${atendidasMes.length} ya resueltas</div>
+        <div class="r">Resueltas</div>
+        <div class="v">${atendidas.length}</div>
+        <div class="s">${lista.length ? Math.round(atendidas.length / lista.length * 100) + '% de las que entraron'
+                                      : 'nada que resolver'}</div>
       </div>
       <div class="kpi">
         <div class="r">Tiempo medio</div>
         <div class="v">${tiempo}</div>
         <div class="s">${t ? 'sobre ' + t.sobre + ' resueltas' : 'aún sin resolver ninguna'}</div>
       </div>
-      <div class="kpi">
-        <div class="r">Desde el principio</div>
-        <div class="v">${solicitudes.length}</div>
-        <div class="s">${solicitudes.filter(s => s.estado === 'atendida').length} resueltas en total</div>
+      <div class="kpi ${abiertas.length ? 'urge' : ''}">
+        <div class="r">Sin resolver ahora</div>
+        <div class="v">${abiertas.length}</div>
+        <div class="s">${abiertas.filter(s => s.estado === 'en_proceso').length} ya en proceso,
+          de todas las fechas</div>
       </div>`;
 
     $('statsBarras').innerHTML =
       barrasHtml('Lo que más se pide', 'Por detalle de servicio',
-        contar(solicitudes, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 6)) +
+        contar(lista, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 6)) +
+      barrasHtml('De qué oficina vienen', 'Dónde hay que ir más veces',
+        contar(lista, s => s.oficina ? 'Oficina ' + oficinaPareja(s.oficina) : null, 8)) +
       barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
-        contar(solicitudes, s => s.gerencia, 6)) +
+        contar(lista, s => s.gerencia, 6)) +
       barrasHtml('En qué piso', 'Dónde está el trabajo',
-        contar(solicitudes, s => s.piso ? 'Piso ' + s.piso : null, 6)) +
+        contar(lista, s => s.piso ? 'Piso ' + s.piso : null, 6)) +
       barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
-        contar(solicitudes.filter(s => s.estado === 'atendida'), s => s.tecnico, 6));
+        contar(atendidas, s => s.tecnico, 6));
   }
+
+  $('statsPeriodos').addEventListener('click', e => {
+    const b = e.target.closest('[data-periodo]');
+    if(!b) return;
+    periodo = b.dataset.periodo;
+    pintarStats();
+  });
 
   function verStats(si){
     $('panelStats').hidden = !si;
