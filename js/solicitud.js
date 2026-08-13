@@ -142,11 +142,18 @@
     pintarAntes(false);
   }
 
-  /* Las que hablan del problema que se acaba de elegir. */
+  /* Las que hablan de lo que se acaba de elegir. Con un atajo se mira su
+     familia entera —"la computadora no sirve" son cinco problemas distintos—;
+     con los desplegables, solo el detalle marcado, que ahí la persona ya dijo
+     exactamente cuál es. */
   function ayudaDeAhora(){
-    const cual = (detalle.value || '').trim().toUpperCase();
-    if(!cual) return [];
-    return guiasPublicas.filter(g => String(g.categoria || '').trim().toUpperCase() === cual);
+    const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
+    const cuales = (a && a.familia && a.familia.length)
+      ? a.familia.map(d => d.trim().toUpperCase())
+      : [(detalle.value || '').trim().toUpperCase()].filter(Boolean);
+    if(!cuales.length) return [];
+    return guiasPublicas.filter(g =>
+      cuales.includes(String(g.categoria || '').trim().toUpperCase()));
   }
 
   /* La línea de abajo solo dice que existe; lo que hay escrito se lee en la
@@ -164,19 +171,54 @@
      la línea; volver a metérsela por los ojos, no. */
   let yaLaVio = false;
 
-  function abrirAyuda(){
+  /* Con una sola guía se enseña de una vez: preguntar "¿cuál es tu caso?" para
+     una única respuesta es hacerle dar un clic de más a la gente. Con varias,
+     primero la lista y después la que eligió. */
+  function pintarAyuda(elegida){
     const vienen = ayudaDeAhora();
-    if(!vienen.length) return;
     const caja = $('ayudaCuerpo');
     caja.innerHTML = '';
-    vienen.slice(0, 3).forEach(g => {
+
+    if(vienen.length === 1 || elegida){
+      const g = elegida || vienen[0];
+      if(vienen.length > 1){
+        const volver = document.createElement('button');
+        volver.type = 'button';
+        volver.className = 'ay-volver';
+        volver.textContent = '← Ver los otros casos';
+        volver.addEventListener('click', () => pintarAyuda(null));
+        caja.append(volver);
+      }
       const t = document.createElement('div');
       t.className = 'ay-guia';
       const h = document.createElement('b'); h.textContent = g.titulo;
       const p = document.createElement('p'); p.textContent = g.solucion;
       t.append(h, p);
       caja.append(t);
+      return;
+    }
+
+    const rot = document.createElement('div');
+    rot.className = 'ay-pregunta';
+    rot.textContent = '¿Cuál de estos es tu caso?';
+    caja.append(rot);
+    vienen.forEach(g => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ay-caso';
+      const n = document.createElement('b'); n.textContent = g.titulo;
+      /* la primera línea de la solución, para saber de qué va sin abrirla */
+      const s = document.createElement('span');
+      s.textContent = String(g.solucion || '').split('\n').find(l => l.trim()) || '';
+      b.append(n, s);
+      b.addEventListener('click', () => pintarAyuda(g));
+      caja.append(b);
     });
+  }
+
+  function abrirAyuda(){
+    if(!ayudaDeAhora().length) return;
+    pintarAyuda(null);
     yaLaVio = true;
     $('veloAyuda').hidden = false;
     document.body.style.overflow = 'hidden';
