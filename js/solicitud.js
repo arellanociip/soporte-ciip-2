@@ -325,6 +325,21 @@
   function aplicarYo(){
     const yo = leerYo();
     if(!yo || !yo.usuario) return false;
+
+    /* Lo que este navegador recordó de antes puede venir corto: el cargo y la
+       cédula se agregaron después, y a quien ya estaba recordado nadie se los
+       iba a llenar nunca —la página no vuelve a mirar el directorio una vez
+       que te reconoce—. Se completan aquí, solo los huecos: lo que la persona
+       escribió alguna vez manda sobre la lista. */
+    const p = directorioBuscar(yo.usuario);
+    if(p){
+      let creció = false;
+      CAMPOS_YO.forEach(k => {
+        if(!yo[k] && p[k]){ yo[k] = p[k]; creció = true; }
+      });
+      if(creció && $('recordarme').checked) guardarYo(yo);
+    }
+
     CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
     $('quienEres').value = yo.usuario;
     mostrarRecuadro(yo);
