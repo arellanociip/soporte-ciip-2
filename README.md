@@ -168,11 +168,14 @@ renglón se toma solo lo que va impreso en la Hoja de Servicio —equipo, marca,
 modelo y serial— pegado a la persona que lo usa.
 
 La computadora va con su monitor: son dos renglones de la hoja, que para eso
-tiene seis. Y **las impresoras no son de nadie: son del piso** —las usa el que se
-sienta cerca—, así que quien pide soporte por la impresora manda la de su planta;
-si en su piso hay varias, la página le pregunta cuál. El piso de cada impresora
-sale de su responsable en el cuadro, y si no está en el listado, de la gerencia a
-la que pertenece: 16 impresoras colocadas, ninguna perdida.
+tiene seis.
+
+**Las impresoras están agrupadas por piso** —una impresora no es de nadie: la usa
+el que se sienta cerca— y el mapa está hecho: 16 colocadas en los pisos 1, 2, 3,
+4 y 8. Pero ofrecérselas a quien pide **está apagado a propósito**: preguntarle a
+alguien cuál de las siete impresoras del piso 2 usa es pedirle un dato que
+probablemente no sepa. Cuando el mapa esté afinado se vuelve a encender; lo que
+lo sostiene sigue en .
 
 Para qué: el serial es el dato que nadie se sabe de memoria y el que más retrasa
 una hoja. Cuando alguien pide soporte por su computadora, la solicitud llega con

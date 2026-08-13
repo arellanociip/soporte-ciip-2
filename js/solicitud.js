@@ -108,7 +108,7 @@
       $('clasificacionManual').hidden = true;
       yaLaVio = false;
       pintarAntes(true);
-      quitados = []; impresoraElegida = null;
+      quitados = [];
       pintarEquipo();
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
@@ -118,7 +118,7 @@
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
       yaLaVio = false;
       pintarAntes(true);
-      quitados = []; impresoraElegida = null;
+      quitados = [];
       pintarEquipo();
       if(a) detalle.focus();
     }
@@ -136,7 +136,6 @@
      suelta y la hoja va sin él, como antes. */
   let equiposAdjuntos = [];
   let quitados = [];      /* los que la persona soltó a mano en esta pasada */
-  let impresoraElegida = null;   /* cuando en su piso hay más de una */
 
   const comoSeLlama = e => [e.equipo, e.marca, e.modelo,
                             e.serial ? 'serial ' + e.serial : ''].filter(Boolean).join(' · ');
@@ -148,7 +147,6 @@
     const quien = $('usuario').value.trim();
     const tipos = (a && a.equipos) || [];
     equiposAdjuntos = [];
-    let impresorasDelPiso = [];
 
     if(quien && tipos.length && typeof inventarioDe === 'function'){
       const suyos = inventarioDe(quien);
@@ -156,26 +154,17 @@
         const e = suyos.find(x => x.equipo === t);
         if(e && !quitados.includes(e.serial)) equiposAdjuntos.push(e);
       });
-      /* Una impresora no es de nadie: la usa el que se sienta cerca. Si esta
-         persona no tiene una a su nombre, se ofrecen las de su piso. */
-      if(tipos.includes('IMPRESORA') && !equiposAdjuntos.some(e => e.equipo === 'IMPRESORA')
-         && typeof inventarioImpresorasDe === 'function'){
-        impresorasDelPiso = inventarioImpresorasDe($('piso').value)
-          .filter(i => !quitados.includes(i.serial));
-        /* la que ya eligió en el desplegable manda */
-        const elegida = impresorasDelPiso.find(i => i.serial === impresoraElegida);
-        if(elegida){
-          equiposAdjuntos.push(elegida);
-          impresorasDelPiso = [];
-        }else if(impresorasDelPiso.length === 1){
-          /* si en el piso hay una sola, es esa y no hay nada que preguntar */
-          equiposAdjuntos.push(impresorasDelPiso[0]);
-          impresorasDelPiso = [];
-        }
-      }
+      /* Aquí iba la impresora del piso: como una impresora no es de nadie —la
+         usa el que se sienta cerca—, a quien no tiene una a su nombre se le
+         ofrecían las de su planta. Se retiró a propósito, para más adelante:
+         preguntarle a alguien cuál de siete impresoras usa es pedirle un dato
+         que probablemente no sepa, y el mapa por piso hace falta afinarlo
+         primero. Lo que sostiene aquello sigue en su sitio —IMPRESORAS_PISO e
+         inventarioImpresorasDe(), en js/inventario.js—, así que volver a
+         encenderlo es un puñado de líneas. */
     }
 
-    if(!equiposAdjuntos.length && impresorasDelPiso.length < 2){ caja.hidden = true; return; }
+    if(!equiposAdjuntos.length){ caja.hidden = true; return; }
 
     const lista = $('miEquipoLista');
     lista.innerHTML = '';
@@ -194,30 +183,6 @@
       lista.append(fila);
     });
 
-    /* En un piso puede haber siete impresoras: no se adivina cuál. */
-    if(impresorasDelPiso.length > 1){
-      const fila = document.createElement('div');
-      fila.className = 'eq-fila';
-      const rot = document.createElement('span');
-      rot.className = 'et2';
-      rot.textContent = '¿Cuál usas?';
-      const sel = document.createElement('select');
-      /* El texto de arriba decía "La del piso 2…" y parecía la única: nadie
-         despliega una lista que ya parece contestada. Ahora dice cuántas hay
-         dentro, que es lo que invita a abrirla. */
-      sel.innerHTML = '<option value="">Elige una de las ' + impresorasDelPiso.length +
-        ' del piso ' + escapar($('piso').value) + '…</option>' +
-        impresorasDelPiso.map((i, n) => `<option value="${n}">${escapar(
-          [i.marca, i.modelo, i.donde].filter(Boolean).join(' · '))}</option>`).join('');
-      sel.addEventListener('change', () => {
-        const e = impresorasDelPiso[Number(sel.value)];
-        if(!e) return;
-        impresoraElegida = e.serial;
-        pintarEquipo();
-      });
-      fila.append(rot, sel);
-      lista.append(fila);
-    }
     caja.hidden = false;
   }
 
