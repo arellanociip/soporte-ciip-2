@@ -202,7 +202,11 @@
       rot.className = 'et2';
       rot.textContent = '¿Cuál usas?';
       const sel = document.createElement('select');
-      sel.innerHTML = '<option value="">La del piso ' + escapar($('piso').value) + '…</option>' +
+      /* El texto de arriba decía "La del piso 2…" y parecía la única: nadie
+         despliega una lista que ya parece contestada. Ahora dice cuántas hay
+         dentro, que es lo que invita a abrirla. */
+      sel.innerHTML = '<option value="">Elige una de las ' + impresorasDelPiso.length +
+        ' del piso ' + escapar($('piso').value) + '…</option>' +
         impresorasDelPiso.map((i, n) => `<option value="${n}">${escapar(
           [i.marca, i.modelo, i.donde].filter(Boolean).join(' · '))}</option>`).join('');
       sel.addEventListener('change', () => {
