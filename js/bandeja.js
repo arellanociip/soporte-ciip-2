@@ -488,6 +488,47 @@
     return cola ? [...cabeza, ['Otras', cola]] : cabeza;
   }
 
+  /* ---------- de la mayúscula sostenida a algo que se lea ----------
+     Los detalles y las gerencias vienen del Excel en mayúscula sostenida, que
+     es como se escribía cuando se llenaban a máquina. En la Hoja de Servicio se
+     respeta —es el documento de siempre y así lo reconoce quien lo firma— pero
+     en una pantalla de estadísticas eso es un muro que grita: seis renglones en
+     mayúscula cuestan de leer y no dicen nada más.
+
+     Las siglas se quedan como están: "Operatividad de CPU", no "Cpu". */
+  const SIGLAS = new Set(['CPU','PC','PCS','RAM','IP','GTIC','CIIP','TIC','UPS','USB',
+                          'HDMI','VGA','SO','TV','LED','LCD','HP','LG','CD','DVD','S/N']);
+
+  /* El mismo texto que hoy está bien escrito en el catálogo: así una solicitud
+     vieja —guardada cuando los detalles no llevaban tilde— se enseña con las
+     tildes puestas, sin tocar lo que quedó registrado. */
+  const COMO_SE_ESCRIBE = new Map();
+  const desnudo = s => String(s || '').toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  if(typeof CAT_SERVICIOS !== 'undefined'){
+    CAT_SERVICIOS.forEach(s => s.detalles.forEach(d => COMO_SE_ESCRIBE.set(desnudo(d), d)));
+  }
+
+  function enBonito(texto){
+    let t = String(texto == null ? '' : texto).trim();
+    if(!t) return t;
+    t = COMO_SE_ESCRIBE.get(desnudo(t)) || t;
+    /* si ya viene escrito como se debe —el nombre de un técnico, por ejemplo—
+       no se toca: solo se arregla lo que está todo en mayúsculas */
+    if(/[a-záéíóúñü]/.test(t)) return t;
+    const palabras = t.toLowerCase().split(/(\s+|\/)/);
+    let primera = true;
+    return palabras.map(p => {
+      if(!p.trim() || p === '/') return p;
+      const arriba = p.toUpperCase().replace(/[(),.:]/g, '');
+      if(SIGLAS.has(arriba)) return p.toUpperCase();
+      if(primera){ primera = false; return p.charAt(0).toUpperCase() + p.slice(1); }
+      return p;
+    }).join('')
+      /* Marca País es un nombre propio, no dos palabras cualesquiera */
+      .replace(/marca pa[íi]s/gi, 'Marca País');
+  }
+
   function barrasHtml(titulo, sub, filas){
     if(!filas.length){
       return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
@@ -617,11 +658,11 @@
          lo mismo dos veces —la oficina ya lleva el piso delante— y con tan
          pocas solicitudes al día no dicen nada que no se sepa. */
       barrasHtml('Lo que más se pide', 'Por detalle de servicio',
-        contar(lista, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 8)) +
+        contar(lista, s => enBonito(s.detalle) || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 8)) +
       barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
-        contar(lista, s => s.gerencia, 6)) +
+        contar(lista, s => enBonito(s.gerencia), 6)) +
       barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
-        contar(atendidas, s => s.tecnico, 6));
+        contar(atendidas, s => enBonito(s.tecnico), 6));
   }
 
   $('statsPeriodos').addEventListener('click', e => {

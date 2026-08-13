@@ -67,7 +67,7 @@ const CAT_SERVICIOS = [
     etiqueta: 'Soporte técnico',
     pista: 'Algo no sirve, falla, o hay que instalar o mover un equipo',
     detalles: [
-      'CONFIGURACIÓN DE CUENTA DE USUARIO',
+      'CONFIGURACIÓN DE CUENTA USUARIO',
       'INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
       'INSTALACIÓN Y/O CONFIGURACIÓN DE DISPOSITIVO DE PROYECCIÓN DE IMAGEN',
       'INSTALACIÓN DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
@@ -177,8 +177,8 @@ const CAT_ATAJOS = [
     id: 'usuario',                                                    /* 31 */
     titulo: 'Usuario o correo',
     sub: 'Clave, cuenta, configuración',
-    tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACIÓN DE CUENTA DE USUARIO',
-    familia: ['CONFIGURACIÓN DE CUENTA DE USUARIO', 'MANEJO DE SOFTWARE',
+    tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACIÓN DE CUENTA USUARIO',
+    familia: ['CONFIGURACIÓN DE CUENTA USUARIO', 'MANEJO DE SOFTWARE',
               'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS'],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. Necesito que me configuren el correo institucional en el equipo nuevo.',
