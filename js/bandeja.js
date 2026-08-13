@@ -555,15 +555,6 @@
     return vivas.filter(s => s.creada_en && new Date(s.creada_en) >= desde);
   }
 
-  /* Antes de que la lista del personal llenara este campo sola, cada quien
-     escribía su oficina como le parecía: "2-1" y "2-01" son la misma puerta.
-     Sin emparejarlas, la misma oficina sale en dos barras y ninguna de las dos
-     dice la verdad. */
-  function oficinaPareja(v){
-    const m = String(v || '').trim().match(/^(\d+)\s*-\s*(\d+)$/);
-    return m ? m[1] + '-' + m[2].padStart(2, '0') : String(v || '').trim().toUpperCase();
-  }
-
   function rotuloPeriodo(){
     const hoy = new Date();
     const dm = {day: 'numeric', month: 'long'};
@@ -621,14 +612,14 @@
       </div>`;
 
     $('statsBarras').innerHTML =
+      /* Tres listas y en este orden: qué se pide, quién lo pide, quién lo
+         resuelve. Estaban además "de qué oficina" y "en qué piso", que decían
+         lo mismo dos veces —la oficina ya lleva el piso delante— y con tan
+         pocas solicitudes al día no dicen nada que no se sepa. */
       barrasHtml('Lo que más se pide', 'Por detalle de servicio',
-        contar(lista, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 6)) +
-      barrasHtml('De qué oficina vienen', 'Dónde hay que ir más veces',
-        contar(lista, s => s.oficina ? 'Oficina ' + oficinaPareja(s.oficina) : null, 8)) +
+        contar(lista, s => s.detalle || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 8)) +
       barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
         contar(lista, s => s.gerencia, 6)) +
-      barrasHtml('En qué piso', 'Dónde está el trabajo',
-        contar(lista, s => s.piso ? 'Piso ' + s.piso : null, 6)) +
       barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
         contar(atendidas, s => s.tecnico, 6));
   }

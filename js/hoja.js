@@ -13,6 +13,12 @@
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
+ /* En el renglón, el tipo se guarda con la clave del catálogo —SOPORTE_TECNICO—
+    porque es lo que casa con el desplegable de la ficha. En el papel eso no se
+    escribe así: un documento no lleva palabras en mayúscula con guion bajo. */
+  const TIPOS_HOJA = {SOPORTE_TECNICO: 'Soporte técnico', ASISTENCIA: 'Asistencia'};
+  const comoSeEscribe = t => TIPOS_HOJA[String(t || '').trim().toUpperCase()] || t || '';
+
   const RENGLONES = 6;   /* la tabla del Excel siempre tuvo seis filas */
 
   /* s: la solicitud.  tec: quién firma como técnico —en la bandeja es quien
@@ -27,7 +33,7 @@
       const r = renglones[i] || {};
       return `<tr>
         <td style="text-align:center">${i+1}</td>
-        <td>${esc(r.tipo||'')}</td><td>${esc(r.detalle||'')}</td>
+        <td>${esc(comoSeEscribe(r.tipo))}</td><td>${esc(r.detalle||'')}</td>
         <td>${esc(r.equipo||'')}</td><td>${esc(r.marca||'')}</td>
         <td>${esc(r.modelo||'')}</td><td>${esc(r.serial||'')}</td>
       </tr>`;
@@ -56,7 +62,7 @@
         <tr><th colspan="6">GERENCIA SOLICITANTE:</th></tr>
         <tr><td colspan="6" style="text-align:center; font-weight:bold">${esc(s.gerencia)}</td></tr>
         <tr>
-          <th>USUARIO:</th><th>C.I.</th><th>TELEF.</th><th>PISO:</th><th colspan="2">OFICINA:</th>
+          <th>USUARIO:</th><th>C.I.</th><th>TELÉF.</th><th>PISO:</th><th colspan="2">OFICINA:</th>
         </tr>
         <tr>
           <td>${esc(s.usuario)}</td><td>${esc(s.cedula||'S/N')}</td><td>${esc(s.telefono||'S/N')}</td>
@@ -65,12 +71,12 @@
       </table>
 
       <div class="hs-titulo">RESUMEN DE LA SOLICITUD</div>
-      <div class="hs-titulo" style="border-top:none">DESCRIPCION DE LA SITUACION PLANTEADA POR EL USUARIO</div>
+      <div class="hs-titulo" style="border-top:none">DESCRIPCIÓN DE LA SITUACIÓN PLANTEADA POR EL USUARIO</div>
       <div class="hs-caja">${esc(s.descripcion)}</div>
 
       <table>
         <tr>
-          <th style="width:4%">ITEM</th><th style="width:14%">TIPO DE SERVICIO</th>
+          <th style="width:4%">ÍTEM</th><th style="width:14%">TIPO DE SERVICIO</th>
           <th style="width:32%">DETALLE DE SERVICIO</th><th style="width:12%">EQUIPO</th>
           <th style="width:10%">MARCA</th><th style="width:12%">MODELO</th><th style="width:16%">SERIAL</th>
         </tr>
@@ -80,25 +86,25 @@
       <div class="hs-titulo">OBSERVACIONES:</div>
       <div class="hs-caja">${esc(obs !== undefined ? obs : (s.observaciones || ''))}</div>
 
-      <div class="hs-nota">LA PRESENTE DEJA CONSTANCIA Y CONFORMIDAD DE LA ATENCION PRESTADA POR LA
-      GERENCIA DE TECNOLOGIA DE LA INFORMACION Y COMUNICACIÓN.</div>
+      <div class="hs-nota">LA PRESENTE DEJA CONSTANCIA Y CONFORMIDAD DE LA ATENCIÓN PRESTADA POR LA
+      GERENCIA DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN.</div>
 
       <div class="hs-firmas">
         <div class="hs-bloque">
           <div class="hs-fh">DATOS DEL USUARIO</div>
           <div class="hs-fb">
             ${renglon('NOMBRE Y APELLIDO:', s.usuario)}
-            ${renglon('C.I. N°.:', s.cedula)}
-            ${renglon('TELEFONO:', s.telefono)}
+            ${renglon('C.I. N°:', s.cedula)}
+            ${renglon('TELÉFONO:', s.telefono)}
             ${renglon('CARGO:', s.cargo)}
           </div>
         </div>
         <div class="hs-bloque">
-          <div class="hs-fh">TECNICO DE SOPORTE</div>
+          <div class="hs-fh">TÉCNICO DE SOPORTE</div>
           <div class="hs-fb">
             ${renglon('NOMBRE Y APELLIDO:', tec.nombre)}
-            ${renglon('C.I. N°.:', tec.cedula)}
-            ${renglon('TELEFONO:', tec.telefono)}
+            ${renglon('C.I. N°:', tec.cedula)}
+            ${renglon('TELÉFONO:', tec.telefono)}
             ${renglon('CARGO:', tec.cargo)}
           </div>
         </div>

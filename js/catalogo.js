@@ -59,7 +59,7 @@ const CAT_SERVICIOS = [
     detalles: [
       'MANEJO DE SOFTWARE',
       'MANEJO DE DISPOSITIVOS',
-      'RESPALDO Y/O RECUPERACION DE ARCHIVOS',
+      'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS',
     ],
   },
   {
@@ -67,17 +67,17 @@ const CAT_SERVICIOS = [
     etiqueta: 'Soporte técnico',
     pista: 'Algo no sirve, falla, o hay que instalar o mover un equipo',
     detalles: [
-      'CONFIGURACION DE CUENTA USUARIO',
-      'INSTALACION Y/O CONFIGURACION DE IMPRESORA',
-      'INSTALACION Y/O CONFIGURACION DE DISPOSITIVO DE PROYECCION DE IMAGEN',
-      'INSTALACION DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
-      'MOVILIZACION Y/O REUBICACION DE ACTIVOS TECNOLOGICOS',
+      'CONFIGURACIÓN DE CUENTA DE USUARIO',
+      'INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
+      'INSTALACIÓN Y/O CONFIGURACIÓN DE DISPOSITIVO DE PROYECCIÓN DE IMAGEN',
+      'INSTALACIÓN DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
+      'MOVILIZACIÓN Y/O REUBICACIÓN DE ACTIVOS TECNOLÓGICOS',
       'CONECTIVIDAD DE RED O INTERNET',
       'OPERATIVIDAD DE CPU',
       'OPERATIVIDAD DEL MONITOR',
-      'OPERATIVIDAD DE OTROS PERIFERICOS DE LA COMPUTADORA',
-      'SOLUCION DE PROBLEMAS DE IMPRESIÓN',
-      'FORMATEO Y LIMPIEZA DEL ORDENADOR Y/O INSTALACION DE APLICACIONES',
+      'OPERATIVIDAD DE OTROS PERIFÉRICOS DE LA COMPUTADORA',
+      'SOLUCIÓN DE PROBLEMAS DE IMPRESIÓN',
+      'FORMATEO Y LIMPIEZA DEL ORDENADOR Y/O INSTALACIÓN DE APLICACIONES',
       'MANTENIMIENTO PREVENTIVO',
       /* En el Excel el rango SOPORTE_TECNICO llega hasta G17, así que estas dos
          quedaban fuera del desplegable aunque estuvieran escritas debajo o se
@@ -104,7 +104,7 @@ const CAT_OFICINAS = [
    variantes mal escritas. */
 const CAT_EQUIPOS = [
   'CPU', 'MONITOR', 'TECLADO', 'MOUSE', 'IMPRESORA', 'IMPRESORA MULTIFUNCIONAL',
-  'LAPTOP', 'ESCANER', 'VIDEOBEAM', 'TELEFONO IP', 'CABLES Y PERIFERICOS', 'OTRO',
+  'LAPTOP', 'ESCANER', 'VIDEOBEAM', 'TELEFONO IP', 'CABLES Y PERIFÉRICOS', 'OTRO',
 ];
 
 const CAT_MARCAS = [
@@ -140,11 +140,11 @@ const CAT_ATAJOS = [
     familia: [
       'OPERATIVIDAD DE CPU',
       'OPERATIVIDAD DEL MONITOR',
-      'OPERATIVIDAD DE OTROS PERIFERICOS DE LA COMPUTADORA',
-      'FORMATEO Y LIMPIEZA DEL ORDENADOR Y/O INSTALACION DE APLICACIONES',
+      'OPERATIVIDAD DE OTROS PERIFÉRICOS DE LA COMPUTADORA',
+      'FORMATEO Y LIMPIEZA DEL ORDENADOR Y/O INSTALACIÓN DE APLICACIONES',
       'MANTENIMIENTO CORRECTIVO',
       'MANTENIMIENTO PREVENTIVO',
-      'INSTALACION DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
+      'INSTALACIÓN DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
       'UPGRADE DE HARDWARE DE PCS Y PORTÁTILES (AUMENTO DE MEMORIA RAM, CAMBIO DE PROCESADOR, DISCO DURO, TARJETAS GRÁFICAS, ETC.)',
     ],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
@@ -155,9 +155,9 @@ const CAT_ATAJOS = [
     id: 'mudanza',                                                    /* 52 */
     titulo: 'Mover un equipo de sitio',
     sub: 'Cambio de oficina o de puesto',
-    tipo: 'SOPORTE_TECNICO', detalle: 'MOVILIZACION Y/O REUBICACION DE ACTIVOS TECNOLOGICOS',
-    familia: ['MOVILIZACION Y/O REUBICACION DE ACTIVOS TECNOLOGICOS',
-              'INSTALACION Y/O CONFIGURACION DE DISPOSITIVO DE PROYECCION DE IMAGEN'],
+    tipo: 'SOPORTE_TECNICO', detalle: 'MOVILIZACIÓN Y/O REUBICACIÓN DE ACTIVOS TECNOLÓGICOS',
+    familia: ['MOVILIZACIÓN Y/O REUBICACIÓN DE ACTIVOS TECNOLÓGICOS',
+              'INSTALACIÓN Y/O CONFIGURACIÓN DE DISPOSITIVO DE PROYECCIÓN DE IMAGEN'],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. Me mudo de la oficina 2-6 a la 3-01 y hay que llevar la computadora y el monitor.',
     icono: '<svg viewBox="0 0 24 24"><path d="M5 9V6a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 13h18"/><path d="M7 21h10a2 2 0 002-2v-6H5v6a2 2 0 002 2z"/></svg>',
@@ -166,9 +166,9 @@ const CAT_ATAJOS = [
     id: 'impresora',                                                  /* 34 + 10 */
     titulo: 'Problema con la impresora',
     sub: 'No imprime, o hay que instalarla',
-    tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACION Y/O CONFIGURACION DE IMPRESORA',
-    familia: ['INSTALACION Y/O CONFIGURACION DE IMPRESORA',
-              'SOLUCION DE PROBLEMAS DE IMPRESIÓN'],
+    tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
+    familia: ['INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
+              'SOLUCIÓN DE PROBLEMAS DE IMPRESIÓN'],
     equipos: ['IMPRESORA'],   /* y si no tiene, la del piso: son de todos */
     ejemplo: 'Ej. No puedo imprimir desde el lunes: la impresora no aparece en la lista.',
     icono: '<svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 01-2-2v-3a2 2 0 012-2h16a2 2 0 012 2v3a2 2 0 01-2 2h-2"/></svg>',
@@ -177,9 +177,9 @@ const CAT_ATAJOS = [
     id: 'usuario',                                                    /* 31 */
     titulo: 'Usuario o correo',
     sub: 'Clave, cuenta, configuración',
-    tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACION DE CUENTA USUARIO',
-    familia: ['CONFIGURACION DE CUENTA USUARIO', 'MANEJO DE SOFTWARE',
-              'RESPALDO Y/O RECUPERACION DE ARCHIVOS'],
+    tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACIÓN DE CUENTA DE USUARIO',
+    familia: ['CONFIGURACIÓN DE CUENTA DE USUARIO', 'MANEJO DE SOFTWARE',
+              'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS'],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. Necesito que me configuren el correo institucional en el equipo nuevo.',
     icono: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>',

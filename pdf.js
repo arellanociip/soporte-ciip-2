@@ -78,6 +78,10 @@ const ANCHO_HOJA = 612, ALTO_HOJA = 792;
 const MARGEN = 40;
 const CAJA = ANCHO_HOJA - MARGEN * 2;
 
+/* En el papel el tipo se escribe con su nombre, no con la clave del catálogo. */
+const TIPOS_HOJA = {SOPORTE_TECNICO: 'Soporte técnico', ASISTENCIA: 'Asistencia'};
+const comoSeEscribe = t => TIPOS_HOJA[String(t || '').trim().toUpperCase()] || t || '';
+
 function hojaPdf(s){
   const trozos = [];
   const pon = t => trozos.push(t);
@@ -102,8 +106,8 @@ function hojaPdf(s){
   let y = MARGEN;
 
   /* ---- encabezado ---- */
-  texto(MARGEN, y + 9, 'CENTRO INTERNACIONAL DE INVERSION PRODUCTIVA', 10, true);
-  texto(MARGEN, y + 21, 'GERENCIA DE TECNOLOGIA DE LA INFORMACION Y COMUNICACION', 7.5, false);
+  texto(MARGEN, y + 9, 'CENTRO INTERNACIONAL DE INVERSIÓN PRODUCTIVA', 10, true);
+  texto(MARGEN, y + 21, 'GERENCIA DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', 7.5, false);
   const numero = 'N° GTIC-HS/' + String(s.numero).padStart(3, '0') + '-' + s.anio;
   texto(ANCHO_HOJA - MARGEN - ancho(numero, 10, true), y + 9, numero, 10, true);
   const cuando = new Date(s.atendida_en || s.creada_en);
@@ -128,7 +132,7 @@ function hojaPdf(s){
 
   /* cinco columnas: usuario, cédula, teléfono, piso, oficina */
   const anchos = [CAJA * 0.34, CAJA * 0.16, CAJA * 0.18, CAJA * 0.12, CAJA * 0.20];
-  const rotulos = ['USUARIO:', 'C.I.', 'TELEF.', 'PISO:', 'OFICINA:'];
+  const rotulos = ['USUARIO:', 'C.I.', 'TELÉF.', 'PISO:', 'OFICINA:'];
   const valores = [s.usuario || '', s.cedula || 'S/N', s.telefono || 'S/N',
                    s.piso || '', s.oficina || ''];
   fondo(MARGEN, y, CAJA, 13);
@@ -167,13 +171,13 @@ function hojaPdf(s){
     y += alto;
   };
 
-  titulo('DESCRIPCION DE LA SITUACION PLANTEADA POR EL USUARIO');
+  titulo('DESCRIPCIÓN DE LA SITUACIÓN PLANTEADA POR EL USUARIO');
   parrafo(s.descripcion || '', 46);
   y += 12;
 
   /* ---- los renglones de equipo ---- */
   const cols = [0.05, 0.15, 0.30, 0.13, 0.12, 0.12, 0.13].map(f => CAJA * f);
-  const enc = ['ITEM','TIPO DE SERVICIO','DETALLE DE SERVICIO','EQUIPO','MARCA','MODELO','SERIAL'];
+  const enc = ['ÍTEM','TIPO DE SERVICIO','DETALLE DE SERVICIO','EQUIPO','MARCA','MODELO','SERIAL'];
   fondo(MARGEN, y, CAJA, 13);
   caja(MARGEN, y, CAJA, 13);
   x = MARGEN;
@@ -188,7 +192,7 @@ function hojaPdf(s){
   const renglones = Array.isArray(s.renglones) ? s.renglones : [];
   for(let i = 0; i < 6; i++){
     const r = renglones[i] || {};
-    const celdas = [String(i + 1), r.tipo || '', r.detalle || '', r.equipo || '',
+    const celdas = [String(i + 1), comoSeEscribe(r.tipo), r.detalle || '', r.equipo || '',
                     r.marca || '', r.modelo || '', r.serial || ''];
     caja(MARGEN, y, CAJA, 15);
     x = MARGEN;
@@ -208,8 +212,8 @@ function hojaPdf(s){
   parrafo(s.observaciones || '', 46);
   y += 10;
 
-  partir('LA PRESENTE DEJA CONSTANCIA Y CONFORMIDAD DE LA ATENCION PRESTADA POR LA ' +
-         'GERENCIA DE TECNOLOGIA DE LA INFORMACION Y COMUNICACION.', 7.5, false, CAJA)
+  partir('LA PRESENTE DEJA CONSTANCIA Y CONFORMIDAD DE LA ATENCIÓN PRESTADA POR LA ' +
+         'GERENCIA DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN.', 7.5, false, CAJA)
     .forEach((l, i) => texto(MARGEN, y + i * 10, l, 7.5, false, true, CAJA));
   y += 24;
 
@@ -240,14 +244,14 @@ function hojaPdf(s){
 
   bloque(MARGEN, 'DATOS DEL USUARIO', [
     ['NOMBRE Y APELLIDO:', s.usuario || ''],
-    ['C.I. N°.:', s.cedula || ''],
-    ['TELEFONO:', s.telefono || ''],
+    ['C.I. N°:', s.cedula || ''],
+    ['TELÉFONO:', s.telefono || ''],
     ['CARGO:', s.cargo || ''],
   ]);
-  bloque(MARGEN + mitad + 12, 'TECNICO DE SOPORTE', [
+  bloque(MARGEN + mitad + 12, 'TÉCNICO DE SOPORTE', [
     ['NOMBRE Y APELLIDO:', s.tecnico || ''],
-    ['C.I. N°.:', s.tecnico_cedula || ''],
-    ['TELEFONO:', s.tecnico_telefono || ''],
+    ['C.I. N°:', s.tecnico_cedula || ''],
+    ['TELÉFONO:', s.tecnico_telefono || ''],
     ['CARGO:', s.tecnico_cargo || ''],
   ]);
 

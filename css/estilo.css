@@ -1183,7 +1183,11 @@ select.despierta{animation:destello .7s ease;}
 .kpi.urge .r{color:var(--amber);}
 
 /* ---- las listas con barra ---- */
+/* Tres listas: la primera ocupa el ancho entero —es la que se lee siempre y la
+   que tiene los rótulos más largos— y las otras dos se reparten la fila de
+   abajo. Con cuatro o cinco cajas de dos en dos quedaba un hueco al final. */
 .barrios{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+.barrios > .barrio:first-child{grid-column:1 / -1;}
 @media (max-width:820px){ .barrios{grid-template-columns:1fr;} }
 
 .barrio{
