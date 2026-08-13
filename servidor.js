@@ -300,7 +300,9 @@ function cuerpoDe(req){
     req.on('data', t => {
       datos += t;
       /* un cuerpo desmedido solo puede ser un error o una travesura */
-      if(datos.length > 1e6){ rechazar(new Error('Cuerpo demasiado grande')); req.destroy(); }
+      /* un mensaje de texto no llega a 1 KB, pero una foto de 8 MB en base64
+         ocupa 11: el tope tiene que dar para eso y nada mas */
+      if(datos.length > 16e6){ rechazar(new Error('Cuerpo demasiado grande')); req.destroy(); }
     });
     req.on('end', () => {
       try{ resolver(datos ? JSON.parse(datos) : {}); }
@@ -308,6 +310,78 @@ function cuerpoDe(req){
     });
     req.on('error', rechazar);
   });
+}
+
+/* ================= adjuntos: fotos y PDF =================
+   Una foto de la pantalla dice en un segundo lo que cuesta tres mensajes
+   escribir, y un PDF es a veces lo único que hay (una factura, un informe de
+   error impreso). Se guardan en datos/adjuntos/, fuera del repositorio como
+   todo lo demás de la casa.
+
+   Solo tres tipos, y se comprueba lo que el archivo ES, no lo que dice ser: el
+   navegador manda un "tipo" que cualquiera puede falsear, así que se miran los
+   primeros bytes. Un .exe renombrado a .jpg no pasa.
+
+   El nombre en disco es un azar de 32 caracteres, no el que traía: así dos
+   personas pueden mandar "foto.jpg" sin pisarse, y la dirección del archivo no
+   se adivina —que es lo que hace las veces de permiso, igual que el id de la
+   solicitud para quien la pidió. */
+const ADJUNTOS = path.join(DATOS, 'adjuntos');
+const TOPE_ADJUNTO = 8 * 1024 * 1024;   /* 8 MB: un PDF escaneado cabe */
+
+const FIRMAS = [
+  {tipo: 'image/jpeg', ext: '.jpg', firma: [0xFF, 0xD8, 0xFF]},
+  {tipo: 'image/png',  ext: '.png', firma: [0x89, 0x50, 0x4E, 0x47]},
+  {tipo: 'application/pdf', ext: '.pdf', firma: [0x25, 0x50, 0x44, 0x46]},
+];
+
+function queEs(buf){
+  return FIRMAS.find(f => f.firma.every((b, i) => buf[i] === b)) || null;
+}
+
+/* El nombre que la persona verá al descargarlo. Se le quitan las rutas y los
+   caracteres que no pintan nada en un nombre de archivo. */
+function nombreLimpio(nombre, ext){
+  const base = String(nombre || '').split(/[\\/]/).pop()
+    .replace(/[^\w.\- áéíóúñÁÉÍÓÚÑ]/g, '').trim().slice(0, 80);
+  return base || ('archivo' + ext);
+}
+
+function guardarAdjunto(datos){
+  const crudo = String(datos.datos || '');
+  /* viene como data:image/jpeg;base64,XXXX o solo el base64 */
+  const b64 = crudo.includes(',') ? crudo.slice(crudo.indexOf(',') + 1) : crudo;
+  const buf = Buffer.from(b64, 'base64');
+  if(!buf.length) throw Object.assign(new Error('El archivo llegó vacío.'), {codigo: 400});
+  if(buf.length > TOPE_ADJUNTO){
+    throw Object.assign(new Error('El archivo pesa más de 8 MB.'), {codigo: 413});
+  }
+  const que = queEs(buf);
+  if(!que){
+    throw Object.assign(new Error('Solo se pueden mandar fotos (JPG o PNG) y documentos PDF.'),
+                        {codigo: 415});
+  }
+  fs.mkdirSync(ADJUNTOS, {recursive: true});
+  const archivo = crypto.randomBytes(16).toString('hex') + que.ext;
+  fs.writeFileSync(path.join(ADJUNTOS, archivo), buf);
+  return {
+    url: '/adjuntos/' + archivo,
+    nombre: nombreLimpio(datos.nombre, que.ext),
+    tipo: que.tipo,
+    tamano: buf.length,
+  };
+}
+
+/* Lo que el navegador dice haber subido, comprobado contra lo que hay en
+   disco: sin esto, cualquiera podría inventarse una dirección en un mensaje. */
+function adjuntosValidos(lista){
+  if(!Array.isArray(lista)) return [];
+  return lista.filter(a => a && typeof a.url === 'string' &&
+      /^\/adjuntos\/[0-9a-f]{32}\.(jpg|png|pdf)$/.test(a.url) &&
+      fs.existsSync(path.join(ADJUNTOS, path.basename(a.url))))
+    .slice(0, 4)
+    .map(a => ({url: a.url, nombre: nombreLimpio(a.nombre, ''), tipo: String(a.tipo || ''),
+                tamano: Number(a.tamano) || 0}));
 }
 
 /* ================= la API ================= */
@@ -483,12 +557,18 @@ async function atenderApi(req, res, url){
      Así nadie puede escribir haciéndose pasar por otro, y quien pide sigue sin
      necesitar cuenta. */
   if(url.pathname === '/rest/v1/rpc/enviar_mensaje' && req.method === 'POST'){
-    const {id, texto} = await cuerpoDe(req);
+    const cuerpo = await cuerpoDe(req);
+    const {id, texto} = cuerpo;
     if(!/^[0-9a-f-]{36}$/i.test(id || '')){
       return responder(res, 400, {message: 'Falta el identificador de la solicitud.'});
     }
     const limpio = String(texto == null ? '' : texto).trim().slice(0, 1000);
-    if(!limpio) return responder(res, 400, {message: 'El mensaje viene vacío.'});
+    /* Un mensaje puede ser solo una foto: "mira cómo quedó la pantalla" no
+       necesita texto. Lo que no puede es venir vacío del todo. */
+    const traidos = adjuntosValidos(cuerpo.adjuntos);
+    if(!limpio && !traidos.length){
+      return responder(res, 400, {message: 'El mensaje viene vacío.'});
+    }
 
     const solicitudes = leerSolicitudes();
     const i = solicitudes.findIndex(s => s.id === id);
@@ -510,7 +590,9 @@ async function atenderApi(req, res, url){
     }
 
     if(!Array.isArray(s.mensajes)) s.mensajes = [];
-    s.mensajes.push({de, nombre, texto: limpio, en: new Date().toISOString()});
+    const msg = {de, nombre, texto: limpio, en: new Date().toISOString()};
+    if(traidos.length) msg.adjuntos = traidos;
+    s.mensajes.push(msg);
     /* cien mensajes por solicitud son de sobra; más es una conversación que
        debería estar pasando por teléfono */
     if(s.mensajes.length > 100) s.mensajes = s.mensajes.slice(-100);
@@ -520,6 +602,27 @@ async function atenderApi(req, res, url){
                 ' de ' + de + ' (' + nombre + ')');
     avisarCambio();
     return responder(res, 200, [s.mensajes[s.mensajes.length - 1]]);
+  }
+
+  /* ---- subir una foto o un PDF ----
+     Sin cuenta, como el resto de la conversación: la prueba de que uno tiene
+     algo que ver con esa solicitud es su id imposible de adivinar, el mismo
+     que ya hace de llave para escribir en el hilo. */
+  if(url.pathname === '/rest/v1/rpc/subir_adjunto' && req.method === 'POST'){
+    const cuerpo = await cuerpoDe(req);
+    if(!/^[0-9a-f-]{36}$/i.test(cuerpo.id || '')){
+      return responder(res, 400, {message: 'Falta el identificador de la solicitud.'});
+    }
+    const s = leerSolicitudes().find(x => x.id === cuerpo.id);
+    if(!s) return responder(res, 404, {message: 'No existe esa solicitud.'});
+    if(s.estado === 'anulada'){
+      return responder(res, 409, {message: 'Esa solicitud está anulada.'});
+    }
+    try{
+      return responder(res, 201, [guardarAdjunto(cuerpo)]);
+    }catch(e){
+      return responder(res, e.codigo || 400, {message: e.message});
+    }
   }
 
   /* ---- retirar la propia solicitud, sin cuenta ----
@@ -707,19 +810,36 @@ const TIPOS = {
   '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8', '.json':'application/json; charset=utf-8',
   '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml',
-  '.ico':'image/x-icon', '.md':'text/markdown; charset=utf-8',
+  '.ico':'image/x-icon', '.pdf':'application/pdf', '.jpeg':'image/jpeg', '.md':'text/markdown; charset=utf-8',
 };
 
 function servirArchivo(res, pedido){
   /* path.normalize aplana los ".." antes de comprobar: sin esto, una petición
      a /../../algo se saldría de la carpeta del sitio. */
   const limpio = path.normalize(decodeURIComponent(pedido)).replace(/^([/\\])+/, '');
+
+  /* Los adjuntos del chat viven en datos/adjuntos/ —fuera del sitio, con el
+     resto de lo que es de la casa— pero se piden como /adjuntos/xxx. Solo por
+     su nombre exacto: 32 caracteres al azar. Cualquier otra cosa ni se busca,
+     así que por aquí no se llega al resto de datos/ ni se lista la carpeta. */
+  if(limpio === 'adjuntos' || limpio.startsWith('adjuntos' + path.sep)){
+    const nombre = path.basename(limpio);
+    if(!/^[0-9a-f]{32}\.(jpg|png|pdf)$/.test(nombre)){
+      return responder(res, 403, 'Prohibido', 'text/plain');
+    }
+    return enviarArchivo(res, path.join(ADJUNTOS, nombre));
+  }
+
   const destino = path.join(RAIZ, limpio || 'index.html');
 
   if(!destino.startsWith(RAIZ)) return responder(res, 403, 'Fuera de sitio', 'text/plain');
   /* datos/ guarda las solicitudes y las huellas de las claves: no se sirve */
   if(destino.startsWith(DATOS)) return responder(res, 403, 'Prohibido', 'text/plain');
 
+  enviarArchivo(res, destino);
+}
+
+function enviarArchivo(res, destino){
   fs.stat(destino, (err, st) => {
     if(err || !st.isFile()) return responder(res, 404, 'No está aquí', 'text/plain');
     res.writeHead(200, {

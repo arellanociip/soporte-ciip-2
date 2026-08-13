@@ -950,6 +950,83 @@ select.despierta{animation:destello .7s ease;}
 .chat-escribir .boton{flex:0 0 auto; padding:10px 16px;}
 .chat-nota{font-size:11px; color:var(--gray-soft); margin-top:6px;}
 
+/* ---------- fotos y PDF ----------
+   Un solo botón —el clip— con las dos opciones dentro. Dos botones sueltos en
+   una barra que ya tiene un cuadro de texto y un Enviar la vuelven un panel de
+   mandos; y el navegador necesita saber de antemano qué filtro poner en el
+   cuadro de archivos, así que la pregunta hay que hacerla igual. */
+.adj{position:relative; flex:0 0 auto;}
+.adj-boton{
+  width:40px; height:40px; border:1px solid var(--line); background:#fff;
+  border-radius:var(--r-sm); cursor:pointer; color:var(--gray);
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .14s ease, color .14s ease, background .14s ease;
+}
+.adj-boton svg{
+  width:19px; height:19px; fill:none; stroke:currentColor;
+  stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
+}
+.adj-boton:hover{border-color:var(--navy); color:var(--navy); background:#FAFCFF;}
+.adj-boton:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.22);}
+/* mientras sube, el clip late: es lo único que dice que algo está pasando */
+.adj-boton.subiendo{color:var(--navy); animation:latirClip .9s ease-in-out infinite;}
+@keyframes latirClip{50%{opacity:.35;}}
+
+.adj-menu{
+  position:absolute; bottom:48px; left:0; z-index:5;
+  background:#fff; border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:0 4px 12px rgba(14,20,36,.10), 0 14px 34px rgba(14,20,36,.14);
+  padding:6px; min-width:190px;
+  animation:surgirCorto .16s ease both;
+}
+.adj-menu button{
+  display:block; width:100%; text-align:left; font-family:inherit; font-size:13px;
+  background:none; border:none; border-radius:var(--r-sm);
+  padding:9px 11px; cursor:pointer; color:var(--ink);
+}
+.adj-menu button:hover{background:var(--navy-soft); color:var(--navy);}
+
+/* lo subido y todavía sin mandar */
+.adj-lista{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+.adj-ficha{
+  display:flex; align-items:center; gap:8px;
+  background:var(--block); border-radius:var(--r-sm); padding:7px 9px;
+  font-size:12px; max-width:100%;
+}
+.adj-ficha img{width:30px; height:30px; object-fit:cover; border-radius:5px; flex:0 0 auto;}
+.adj-ficha .ic{font-size:16px;}
+.adj-ficha .n{
+  max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;
+}
+.adj-ficha .p{color:var(--gray-soft);}
+.adj-ficha button{
+  border:none; background:none; cursor:pointer; color:var(--gray-soft);
+  font-size:13px; line-height:1; padding:3px;
+}
+.adj-ficha button:hover{color:var(--rust);}
+.adj-mal{
+  font-size:12px; color:var(--rust); background:var(--rust-bg);
+  border-radius:var(--r-sm); padding:7px 10px; width:100%;
+}
+
+/* lo que ya se mandó, dentro de la burbuja */
+.burbuja-adj{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px;}
+.burbuja-adj .adj-foto img{
+  max-width:200px; max-height:200px; border-radius:var(--r-sm); display:block;
+}
+.burbuja-adj .adj-pdf{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  background:rgba(255,255,255,.75); border-radius:var(--r-sm); padding:8px 10px;
+  font-size:12.5px; color:var(--ink); max-width:100%;
+}
+.burbuja.usuario .burbuja-adj .adj-pdf{background:rgba(255,255,255,.18); color:#fff;}
+.burbuja-adj .adj-pdf:hover{text-decoration:underline;}
+.burbuja-adj .adj-pdf .n{
+  font-weight:700; max-width:180px; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap;
+}
+.burbuja-adj .adj-pdf .p{opacity:.7;}
+
 /* ===================== ESTADÍSTICAS =====================
    Cuatro cifras y unas listas ordenadas. Nada de tortas ni de colorines: cada
    barra mide lo mismo —cuántas veces— así que van todas del mismo azul, y lo

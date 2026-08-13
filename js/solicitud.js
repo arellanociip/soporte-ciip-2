@@ -784,13 +784,16 @@
       <div class="chat-hilo" id="chatHilo">
         ${msgs.length ? msgs.map(m => `<div class="burbuja ${m.de === 'usuario' ? 'usuario' : 'gtic'}">` +
             `<div class="quien">${escapar(m.de === 'usuario' ? 'Tú' : m.nombre)}</div>` +
-            `<div class="texto">${escapar(m.texto)}</div>` +
+            (m.texto ? `<div class="texto">${escapar(m.texto)}</div>` : '') +
+            soporteAdjuntos.enBurbuja(m.adjuntos) +
             `<div class="hora">${escapar(hora(m.en))}</div>` +
           `</div>`).join('')
           : `<div class="chat-vacio">Puedes escribirle si necesitas contarle algo más:<br>
              a qué hora estás, dónde te consigue, o cualquier detalle que ayude.</div>`}
       </div>
+      <div class="adj-lista" id="adjLista" hidden></div>
       <div class="chat-escribir">
+        ${soporteAdjuntos.botonHtml()}
         <textarea id="chatTexto" rows="1" maxlength="1000"
                   placeholder="Escríbele a ${escapar(s.tecnico.split(' ')[0])}…"></textarea>
         <button type="button" class="boton primario" id="chatEnviar"
@@ -908,6 +911,8 @@
     }
     const hilo = $('chatHilo');
     if(hilo) hilo.scrollTop = (!g || g.alFondo) ? hilo.scrollHeight : g.donde;
+    /* el clip y su menu son otros despues de repintar: se vuelven a enganchar */
+    soporteAdjuntos.conectar(chatId);
   }
 
   function abrirChat(id){
@@ -931,7 +936,10 @@
   async function enviarMensaje(){
     const caja = $('chatTexto'), boton = $('chatEnviar');
     const texto = caja.value.trim();
-    if(!texto || !chatId){ caja.focus(); return; }
+    /* un mensaje puede ser solo una foto: la pantalla en negro se ve mejor que
+       se cuenta */
+    const adjuntos = soporteAdjuntos.pendientes();
+    if((!texto && !adjuntos.length) || !chatId){ caja.focus(); return; }
 
     boton.disabled = true; caja.disabled = true;
     try{
@@ -940,7 +948,7 @@
         const r = await fetch(B.url + '/rest/v1/rpc/enviar_mensaje', {
           method: 'POST',
           headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
-          body: JSON.stringify({id: chatId, texto}),
+          body: JSON.stringify({id: chatId, texto, adjuntos}),
         });
         if(!r.ok){
           const c = await r.json().catch(() => ({}));
@@ -948,6 +956,7 @@
         }
       }
       caja.value = '';
+      soporteAdjuntos.vaciar();
       await pintarMias();      /* trae el hilo al día y repinta la ventana */
       const nueva = $('chatTexto');
       if(nueva){ nueva.disabled = false; nueva.focus(); }

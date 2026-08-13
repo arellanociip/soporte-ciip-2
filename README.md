@@ -181,6 +181,26 @@ equipos, a quién llamar— que no tienen por qué salir de la gerencia.
 
 ---
 
+## Fotos y PDF en la conversación
+
+Dentro del chat, el clip abre un menú con dos opciones: **foto o imagen** y
+**documento PDF**. Sirve en las dos direcciones —quien pide manda la foto de la
+pantalla, GTIC manda el instructivo— y hasta cuatro archivos por mensaje. Un
+mensaje puede ser solo una foto, sin texto.
+
+Las fotos se achican en el navegador antes de subirlas: 1600 píxeles del lado
+largo y JPEG. Lo que sale del teléfono con cuatro megas llega en unos cientos de
+kilobytes. El tope es 8 MB por archivo.
+
+Se guardan en `datos/adjuntos/`, con un nombre de 32 caracteres al azar —no el
+que traía— y se sirven por `/adjuntos/<nombre>`. Esa dirección imposible de
+adivinar es lo que hace de permiso, igual que el id de la solicitud para quien la
+pidió: la carpeta no se puede listar y un nombre que no case con ese patrón ni se
+busca. El servidor comprueba lo que el archivo **es** —los primeros bytes— y no
+lo que dice ser, así que un ejecutable renombrado a .jpg no entra.
+
+---
+
 ## El vigía: que la bandeja salte sola
 
 Doble clic en **`vigia.cmd`**. Se queda escuchando al servidor y, en cuanto entra
@@ -339,6 +359,7 @@ js/config.js        dónde se guarda: local, supabase o nada
 js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
 js/directorio.js    quién trabaja dónde, para no escribirlo cada vez
 js/local.js         el modo prueba: el almacén del navegador cuando no hay servidor
+js/adjuntos.js      el clip del chat: fotos y PDF, iguales en las dos páginas
 js/solicitud.js     la lógica del formulario
 js/bandeja.js       acceso, cola, atención, guías e impresión
 sql/esquema.sql     la tabla en Supabase, para el día que se mude

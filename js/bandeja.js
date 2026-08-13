@@ -1004,13 +1004,16 @@
       <div class="chat-hilo" id="chatHilo">
         ${msgs.length ? msgs.map(m => `<div class="burbuja ${m.de === 'gtic' ? 'usuario' : 'gtic'}">` +
             `<div class="quien">${esc(m.de === 'gtic' ? m.nombre : String(m.nombre).split(' ')[0])}</div>` +
-            `<div class="texto">${esc(m.texto)}</div>` +
+            (m.texto ? `<div class="texto">${esc(m.texto)}</div>` : '') +
+            soporteAdjuntos.enBurbuja(m.adjuntos) +
             `<div class="hora">${esc(hora(m.en))}</div>` +
           `</div>`).join('')
           : `<div class="chat-vacio">Puedes escribirle para pedirle un dato,
              avisarle a qué hora subes, o decirle que ya quedó.</div>`}
       </div>
+      <div class="adj-lista" id="adjLista" hidden></div>
       <div class="chat-escribir">
+        ${soporteAdjuntos.botonHtml()}
         <textarea id="chatTexto" rows="1" maxlength="1000"
                   placeholder="Escríbele a ${esc(String(s.usuario).split(' ')[0])}…"></textarea>
         <button type="button" class="boton primario" id="chatEnviar">Enviar</button>
@@ -1048,6 +1051,8 @@
     /* si estaba mirando el final, se queda en el final —donde acaba de llegar
        lo nuevo—; si había subido a leer, se respeta dónde estaba */
     if(hilo) hilo.scrollTop = (!g || g.alFondo) ? hilo.scrollHeight : g.donde;
+    /* el clip y su menú son otros después de repintar: se vuelven a enganchar */
+    soporteAdjuntos.conectar(chatId);
   }
 
   function abrirChat(id){
@@ -1071,19 +1076,22 @@
   async function enviarMensaje(){
     const caja = $('chatTexto'), boton = $('chatEnviar');
     const texto = caja.value.trim();
-    if(!texto || !chatId){ caja.focus(); return; }
+    /* un mensaje puede ser solo una foto: "mira cómo quedó" no necesita texto */
+    const adjuntos = soporteAdjuntos.pendientes();
+    if((!texto && !adjuntos.length) || !chatId){ caja.focus(); return; }
     boton.disabled = true; caja.disabled = true;
     try{
       const r = await pedir('/rest/v1/rpc/enviar_mensaje', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id: chatId, texto}),
+        body: JSON.stringify({id: chatId, texto, adjuntos}),
       });
       const nuevo = (await r.json())[0];
       /* Se vacía ANTES de repintar. pintarChat conserva lo que haya escrito
          —para no borrarlo cuando entra un mensaje del otro lado— así que si no
          se vacía aquí, devuelve el texto que acaba de enviarse. */
       caja.value = '';
+      soporteAdjuntos.vaciar();
       /* se añade a lo que ya está cargado y se repinta: no hace falta volver a
          pedir la solicitud entera para ver el mensaje que uno acaba de poner */
       const i = solicitudes.findIndex(x => x.id === chatId);
