@@ -23,8 +23,23 @@ servicio y los detalles que cuelgan de cada uno son exactamente sus listas.
 
 ## Arrancarlo (lo de todos los días)
 
-**Doble clic a `servir.cmd`.** Levanta el servidor e imprime las direcciones.
-Mientras esa ventana esté abierta, la oficina puede pedir soporte.
+**No hay que arrancar nada:** el servidor y el vigía se levantan solos al
+encender la PC —hay un acceso directo a `arrancar.vbs` en la carpeta de Inicio—
+y corren **sin ventana**. No hay ninguna ventana negra que se pueda cerrar por
+error, que es como se quedaba la oficina sin sistema sin que nadie supiera por
+qué.
+
+| Doble clic en | Para |
+|---|---|
+| `estado.cmd` | Ver si están vivos, si la página responde y las últimas líneas del registro |
+| `arrancar.vbs` | Levantarlos, si `estado.cmd` dice que están apagados |
+| `detener.cmd` | Apagarlos (mientras estén apagados nadie puede pedir soporte) |
+
+Todo lo que diga el servidor —incluido cualquier tropiezo, con su hora— queda en
+`datos\servidor.log`. Si se cae, se vuelve a levantar solo a los cinco segundos.
+
+`servir.cmd` sigue existiendo para arrancarlo **con** ventana, que es cómodo
+cuando se está trabajando en el código y se quiere ver lo que pasa en vivo.
 
 Antes de la primera vez, hay que crear un usuario para entrar a la bandeja:
 
@@ -58,8 +73,8 @@ Todo se guarda en `datos\solicitudes.json`, un archivo de texto de esta PC. Se
 puede abrir, leer y respaldar copiándolo. `datos\` no va al repositorio: son
 datos de la casa y las huellas de las claves, no código.
 
-> **Lo que hay que saber del servidor en tu PC:** mientras esa ventana esté
-> cerrada, o el equipo apagado, nadie puede pedir soporte ni ver la bandeja. Es
+> **Lo que hay que saber del servidor en tu PC:** con el equipo apagado —o el
+> servidor detenido— nadie puede pedir soporte ni ver la bandeja. Es
 > el precio de no depender de la nube. Cuando eso empiece a estorbar, el paso
 > siguiente es Supabase — y solo hay que cambiar `js/config.js`.
 
@@ -203,14 +218,15 @@ lo que dice ser, así que un ejecutable renombrado a .jpg no entra.
 
 ## El vigía: que la bandeja salte sola
 
-Doble clic en **`vigia.cmd`**. Se queda escuchando al servidor y, en cuanto entra
-una solicitud, trae la bandeja al frente de la pantalla; si no estaba abierta, la
-abre en su propia ventana. Deja esa ventanita negra abierta: para apagarlo, se
-cierra.
+En **esta** máquina ya viene puesto: lo levanta `arrancar.vbs` junto con el
+servidor, sin ventana. Se queda escuchando y, en cuanto entra una solicitud, trae
+la bandeja al frente de la pantalla; si no estaba abierta, la abre en su propia
+ventana.
 
-Para que arranque solo con Windows, doble clic en **`vigia-al-encender.cmd`** una
-vez. Se quita borrando el acceso directo: `Windows+R`, escribe `shell:startup`, y
-borra "Vigia de la bandeja".
+**En la máquina de otro compañero**, doble clic en **`vigia.cmd`** —ese sí abre
+una ventanita, que hay que dejar abierta— o en **`vigia-al-encender.cmd`** para
+que arranque solo con Windows. Se quita borrando el acceso directo: `Windows+R`,
+escribe `shell:startup`, y borra el que diga "Vigia de la bandeja".
 
 **Si no salta, lo primero es mirar si está andando**: su ventanita tiene que
 estar abierta (busca "Vigia de la bandeja" en la barra de tareas). Y todo lo que
@@ -354,7 +370,10 @@ index.html          el formulario que llena la casa
 bandeja.html        la cola de GTIC
 css/estilo.css      todo el diseño, incluida la hoja impresa
 servidor.js         ← el servidor de esta PC: sirve las páginas y guarda las solicitudes
-servir.cmd          doble clic para levantarlo
+arrancar.vbs        levanta el servidor y el vigia sin ventana (arranca con Windows)
+estado.cmd          si estan vivos y que dice el registro
+detener.cmd         apagarlos
+servir.cmd          levantarlo CON ventana, para trabajar en el codigo
 js/config.js        dónde se guarda: local, supabase o nada
 js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
 js/directorio.js    quién trabaja dónde, para no escribirlo cada vez

@@ -846,7 +846,16 @@ function enviarArchivo(res, destino){
       'Content-Type': TIPOS[path.extname(destino).toLowerCase()] || 'application/octet-stream',
       'Cache-Control': 'no-cache',
     });
-    fs.createReadStream(destino).pipe(res);
+    /* Un navegador corta la descarga de una imagen a media asta cada dos por
+       tres —se cambia de página, se cierra la ventana— y ese corte llega aquí
+       como un error del flujo. Sin estas dos líneas, ese error no lo atrapa
+       nadie: no está dentro del try del servidor, porque ocurre después, y un
+       error suelto tumba el proceso entero. Es decir, alguien cerrando una
+       pestaña dejaba a toda la oficina sin servidor. */
+    const flujo = fs.createReadStream(destino);
+    flujo.on('error', () => { try{ res.destroy(); }catch(e){} });
+    res.on('close', () => flujo.destroy());
+    flujo.pipe(res);
   });
 }
 
@@ -881,6 +890,29 @@ const servidor = http.createServer(async (req, res) => {
   }
 });
 
+/* ---------- dejar dicho por qué se murió ----------
+   Este servidor corre en una ventana negra que casi siempre está minimizada, y
+   cuando se caía no quedaba rastro: la oficina se enteraba porque la página
+   dejaba de cargar y aquí no había nada que leer. Ahora todo lo que lo tumbe
+   queda escrito con su hora en datos/servidor.log. */
+function anotarFallo(que, e){
+  const linea = '\n[' + new Date().toISOString() + '] ' + que + '\n' +
+                ((e && e.stack) || String(e)) + '\n';
+  try{
+    fs.mkdirSync(DATOS, {recursive: true});
+    fs.appendFileSync(path.join(DATOS, 'servidor.log'), linea, 'utf8');
+  }catch(x){}
+  console.error(linea);
+}
+
+process.on('uncaughtException', e => {
+  anotarFallo('Error suelto', e);
+  /* Se sigue sirviendo. Un error atendiendo una petición no puede dejar sin
+     sistema a toda la casa; y si de verdad quedó algo roto, el registro lo
+     dice y servir.cmd vuelve a levantarlo cuando haga falta. */
+});
+process.on('unhandledRejection', e => anotarFallo('Promesa sin atender', e));
+
 /* La IP de esta máquina en la red de la oficina. Se descartan la de loopback y
    la del VPN de Cloudflare (172.16.x), con la que nadie podría entrar. */
 function ipDeRed(){
@@ -914,6 +946,9 @@ servidor.listen(PUERTO, '0.0.0.0', () => {
   }
   console.log('');
   console.log('   Todo se guarda en:   datos\\solicitudes.json');
-  console.log('   Deja esta ventana abierta. Para apagarlo: Ctrl+C');
+  /* Corre sin ventana, así que ya no vale aquello de "no la cierres": lo que
+     hace falta es saber dónde mirar y con qué apagarlo. */
+  console.log('   Cómo va todo:        estado.cmd');
+  console.log('   Para apagarlo:       detener.cmd');
   console.log('');
 });
