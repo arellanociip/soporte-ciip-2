@@ -17,6 +17,7 @@
       <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
     </div>
     <div class="der" id="cabDerecha" hidden>
+      <a href="#" id="botonSaber">Qué sabemos</a>
       <a href="#" id="botonStats">Estadísticas</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
@@ -105,6 +106,28 @@
     <div class="barrios" id="statsBarras"></div>
   </section>
 
+  <!-- ===================== QUÉ SABEMOS =====================
+       Las guías de la gerencia: lo que se aprendió resolviendo, escrito para
+       no volver a averiguarlo. Vive detrás de la clave, con la bandeja: aquí
+       se anotan mañas de la casa que no tienen por qué salir de GTIC. -->
+  <section id="panelSaber" hidden>
+    <div class="intro">
+      <h1>Qué sabemos</h1>
+      <p>Lo que la gerencia ya resolvió, escrito para no volver a averiguarlo.
+      Al abrir una solicitud, lo de aquí sale solo si viene al caso.</p>
+    </div>
+
+    <div class="barra">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="buscarGuia" placeholder="Buscar por título, contenido o tipo de servicio">
+      </div>
+      <button type="button" class="boton primario chico" id="botonNuevaGuia">+ Escribir una guía</button>
+    </div>
+
+    <div id="listaGuias"></div>
+  </section>
+
 </main>
 
 <!-- ===================== FICHA DE UNA SOLICITUD ===================== -->
@@ -164,6 +187,44 @@
   <div class="hoja hoja-chat">
     <button type="button" class="cerrar" id="cerrarChat" aria-label="Cerrar">✕</button>
     <div id="chatCuerpo"></div>
+  </div>
+</div>
+
+<!-- ===================== ESCRIBIR UNA GUÍA =====================
+     Se abre desde "Qué sabemos" o desde una solicitud ya resuelta, y en ese
+     caso viene con lo que el técnico escribió en observaciones. -->
+<div class="velo" id="veloGuia" hidden>
+  <div class="hoja" style="max-width:640px">
+    <button type="button" class="cerrar" id="cerrarGuia" aria-label="Cerrar">✕</button>
+    <h2 id="tituloVentanaGuia">Escribir una guía</h2>
+    <div class="bajada">Lo que hay que hacer la próxima vez que pase esto.
+      Lo lee GTIC, nadie más.</div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo c8">
+        <label for="gTitulo">Título *</label>
+        <input type="text" id="gTitulo" placeholder="Ej. La impresora del piso 3 saca la hoja en blanco">
+        <div class="error"></div>
+      </div>
+      <div class="campo c4">
+        <label for="gCategoria">Tipo de servicio</label>
+        <select id="gCategoria"></select>
+      </div>
+      <div class="campo">
+        <label for="gCuerpo">Qué hay que hacer *</label>
+        <textarea id="gCuerpo" rows="10"
+          placeholder="Los pasos, en orden. Lo que hay que comprobar primero, qué se hace y qué NO."></textarea>
+        <div class="error"></div>
+      </div>
+    </div>
+
+    <div class="aviso malo" id="avisoGuia" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="guardarGuia">Guardar</button>
+      <button type="button" class="boton plano" id="cancelarGuia">Cancelar</button>
+      <button type="button" class="boton plano peligro" id="borrarGuia" hidden>Borrar</button>
+    </div>
   </div>
 </div>
 

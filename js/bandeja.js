@@ -680,7 +680,8 @@
 
   function verStats(si){
     $('panelStats').hidden = !si;
-    $('pantallaBandeja').hidden = si;
+    if(si) verSaber(false);
+    $('pantallaBandeja').hidden = si || !$('panelSaber').hidden;
     /* el enlace dice a dónde lleva, no dónde estás */
     $('botonStats').textContent = si ? 'Ver la cola' : 'Estadísticas';
     if(si) pintarStats();
@@ -690,6 +691,170 @@
     e.preventDefault();
     verStats($('panelStats').hidden);
   });
+
+  /* ================= qué sabemos =================
+     Las guías de la gerencia. Dos maneras de que sirvan, porque son dos
+     momentos distintos: buscarlas aquí cuando uno se acuerda de que existe
+     algo escrito, y que salgan solas en la ficha cuando no se acuerda —que es
+     casi siempre—.
+
+     Se guardan en el servidor y no en el navegador a propósito: lo que
+     aprendió uno tiene que estar en la máquina del otro. */
+  let guias = [];
+
+  async function cargarGuias(){
+    if(enPrueba){ guias = []; return; }
+    try{
+      const r = await pedir('/rest/v1/guias?select=*', {});
+      guias = await r.json();
+    }catch(e){ console.warn('No se pudieron traer las guías:', e); }
+    if(!$('panelSaber').hidden) pintarGuias();
+  }
+
+  /* Lo que hace que una guía venga al caso de una solicitud: comparte el tipo
+     de servicio, o su título aparece nombrado en lo que pidió el usuario. */
+  function guiasDe(s){
+    const detalle = String(s.detalle || '').trim().toUpperCase();
+    const texto = (String(s.descripcion || '') + ' ' + String(s.detalle || '')).toLowerCase();
+    return guias.filter(g => {
+      const cat = String(g.categoria || '').trim().toUpperCase();
+      if(detalle && cat === detalle) return true;
+      /* palabras del título de la guía que aparezcan en lo que se pidió: las
+         cortas ("de", "el") no cuentan, o todo se parecería a todo */
+      const claves = String(g.titulo || '').toLowerCase().split(/[^a-záéíóúñü]+/)
+        .filter(p => p.length > 5);
+      return claves.length >= 2 && claves.filter(p => texto.includes(p)).length >= 2;
+    }).slice(0, 4);
+  }
+
+  function fichaGuiaHtml(g, compacta){
+    const cuando = g.actualizada_en ? fechaCorta(g.actualizada_en) : '';
+    return `<article class="guia${compacta ? ' chica' : ''}" data-guia="${esc(g.id)}">
+      <div class="guia-h">
+        <h3>${esc(g.titulo)}</h3>
+        ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
+      </div>
+      <div class="guia-cuerpo">${esc(g.cuerpo)}</div>
+      <div class="guia-pie">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}
+        ${g.origen ? ' · de la N° ' + esc(g.origen) : ''}
+        <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button></div>
+    </article>`;
+  }
+
+  function pintarGuias(){
+    const q = $('buscarGuia').value.trim().toLowerCase();
+    const vistas = !q ? guias : guias.filter(g =>
+      [g.titulo, g.cuerpo, g.categoria, g.autor]
+        .some(v => String(v || '').toLowerCase().includes(q)));
+
+    $('listaGuias').innerHTML = vistas.length
+      ? `<div class="guias">${vistas.map(g => fichaGuiaHtml(g, false)).join('')}</div>`
+      : `<div class="vacio">${guias.length
+          ? 'Ninguna guía coincide con lo que buscas.'
+          : 'Todavía no hay ninguna guía escrita. La primera sale sola de una ' +
+            'solicitud ya resuelta: ábrela y pulsa "Guardar esto como guía".'}</div>`;
+  }
+
+  function verSaber(si){
+    $('panelSaber').hidden = !si;
+    if(si) verStats(false);
+    $('pantallaBandeja').hidden = si || !$('panelStats').hidden;
+    $('botonSaber').textContent = si ? 'Ver la cola' : 'Qué sabemos';
+    if(si) pintarGuias();
+  }
+
+  $('botonSaber').addEventListener('click', e => {
+    e.preventDefault();
+    verSaber($('panelSaber').hidden);
+  });
+  $('buscarGuia').addEventListener('input', pintarGuias);
+  $('listaGuias').addEventListener('click', e => {
+    const b = e.target.closest('[data-editar]');
+    if(b) abrirGuia(guias.find(g => g.id === b.dataset.editar));
+  });
+
+  /* ---------- escribir una guía ---------- */
+  let guiaEnMano = null;   /* la que se está corrigiendo, o null si es nueva */
+
+  function abrirGuia(g, semilla){
+    guiaEnMano = g || null;
+    const detalles = CAT_SERVICIOS.reduce((t, s) => t.concat(s.detalles), []);
+    const cat = (g && g.categoria) || (semilla && semilla.categoria) || 'General';
+    $('gCategoria').innerHTML = ['General'].concat(detalles)
+      .map(d => `<option value="${esc(d)}" ${d === cat ? 'selected' : ''}>${esc(d)}</option>`).join('');
+    $('gTitulo').value = (g && g.titulo) || (semilla && semilla.titulo) || '';
+    $('gCuerpo').value = (g && g.cuerpo) || (semilla && semilla.cuerpo) || '';
+    $('tituloVentanaGuia').textContent = g ? 'Corregir la guía' : 'Escribir una guía';
+    $('borrarGuia').hidden = !g;
+    $('avisoGuia').hidden = true;
+    guiaSemilla = semilla || null;
+    $('veloGuia').hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => $('gTitulo').focus());
+  }
+  let guiaSemilla = null;
+
+  function cerrarGuia(){
+    $('veloGuia').hidden = true;
+    guiaEnMano = null; guiaSemilla = null;
+    if($('velo').hidden && $('veloChat').hidden && $('veloPerfil').hidden && $('veloNueva').hidden){
+      document.body.style.overflow = '';
+    }
+  }
+
+  async function guardarGuia(){
+    const titulo = $('gTitulo').value.trim();
+    const cuerpo = $('gCuerpo').value.trim();
+    if(!titulo || !cuerpo){
+      $('avisoGuia').innerHTML = '<span>⚠</span><div>Hacen falta el título y los pasos: ' +
+        'una guía sin una de las dos cosas no le sirve a nadie.</div>';
+      $('avisoGuia').hidden = false;
+      return;
+    }
+    const boton = $('guardarGuia');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    const cuerpoJson = {titulo, cuerpo, categoria: $('gCategoria').value};
+    if(!guiaEnMano && guiaSemilla && guiaSemilla.origen) cuerpoJson.origen = guiaSemilla.origen;
+    try{
+      const r = await pedir('/rest/v1/guias' + (guiaEnMano ? '?id=eq.' + guiaEnMano.id : ''), {
+        method: guiaEnMano ? 'PATCH' : 'POST',
+        headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+        body: JSON.stringify(cuerpoJson),
+      });
+      const guardada = (await r.json())[0];
+      const i = guias.findIndex(g => g.id === guardada.id);
+      if(i >= 0) guias[i] = guardada; else guias.unshift(guardada);
+      cerrarGuia();
+      if(!$('panelSaber').hidden) pintarGuias();
+      if(!$('velo').hidden) pintarFicha();
+    }catch(err){
+      $('avisoGuia').innerHTML = '<span>⚠</span><div>No se pudo guardar: ' + esc(err.message) + '</div>';
+      $('avisoGuia').hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar';
+  }
+
+  async function borrarLaGuia(){
+    if(!guiaEnMano) return;
+    if(!confirm('Se borra la guía "' + guiaEnMano.titulo + '". ¿Seguimos?')) return;
+    try{
+      await pedir('/rest/v1/guias?id=eq.' + guiaEnMano.id, {method: 'DELETE'});
+      guias = guias.filter(g => g.id !== guiaEnMano.id);
+      cerrarGuia();
+      pintarGuias();
+      if(!$('velo').hidden) pintarFicha();
+    }catch(err){
+      $('avisoGuia').innerHTML = '<span>⚠</span><div>No se pudo borrar: ' + esc(err.message) + '</div>';
+      $('avisoGuia').hidden = false;
+    }
+  }
+
+  $('botonNuevaGuia').addEventListener('click', () => abrirGuia(null, null));
+  $('cerrarGuia').addEventListener('click', cerrarGuia);
+  $('cancelarGuia').addEventListener('click', cerrarGuia);
+  $('guardarGuia').addEventListener('click', guardarGuia);
+  $('borrarGuia').addEventListener('click', borrarLaGuia);
+  $('veloGuia').addEventListener('click', e => { if(e.target === $('veloGuia')) cerrarGuia(); });
 
   /* ================= la ficha de una solicitud ================= */
   function opcionesHtml(lista, elegido){
@@ -975,6 +1140,48 @@
       <div class="v ${completo?'parrafo':''}">${esc(valor || '—')}</div></div>`;
   }
 
+  /* ---------- lo que ya sabemos de esto, dentro de la ficha ----------
+     Dos fuentes, y la diferencia importa: arriba las guías, que alguien se
+     sentó a escribir y valen para siempre; abajo los casos anteriores del
+     mismo tipo, que son lo que se hizo aquel día y puede estar bien o mal.
+     Van juntos porque la pregunta es una sola —"¿esto ya nos pasó?"— y hay
+     que responderla sin salir de la ficha.
+
+     Los casos anteriores no cuestan trabajo a nadie: son las observaciones que
+     el técnico ya escribe para que salgan impresas en la hoja. */
+  function casosParecidos(s){
+    if(!s.detalle) return [];
+    return solicitudes
+      .filter(x => x.id !== s.id && x.estado === 'atendida' &&
+                   x.detalle === s.detalle && String(x.observaciones || '').trim())
+      .sort((a, b) => String(b.atendida_en || b.creada_en).localeCompare(
+                      String(a.atendida_en || a.creada_en)))
+      .slice(0, 4);
+  }
+
+  function saberHtml(s){
+    const enGuias = guiasDe(s);
+    const antes = casosParecidos(s);
+    const hayObs = !!String(s.observaciones || '').trim();
+    if(!enGuias.length && !antes.length && !hayObs) return '';
+
+    return `<div class="seccion">Qué sabemos de esto</div>
+      <div class="saber">
+        ${enGuias.length ? enGuias.map(g => fichaGuiaHtml(g, true)).join('')
+          : ''}
+        ${antes.length ? `<div class="antes">
+            <div class="antes-t">Cómo se resolvió antes${s.detalle ? ' · ' + esc(s.detalle) : ''}</div>
+            ${antes.map(x => `<div class="antes-f">
+              <div class="antes-c">N° ${String(x.numero).padStart(3,'0')}-${esc(String(x.anio))} ·
+                ${esc(fechaCorta(x.atendida_en || x.creada_en))}${x.tecnico ? ' · ' + esc(x.tecnico) : ''}</div>
+              <div class="antes-o">${esc(x.observaciones)}</div>
+            </div>`).join('')}
+          </div>` : ''}
+        ${hayObs ? `<button type="button" class="boton plano chico" id="botonAGuia">
+            Guardar esto como guía</button>` : ''}
+      </div>`;
+  }
+
   function pintarFicha(){
     const s = abierta;
     $('hojaFicha').innerHTML = `
@@ -1002,6 +1209,8 @@
         <div class="campo"><label for="fObs">Observaciones <span class="opc">· sale impreso en la hoja</span></label>
           <textarea id="fObs" rows="4" placeholder="Qué se encontró y qué se hizo.">${esc(s.observaciones||'')}</textarea></div>
       </div>
+
+      ${saberHtml(s)}
 
       <div class="seccion">Renglones de equipo</div>
       <div id="renglones">${s.renglones.map(renglonHtml).join('')}</div>
@@ -1267,6 +1476,7 @@
       mostrarBandeja();
       pintarAvisoPermiso();
       await cargar();
+      cargarGuias();
       escuchar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
@@ -1400,6 +1610,24 @@
     /* el atajo del recuadro cuando a la cuenta le faltan cargo o cédula */
     if(e.target.id === 'botonCompletarDatos'){ abrirPerfil(); return; }
 
+    /* Pasar de un caso resuelto a una guía. Se lleva lo que hay escrito ahora
+       mismo en observaciones, no lo último guardado: si el técnico acaba de
+       escribir cómo lo resolvió, es justo eso lo que vale la pena guardar. */
+    if(e.target.id === 'botonAGuia'){
+      const s = abierta;
+      abrirGuia(null, {
+        titulo: String(s.descripcion || '').trim().slice(0, 120),
+        cuerpo: $('fObs').value.trim(),
+        categoria: s.detalle || 'General',
+        origen: String(s.numero).padStart(3, '0') + '-' + s.anio,
+      });
+      return;
+    }
+
+    /* una guía de las que salen en la ficha, para corregirla ahí mismo */
+    const editar = e.target.closest('[data-editar]');
+    if(editar){ abrirGuia(guias.find(g => g.id === editar.dataset.editar)); return; }
+
     /* el globo de la ficha abre la conversación encima de ella */
     const globo = e.target.closest('[data-chat]');
     if(globo){ abrirChat(globo.dataset.chat); return; }
@@ -1488,7 +1716,8 @@
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape') return;
     /* el de encima primero: el aviso va sobre todo, y el chat sobre la ficha */
-    if(!$('veloNueva').hidden) cerrarNueva();
+    if(!$('veloGuia').hidden) cerrarGuia();
+    else if(!$('veloNueva').hidden) cerrarNueva();
     else if(!$('veloChat').hidden) cerrarChat();
     else if(!$('veloPerfil').hidden) cerrarPerfil();
     else if(!$('velo').hidden) cerrar();
@@ -1525,7 +1754,7 @@
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
     pintarAvisoPermiso();
-    try{ await cargar(); escuchar(); }
+    try{ await cargar(); cargarGuias(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();

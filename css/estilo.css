@@ -908,6 +908,57 @@ select.despierta{animation:destello .7s ease;}
 
 .barrio .vacio-b{font-size:12.5px; color:var(--gray-soft); padding:6px 0;}
 
+/* ===================== QUÉ SABEMOS =====================
+   Las guías de la gerencia. En su pestaña se leen enteras; dentro de la ficha
+   van recortadas a unas líneas, porque ahí son una ayuda al margen y no lo que
+   uno vino a hacer. */
+.guias{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; align-items:start;}
+@media (max-width:820px){ .guias{grid-template-columns:1fr;} }
+
+.guia{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:16px 18px;
+  border-left:3px solid var(--navy);
+}
+.guia-h{display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+.guia-h h3{font-size:14.5px; font-weight:700; line-height:1.3; flex:1; min-width:0;}
+.guia-cat{
+  background:var(--navy-soft); color:var(--navy); border-radius:20px;
+  padding:3px 10px; font-size:10.5px; font-weight:700; white-space:nowrap;
+}
+.guia-cuerpo{
+  margin-top:9px; font-size:13px; line-height:1.6; color:var(--gray);
+  white-space:pre-wrap; word-break:break-word;
+}
+.guia-pie{
+  margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft);
+  font-size:11.5px; color:var(--gray-soft); display:flex; gap:8px; align-items:baseline;
+}
+.guia-pie .enlace{margin-left:auto;}
+
+/* dentro de la ficha */
+.guia.chica{box-shadow:none; padding:13px 15px;}
+.guia.chica .guia-cuerpo{
+  display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+.saber{display:flex; flex-direction:column; gap:12px;}
+.antes{
+  background:var(--block); border-radius:var(--r-sm); padding:13px 15px;
+}
+.antes-t{
+  font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--gray-soft); margin-bottom:10px;
+}
+.antes-f{padding:8px 0; border-top:1px solid var(--line);}
+.antes-f:first-of-type{border-top:none; padding-top:0;}
+.antes-c{font-size:11.5px; color:var(--gray-soft); font-variant-numeric:tabular-nums;}
+.antes-o{font-size:13px; line-height:1.55; margin-top:2px; white-space:pre-wrap;}
+
+/* borrar no se pinta como una acción más: va apartado y en el color del daño */
+.boton.plano.peligro{color:var(--rust); border-color:#F0D2C6; margin-left:auto;}
+.boton.plano.peligro:hover{background:var(--rust-bg);}
+
 /* ===================== IMPRESIÓN: la Hoja de Servicio ===================== */
 /* Reconstruye el formato del Excel para firmar y sellar. En pantalla vive
    oculta; solo existe al imprimir. */

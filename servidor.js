@@ -24,6 +24,7 @@ const RAIZ    = __dirname;
 const DATOS   = path.join(RAIZ, 'datos');
 const F_SOLIC = path.join(DATOS, 'solicitudes.json');
 const F_USERS = path.join(DATOS, 'usuarios.json');
+const F_GUIAS = path.join(DATOS, 'guias.json');
 const PUERTO  = Number(process.env.PUERTO) || 8123;
 
 /* ================= el archivo como base de datos ================= */
@@ -45,6 +46,7 @@ function escribirJson(archivo, valor){
 
 const leerSolicitudes = () => leerJson(F_SOLIC, []);
 const leerUsuarios    = () => leerJson(F_USERS, []);
+const leerGuias       = () => leerJson(F_GUIAS, []);
 
 /* ================= usuarios y claves ================= */
 /* La clave nunca se guarda: se guarda su huella con scrypt y una sal propia.
@@ -234,6 +236,13 @@ function sesionDe(req){
     return null;
   }
   return s;
+}
+
+/* Quién firma lo que escribe: el nombre de la cuenta, y el correo si nadie se
+   lo puso. La sesión solo guarda el correo, que es lo que no cambia. */
+function quienEs(sesion){
+  const u = leerUsuarios().find(x => x.correo === sesion.correo);
+  return (u && u.nombre) || sesion.correo;
 }
 
 /* ================= avisar en cuanto algo cambia =================
@@ -544,6 +553,76 @@ async function atenderApi(req, res, url){
                 ' por ' + s.usuario);
     avisarCambio();
     return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
+  }
+
+  /* ---- las guías: lo que GTIC ya sabe ----
+     Solo con sesión, las cuatro operaciones. No hay lectura anónima a
+     propósito: aquí se escriben mañas de la casa —a quién llamar, qué clave
+     tiene tal equipo, por dónde se cuelga el sistema— y eso no sale de la
+     gerencia. La página del usuario ni las pide. */
+  if(url.pathname === '/rest/v1/guias'){
+    const sesion = sesionDe(req);
+    if(!sesion) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
+
+    if(req.method === 'GET'){
+      const guias = leerGuias()
+        .sort((a, b) => String(b.actualizada_en).localeCompare(String(a.actualizada_en)));
+      return responder(res, 200, guias);
+    }
+
+    if(req.method === 'POST'){
+      const datos = await cuerpoDe(req);
+      const titulo = String(datos.titulo || '').trim();
+      const cuerpo = String(datos.cuerpo || '').trim();
+      if(!titulo || !cuerpo){
+        return responder(res, 400, {message: 'Una guía necesita título y contenido.'});
+      }
+      const guias = leerGuias();
+      const ahora = new Date().toISOString();
+      const fila = {
+        id: crypto.randomUUID(),
+        titulo: titulo.slice(0, 160),
+        categoria: String(datos.categoria || '').trim().slice(0, 120) || 'General',
+        cuerpo: cuerpo.slice(0, 20000),
+        /* de qué solicitud salió, cuando sale de una: sirve para volver al caso */
+        origen: datos.origen ? String(datos.origen).slice(0, 40) : null,
+        autor: quienEs(sesion),
+        creada_en: ahora,
+        actualizada_en: ahora,
+      };
+      guias.push(fila);
+      escribirJson(F_GUIAS, guias);
+      console.log('  » guía nueva:', fila.titulo, '·', fila.autor);
+      return responder(res, 201, [fila]);
+    }
+
+    /* el navegador pide ?id=eq.<id>, como haría contra Supabase */
+    const filtro = url.searchParams.get('id') || '';
+    const id = filtro.startsWith('eq.') ? filtro.slice(3) : '';
+    const guias = leerGuias();
+    const i = guias.findIndex(g => g.id === id);
+    if(i < 0) return responder(res, 404, {message: 'No existe esa guía.'});
+
+    if(req.method === 'PATCH'){
+      const datos = await cuerpoDe(req);
+      ['titulo', 'categoria', 'cuerpo'].forEach(k => {
+        if(datos[k] !== undefined) guias[i][k] = String(datos[k]).trim().slice(0, 20000);
+      });
+      if(!guias[i].titulo || !guias[i].cuerpo){
+        return responder(res, 400, {message: 'Una guía necesita título y contenido.'});
+      }
+      guias[i].actualizada_en = new Date().toISOString();
+      guias[i].autor = quienEs(sesion);
+      escribirJson(F_GUIAS, guias);
+      return responder(res, 200, [guias[i]]);
+    }
+
+    if(req.method === 'DELETE'){
+      const fuera = guias.splice(i, 1)[0];
+      escribirJson(F_GUIAS, guias);
+      console.log('  » guía borrada:', fuera.titulo);
+      return responder(res, 200, [fuera]);
+    }
   }
 
   /* ---- solicitudes ---- */

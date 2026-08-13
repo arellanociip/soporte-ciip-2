@@ -146,6 +146,30 @@ navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
 
 ---
 
+## Qué sabemos: la base de conocimiento
+
+Vive dentro de la bandeja, detrás de la clave, y funciona por dos vías que se
+usan en momentos distintos:
+
+**Sin escribir nada.** Al abrir una solicitud, la ficha muestra cómo se
+resolvieron las anteriores del mismo tipo de servicio: número, fecha, quién la
+atendió y lo que dejó escrito en Observaciones. No cuesta trabajo extra a nadie
+—son las mismas observaciones que ya salen impresas en la hoja— y empieza a
+servir con la segunda solicitud parecida que entre.
+
+**Escribiendo.** De un caso bien resuelto, el botón *"Guardar esto como guía"*
+abre una ventana con el título y los pasos ya puestos; se corrige y se guarda. A
+partir de ahí esa guía sale sola en las fichas del mismo tipo de servicio, o en
+aquellas cuyo texto la nombre. Y en el enlace **"Qué sabemos"** del encabezado
+están todas, buscables por título, contenido o tipo.
+
+Se guardan en `datos/guias.json`, en el servidor y no en el navegador: lo que
+aprendió uno tiene que estar en la máquina del otro. Solo se leen con sesión
+iniciada —la página del usuario ni las pide—, así que ahí se pueden anotar mañas
+de la casa que no tienen por qué salir de la gerencia.
+
+---
+
 ## El vigía: que la bandeja salte sola
 
 Doble clic en **`vigia.cmd`**. Se queda escuchando al servidor y, en cuanto entra
@@ -305,7 +329,9 @@ js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
 js/directorio.js    quién trabaja dónde, para no escribirlo cada vez
 js/local.js         el modo prueba: el almacén del navegador cuando no hay servidor
 js/solicitud.js     la lógica del formulario
-js/bandeja.js       acceso, cola, atención e impresión
+js/bandeja.js       acceso, cola, atención, guías e impresión
 sql/esquema.sql     la tabla en Supabase, para el día que se mude
-datos/              las solicitudes y los usuarios de GTIC (no va al repositorio)
+vigia.ps1           el vigía: trae la bandeja al frente cuando entra una solicitud
+vigia.cmd           doble clic para arrancarlo
+datos/              solicitudes, usuarios y guías de GTIC (no va al repositorio)
 ```
