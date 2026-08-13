@@ -653,6 +653,16 @@
      número en un sitio distinto del que luego habría que consultar. */
   async function reflejarEnvio(fila){
     soporteMias.anotar(fila);
+    /* La planilla se vacía en cuanto la solicitud sale. Se hace aquí y no al
+       volver a abrirse, porque abrirse es lo que pasa cuando GTIC cierra: si
+       se limpiara entonces, se limpiaría delante de la persona.
+
+       Mientras hubo pantalla de acuse esto lo hacía el botón de "pedir otra";
+       al quitarla se quedó sin hacer, y la planilla volvía con lo de la vez
+       pasada escrito y el medidor en 100%: parecía que hubiera algo a medio
+       enviar. Lo que sí se conserva es quién eres —eso no se reescribe— y la
+       casilla de recordarte, que la limpieza respeta. */
+    limpiar();
     await pintarMias();
     const numero = 'GTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
     const aviso = $('avisoUnaALaVez');
@@ -764,7 +774,16 @@
     detalle.classList.remove('despierta');
     /* suelta el atajo y devuelve la clasificación a su estado inicial */
     atajoElegido = null;
+    /* form.reset() no toca los campos ocultos —ningún navegador los devuelve a
+       su sitio, porque no son de escribir—, así que el atajo hay que soltarlo
+       a mano. Si no, la planilla volvía con "La computadora no sirve" elegido
+       por dentro sin ninguna tarjeta marcada por fuera, y el medidor contaba
+       un dato que nadie había puesto. */
+    $('atajo').value = '';
     $('atajos').querySelectorAll('.atajo').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    /* si quedó abierta la ventana de "quizá lo resuelvas ahora mismo", se
+       cierra: era la ayuda de un problema que ya se mandó */
+    cerrarAyuda();
     desc.placeholder = AYUDA_POR_DEFECTO;
     $('clasificado').hidden = true;
     $('clasificacionManual').hidden = true;
