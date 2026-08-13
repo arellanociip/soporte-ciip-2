@@ -36,29 +36,42 @@
   </div>
 
   <!-- ===================== ACCESO ===================== -->
-  <section id="pantallaAcceso" hidden>
-    <div class="tarjeta" style="max-width:400px; margin:40px auto;">
-      <div class="intro" style="margin-bottom:20px">
-        <h1>Acceso de GTIC</h1>
-        <p>Esta bandeja es solo para el personal de la gerencia.</p>
+  <section id="pantallaAcceso" class="acceso" hidden>
+    <form class="acceso-caja" id="formAcceso">
+      <div class="acceso-sello">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="10.5" width="16" height="10.5" rx="2.2"/>
+          <path d="M8 10.5V7.4a4 4 0 018 0v3.1"/>
+        </svg>
       </div>
-      <form id="formAcceso">
-        <div class="rejilla">
-          <div class="campo">
-            <label for="correo">Correo</label>
-            <input type="text" id="correo" autocomplete="username" placeholder="tu.correo@ciip.gob.ve">
-          </div>
-          <div class="campo">
-            <label for="clave">Contraseña</label>
-            <input type="password" id="clave" autocomplete="current-password">
-          </div>
+      <h1>Acceso de GTIC</h1>
+      <p class="acceso-bajada">Esta bandeja es solo para el personal de la gerencia.
+        Quien pide un soporte no necesita cuenta.</p>
+
+      <div class="campo">
+        <label for="correo">Correo</label>
+        <input type="text" id="correo" autocomplete="username" placeholder="tu.correo@ciip.com.ve">
+      </div>
+      <div class="campo">
+        <label for="clave">Contraseña</label>
+        <div class="clave-caja">
+          <input type="password" id="clave" autocomplete="current-password">
+          <!-- Ver lo que uno escribió es la forma más corta de resolver un
+               "contraseña incorrecta" que en realidad era una tecla mal dada. -->
+          <button type="button" id="verClave" aria-pressed="false"
+                  aria-label="Mostrar la contraseña" title="Mostrar la contraseña">
+            <svg viewBox="0 0 24 24"><path d="M1.8 12S5.9 5.5 12 5.5 22.2 12 22.2 12 18.1 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.1"/></svg>
+          </button>
         </div>
-        <div class="aviso malo" id="avisoAcceso" hidden style="margin:16px 0 0"></div>
-        <div class="botones">
-          <button type="submit" class="boton primario" id="botonEntrar">Entrar</button>
-        </div>
-      </form>
-    </div>
+      </div>
+
+      <div class="aviso malo" id="avisoAcceso" hidden style="margin:4px 0 0"></div>
+
+      <button type="submit" class="boton primario ancho" id="botonEntrar">Entrar</button>
+
+      <div class="acceso-pie">Las cuentas las crea GTIC desde el servidor;
+        no hay registro por la web. Si olvidaste tu clave, se pone una nueva desde ahí.</div>
+    </form>
   </section>
 
   <!-- ===================== LA BANDEJA ===================== -->

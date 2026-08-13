@@ -137,7 +137,24 @@
     $('pantallaAcceso').hidden = false;
     $('pantallaBandeja').hidden = true;
     $('cabDerecha').hidden = true;
+    /* el cursor donde va a escribir, sin tener que buscarlo con el ratón */
+    requestAnimationFrame(() => {
+      const c = $('correo');
+      if(c && !c.value) c.focus(); else $('clave').focus();
+    });
   }
+
+  /* Ver la contraseña: la mitad de los "no me deja entrar" son una tecla mal
+     dada, y sin poder mirar lo escrito no hay forma de darse cuenta. */
+  $('verClave').addEventListener('click', () => {
+    const campo = $('clave'), boton = $('verClave');
+    const viendo = campo.type === 'text';
+    campo.type = viendo ? 'password' : 'text';
+    boton.setAttribute('aria-pressed', String(!viendo));
+    boton.title = viendo ? 'Mostrar la contraseña' : 'Ocultar la contraseña';
+    boton.setAttribute('aria-label', boton.title);
+    campo.focus();
+  });
   function mostrarBandeja(){
     $('pantallaAcceso').hidden = true;
     $('pantallaBandeja').hidden = false;

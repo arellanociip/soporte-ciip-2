@@ -108,7 +108,10 @@ a{color:var(--navy);}
    sabes en cuál estás parado aunque el cursor no se vea. */
 .campo:focus-within label{color:var(--navy);}
 
-input[type=text], input[type=tel], select, textarea{
+/* La contraseña estaba fuera de esta lista desde el principio: se veía como la
+   caja gris de fábrica del navegador, angosta y con otro borde, al lado de un
+   campo de correo bien puesto. */
+input[type=text], input[type=tel], input[type=password], input[type=email], select, textarea{
   width:100%; font-family:inherit; font-size:13.5px; color:var(--ink);
   background:#fff; border:1px solid var(--line); border-radius:var(--r-sm);
   padding:9px 11px; transition:border-color .14s ease, box-shadow .14s ease;
@@ -409,6 +412,65 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.alerta{background:var(--amber-bg); color:var(--amber); border:1px solid #F0DFBC;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
+
+/* ===================== EL ACCESO DE GTIC =====================
+   La primera pantalla de la gerencia, y durante meses la única cosa de este
+   sitio que se veía sin terminar: una tarjeta suelta arriba a la izquierda.
+   Ahora se planta en el centro de lo que queda de pantalla —de ahí el
+   min-height con la altura del encabezado descontada— y pide lo justo. */
+.acceso{
+  min-height:calc(100vh - 74px - 88px);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px 0 40px;
+}
+.acceso-caja{
+  width:100%; max-width:420px;
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 1px 2px rgba(14,20,36,.04), 0 12px 34px rgba(14,20,36,.09);
+  padding:32px 34px 26px;
+  display:flex; flex-direction:column; gap:16px;
+  animation:surgir .3s ease both;
+}
+/* el candado: dice de qué va esto antes de leer una palabra */
+.acceso-sello{
+  width:46px; height:46px; border-radius:13px;
+  background:var(--navy-soft); color:var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:2px;
+}
+.acceso-sello svg{
+  width:23px; height:23px; fill:none; stroke:currentColor;
+  stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
+}
+.acceso-caja h1{font-size:22px; font-weight:700; letter-spacing:-.01em; margin-bottom:-8px;}
+.acceso-bajada{font-size:13px; color:var(--gray); line-height:1.55;}
+.acceso-caja .campo{gap:6px;}
+.acceso-caja input{padding:11px 13px; font-size:14px;}
+
+/* el ojo va dentro del campo, no al lado: al lado empuja el ancho y desalinea
+   los dos campos, que es lo que más se nota en una pantalla tan sencilla */
+.clave-caja{position:relative;}
+.clave-caja input{padding-right:44px;}
+.clave-caja button{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; border:none; background:none; cursor:pointer;
+  color:var(--gray-soft); border-radius:var(--r-sm);
+  display:flex; align-items:center; justify-content:center;
+}
+.clave-caja button:hover{color:var(--navy); background:var(--navy-soft);}
+.clave-caja button:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.22);}
+.clave-caja button svg{
+  width:19px; height:19px; fill:none; stroke:currentColor;
+  stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
+}
+/* con la contraseña a la vista, el ojo se marca: es un estado, no un gesto */
+.clave-caja button[aria-pressed="true"]{color:var(--navy);}
+
+.boton.ancho{width:100%; justify-content:center; padding:12px 20px; font-size:14px;}
+.acceso-pie{
+  font-size:11.5px; color:var(--gray-soft); line-height:1.5;
+  border-top:1px solid var(--line-soft); padding-top:14px;
+}
 
 /* ===================== BANDEJA ===================== */
 .barra{
