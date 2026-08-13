@@ -1222,16 +1222,6 @@ select.despierta{animation:destello .7s ease;}
   display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden;
 }
 
-/* lo que de esa guía sale de la gerencia, marcado para que no haya duda */
-.guia-publica{
-  margin-top:11px; padding:10px 12px;
-  background:var(--good-bg); border-radius:var(--r-sm);
-  font-size:12.5px; line-height:1.55; color:var(--good);
-  white-space:pre-wrap; word-break:break-word;
-}
-.guia-publica b{display:block; font-size:10.5px; letter-spacing:.05em;
-  text-transform:uppercase; margin-bottom:3px;}
-
 /* la nota del campo que sí se publica: se lee antes de escribir, no después */
 .ayuda.destacada{
   background:var(--good-bg); color:var(--good); border-radius:var(--r-sm);

@@ -697,8 +697,6 @@
         ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
       </div>
       <div class="guia-cuerpo">${esc(g.cuerpo)}</div>
-      ${g.solucion ? `<div class="guia-publica"><b>Esto lo ve quien pide:</b>
-        ${esc(g.solucion)}</div>` : ''}
       <div class="guia-pie">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}
         ${g.origen ? ' · de la N° ' + esc(g.origen) : ''}
         <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button></div>
