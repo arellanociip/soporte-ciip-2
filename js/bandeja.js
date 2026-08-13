@@ -753,7 +753,7 @@
     $('panelSaber').hidden = !si;
     if(si) verStats(false);
     $('pantallaBandeja').hidden = si || !$('panelStats').hidden;
-    $('botonSaber').textContent = si ? 'Ver la cola' : 'Qué sabemos';
+    $('botonSaber').textContent = si ? 'Ver la cola' : 'Base del conocimiento';
     if(si) pintarGuias();
   }
 

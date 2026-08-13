@@ -243,7 +243,7 @@ ese, lo corrige en la ficha y manda lo que corrigió.
 
 ---
 
-## Qué sabemos: la base de conocimiento
+## La base del conocimiento
 
 Vive dentro de la bandeja, detrás de la clave, y funciona por dos vías que se
 usan en momentos distintos:
@@ -257,8 +257,8 @@ servir con la segunda solicitud parecida que entre.
 **Escribiendo.** De un caso bien resuelto, el botón *"Guardar esto como guía"*
 abre una ventana con el título y los pasos ya puestos; se corrige y se guarda. A
 partir de ahí esa guía sale sola en las fichas del mismo tipo de servicio, o en
-aquellas cuyo texto la nombre. Y en el enlace **"Qué sabemos"** del encabezado
-están todas, buscables por título, contenido o tipo.
+aquellas cuyo texto la nombre. Y en el enlace **"Base del conocimiento"** del
+encabezado están todas, buscables por título, contenido o tipo.
 
 **Lo que ve la casa.** Cada guía tiene además un campo aparte —*"Lo que puede
 intentar quien pide"*— que es lo único que sale de la gerencia. Al elegir el
