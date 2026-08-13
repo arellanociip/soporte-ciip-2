@@ -195,10 +195,11 @@
   let sinLeer = 0;         /* llegadas mientras la pestaña no se mira */
   const recien = new Set();/* las que están marcadas en la cola */
 
-  /* La notificación del sistema solo existe en "contexto seguro": localhost o
-     https. Por la red de la oficina se entra por http://192.168…, donde el
-     navegador no la ofrece; ahí quedan el sonido, el cartel y el título, que no
-     dependen de permiso de nadie. */
+  /* El aviso en el escritorio de Windows, si el navegador lo da: solo existe en
+     "contexto seguro" —localhost o https— y solo si esa máquina le dio permiso.
+     No se pide ni se explica: quien lo tenga lo tiene, y quien no, tiene el
+     vigía (vigia.cmd), que trae la bandeja al frente sin depender de nada de
+     esto, y la ventana del aviso, que sale igual. */
   const hayNotificaciones = () => typeof Notification !== 'undefined' && window.isSecureContext;
 
   /* Cuáles de estas no estaban antes. La primera carga solo toma nota: si no,
@@ -345,63 +346,6 @@
       nuevas.forEach(s => recien.delete(s.id));
       if(!$('pantallaBandeja').hidden) pintar();
     }, 30000);
-  }
-
-  /* ---------- el permiso para avisar en el escritorio ----------
-     El navegador no saca nada en el escritorio hasta que la persona lo
-     autoriza, y solo pregunta si se lo pide un clic: si se lo pide la página
-     sola al cargar, Edge lo silencia en una campanita de la barra de
-     direcciones que nadie ve. De ahí este cartel con su botón, que es el clic
-     que hace falta. Desaparece en cuanto el permiso está dado. */
-  function pintarAvisoPermiso(){
-    const caja = $('avisoPermiso');
-    if(!caja) return;
-    const texto = $('avisoPermisoTexto'), boton = $('botonPermitir');
-    caja.hidden = true;
-
-    /* Entrando por dirección de red no hay aviso de escritorio para ninguna
-       página y no hay nada que hacer al respecto, así que tampoco hay nada que
-       decir: quien atiende desde otra máquina tiene el vigía (vigia.cmd), que
-       le trae la bandeja al frente sin depender de permiso de nadie. */
-    if(!hayNotificaciones() || Notification.permission === 'granted') return;
-
-    boton.textContent = 'Permitir';
-    if(Notification.permission === 'default'){
-      texto.innerHTML = '<b>Falta un permiso.</b> El aviso dentro de esta página ya funciona, ' +
-        'pero para que Windows te lo muestre en el escritorio —aunque tengas la ventana ' +
-        'detrás de otra— hay que autorizarlo una sola vez.';
-      boton.hidden = false;
-    }else{
-      texto.innerHTML = '<b>El navegador tiene bloqueados los avisos de escritorio.</b> ' +
-        'Para devolvérselos: clic en el candado de la barra de direcciones → ' +
-        'Permisos para este sitio → Notificaciones → Permitir, y recarga la página. ' +
-        'Mientras tanto, el cartel y el sonido de esta página siguen funcionando.';
-      boton.hidden = true;
-    }
-    caja.hidden = false;
-  }
-
-  function pedirPermiso(){
-    if(!hayNotificaciones() || Notification.permission !== 'default') return;
-    let respuesta;
-    try{ respuesta = Notification.requestPermission(); }catch(e){ return; }
-    /* Los navegadores viejos contestan por función en vez de por promesa */
-    if(respuesta && respuesta.then) respuesta.then(alResponder);
-    else alResponder(Notification.permission);
-  }
-
-  function alResponder(estado){
-    pintarAvisoPermiso();
-    if(estado !== 'granted') return;
-    /* Uno de prueba en el momento: así se ve que quedó funcionando sin tener
-       que esperar a que alguien pida un soporte de verdad. */
-    try{
-      const n = new Notification('Avisos encendidos', {
-        body: 'Así vas a ver las solicitudes que entren, aunque tengas esta ventana detrás.',
-        icon: 'assets/logo_ciip.png', tag: 'prueba-avisos',
-      });
-      n.onclick = () => { window.focus(); n.close(); };
-    }catch(e){}
   }
 
   /* ================= traer y pintar ================= */
@@ -1474,7 +1418,6 @@
     try{
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
-      pintarAvisoPermiso();
       await cargar();
       cargarGuias();
       escuchar();
@@ -1517,8 +1460,6 @@
     }
   });
 
-  /* El clic que el navegador está esperando para preguntar. */
-  $('botonPermitir').addEventListener('click', e => { e.preventDefault(); pedirPermiso(); });
 
   $('buscar').addEventListener('input', e => { busqueda = e.target.value; pintar(); });
   $('botonRecargar').addEventListener('click', () => cargar().catch(e => console.error(e)));
@@ -1747,13 +1688,11 @@
       botonVaciar.addEventListener('click', vaciarPrueba);
       $('botonRecargar').after(botonVaciar);
       mostrarBandeja();
-      pintarAvisoPermiso();
       await cargar();
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    pintarAvisoPermiso();
     try{ await cargar(); cargarGuias(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
