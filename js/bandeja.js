@@ -189,15 +189,12 @@
      Lo único que no hace es abrir la ficha: eso es del técnico, y una ventana
      que se abre sola encima de lo que uno estaba escribiendo es un estorbo, no
      un aviso. */
-  const LLAVE_AVISOS = 'soporte_avisos';
   const LLAVE_RED = 'soporte_aviso_red';   /* "ya me lo explicaste" */
   const TITULO = document.title;
 
   let conocidas = null;    /* null = todavía no se ha cargado nada */
   let sinLeer = 0;         /* llegadas mientras la pestaña no se mira */
   const recien = new Set();/* las que están marcadas en la cola */
-
-  const avisosEncendidos = () => localStorage.getItem(LLAVE_AVISOS) !== 'no';
 
   /* La notificación del sistema solo existe en "contexto seguro": localhost o
      https. Por la red de la oficina se entra por http://192.168…, donde el
@@ -247,7 +244,7 @@
   document.addEventListener('visibilitychange', () => { if(!document.hidden) leido(); });
 
   function notificar(s){
-    if(!avisosEncendidos() || !hayNotificaciones() || Notification.permission !== 'granted') return;
+    if(!hayNotificaciones() || Notification.permission !== 'granted') return;
     try{
       const n = new Notification('Llegó una solicitud · N° ' + String(s.numero).padStart(3,'0'), {
         body: s.usuario + '\n' + (s.descripcion || ''),
@@ -336,7 +333,7 @@
 
   function avisarDe(nuevas){
     if(document.hidden){ sinLeer += nuevas.length; marcarTitulo(); }
-    if(avisosEncendidos()) sonar();
+    sonar();
     nuevas.slice().reverse().forEach(notificar);
 
     /* La cola de atrás se coloca primero —para que al cerrar la ventana la
@@ -351,21 +348,6 @@
     }, 30000);
   }
 
-  function pintarBotonAvisos(){
-    const b = $('botonAvisos');
-    if(!b) return;
-    const on = avisosEncendidos();
-    b.textContent = on ? 'Avisos' : 'Avisos: en silencio';
-    b.classList.toggle('apagado', !on);
-    b.title = !on
-      ? 'Silenciado: las solicitudes siguen llegando, pero sin sonido. Clic para encenderlo.'
-      : !hayNotificaciones()
-        ? 'Suena y sale el cartel. El aviso en el escritorio de Windows no lo permite el ' +
-          'navegador por esta dirección: solo lo da en localhost o en https. Clic para silenciar.'
-        : 'Suena y avisa cuando entra una solicitud. Clic para silenciarlo.';
-    pintarAvisoPermiso();
-  }
-
   /* ---------- el permiso para avisar en el escritorio ----------
      El navegador no saca nada en el escritorio hasta que la persona lo
      autoriza, y solo pregunta si se lo pide un clic: si se lo pide la página
@@ -377,7 +359,6 @@
     if(!caja) return;
     const texto = $('avisoPermisoTexto'), boton = $('botonPermitir');
     caja.hidden = true;
-    if(!avisosEncendidos()) return;
 
     /* Por dirección de red el navegador no le da avisos de escritorio a
        ninguna página, haga lo que haga. Decirlo aquí evita la media hora de
@@ -1223,7 +1204,7 @@
     try{
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
-      pintarBotonAvisos();
+      pintarAvisoPermiso();
       await cargar();
       escuchar();
     }catch(err){
@@ -1241,16 +1222,6 @@
        siguiente turno anunciaría como "recién llegado" todo lo del anterior */
     conocidas = null; recien.clear(); leido();
     mostrarAcceso();
-  });
-
-  /* El interruptor del aviso. Silenciarlo apaga el sonido y la notificación de
-     Windows; el cartel y la marca en la cola quedan, que son lo que no molesta
-     a nadie en una oficina con gente al lado. */
-  $('botonAvisos').addEventListener('click', e => {
-    e.preventDefault();
-    const encender = !avisosEncendidos();
-    localStorage.setItem(LLAVE_AVISOS, encender ? 'si' : 'no');
-    pintarBotonAvisos();
   });
 
   /* ---------- los gestos de la ventana del aviso ----------
@@ -1496,13 +1467,13 @@
       botonVaciar.addEventListener('click', vaciarPrueba);
       $('botonRecargar').after(botonVaciar);
       mostrarBandeja();
-      pintarBotonAvisos();
+      pintarAvisoPermiso();
       await cargar();
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    pintarBotonAvisos();
+    pintarAvisoPermiso();
     try{ await cargar(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();

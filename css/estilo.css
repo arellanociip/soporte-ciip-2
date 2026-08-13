@@ -712,9 +712,6 @@ select.despierta{animation:destello .7s ease;}
   100%{background:var(--navy-soft);}
 }
 
-/* silenciado: el enlace se apaga, sin cambiar de sitio ni de tamaño */
-.cab .der a.apagado{opacity:.55;}
-
 /* ---------- menos animación ----------
    Windows y los navegadores exponen esta preferencia; quien la activó por
    mareo o por migraña no debería tener que aguantar nada de lo de arriba. No
