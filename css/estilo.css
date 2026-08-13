@@ -841,6 +841,60 @@ select.despierta{animation:destello .7s ease;}
   100%{background:var(--navy-soft);}
 }
 
+/* ===================== EN EL TELÉFONO =====================
+   Todo lo de arriba está pensado para el monitor de una oficina y ahí funciona;
+   este bloque —y solo este— es lo que cambia en una pantalla de mano. No toca
+   nada del escritorio: son reglas que el navegador ni mira por encima de 560px.
+
+   Lo que se rompía era el encabezado con sesión iniciada: el logo, el título,
+   la gerencia entera y cuatro enlaces peleándose 378 píxeles. El título salía
+   en tres líneas y los enlaces se salían de la pantalla. */
+@media (max-width:560px){
+  .cab{padding:12px 0;}
+  .cab-in{flex-wrap:wrap; gap:10px; padding:0 14px;}
+  .cab img{height:30px;}
+  .cab .tit{font-size:15px;}
+  /* el nombre completo de la gerencia ocupaba cinco líneas y no dice nada que
+     no diga ya el título: en el teléfono sobra */
+  .cab .sub{display:none;}
+  /* los enlaces bajan a su propia fila y se reparten el ancho: así se pueden
+     tocar con el dedo en vez de apuntarles */
+  .cab .der{margin-left:0; width:100%; gap:7px; flex-wrap:wrap;}
+  .cab .der a{flex:1 1 auto; text-align:center; padding:8px 10px;}
+
+  .envoltura, .envoltura.ancha{padding:16px 14px 48px;}
+  .intro h1{font-size:19px;}
+  .tarjeta{padding:18px 16px;}
+
+  /* el buscador en su línea, y los filtros en la suya */
+  .buscador{flex:1 1 100%;}
+  .fichas{width:100%;}
+
+  /* las ventanas emergentes, pegadas a los bordes: en una pantalla de mano el
+     margen de escritorio se come media ficha */
+  .velo{padding:12px 8px;}
+  .hoja{padding:20px 16px;}
+  .hoja .cerrar{top:10px; right:10px;}
+  .acceso-caja{padding:26px 20px 22px;}
+  .acceso{min-height:auto; padding:10px 0 30px;}
+
+  /* la fila del chat: el clip, el cuadro y Enviar no caben en una línea */
+  .chat-escribir{flex-wrap:wrap;}
+  .chat-escribir textarea{flex:1 1 100%; order:-1;}
+  .chat-escribir .boton{flex:1;}
+
+  /* El nombre de una gerencia del CIIP mide sesenta caracteres y se salía de
+     la tarjeta por el costado. Aquí se parte donde haga falta, que es mejor
+     que una línea cortada a la mitad. */
+  .fila > div{min-width:0;}
+  .fila .quien, .fila .donde, .fila .que{overflow-wrap:anywhere;}
+  .fila .que{-webkit-line-clamp:2;}
+  /* y la fila de la derecha —fecha, etiqueta, PDF, escribir— se reparte en
+     varias líneas en vez de empujar, cada cosa del ancho de lo que dice */
+  .fila .der{flex-wrap:wrap; gap:7px;}
+  .fila .der > *{flex:0 0 auto; width:auto;}
+}
+
 /* ---------- menos animación ----------
    Windows y los navegadores exponen esta preferencia; quien la activó por
    mareo o por migraña no debería tener que aguantar nada de lo de arriba. No
