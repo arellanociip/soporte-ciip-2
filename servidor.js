@@ -25,6 +25,10 @@ const DATOS   = path.join(RAIZ, 'datos');
 const F_SOLIC = path.join(DATOS, 'solicitudes.json');
 const F_USERS = path.join(DATOS, 'usuarios.json');
 const F_GUIAS = path.join(DATOS, 'guias.json');
+/* Lo que GTIC le va agregando al inventario desde la bandeja. El grueso viene
+   del cuadro de Patrimonio (js/inventario.js, que es código); esto es lo que
+   se descubre atendiendo, y por eso vive con los datos y no con el código. */
+const F_INV   = path.join(DATOS, 'inventario.json');
 const PUERTO  = Number(process.env.PUERTO) || 8123;
 
 /* ================= el archivo como base de datos ================= */
@@ -47,6 +51,7 @@ function escribirJson(archivo, valor){
 const leerSolicitudes = () => leerJson(F_SOLIC, []);
 const leerUsuarios    = () => leerJson(F_USERS, []);
 const leerGuias       = () => leerJson(F_GUIAS, []);
+const leerInventario  = () => leerJson(F_INV, []);
 
 /* ================= usuarios y claves ================= */
 /* La clave nunca se guarda: se guarda su huella con scrypt y una sal propia.
@@ -748,6 +753,42 @@ async function atenderApi(req, res, url){
                 ' por ' + s.usuario);
     avisarCambio();
     return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
+  }
+
+  /* ---- el inventario que GTIC va completando ----
+     Leerlo es público, como el cuadro que ya viaja en js/inventario.js: son los
+     equipos de la casa, y el formulario los necesita para mandar el serial sin
+     que nadie lo escriba. Agregar es solo con sesión: esto acaba impreso en una
+     Hoja de Servicio y no puede escribirlo cualquiera. */
+  if(url.pathname === '/rest/v1/inventario'){
+    if(req.method === 'GET'){
+      return responder(res, 200, leerInventario());
+    }
+    if(req.method === 'POST'){
+      const sesion = sesionDe(req);
+      if(!sesion) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
+
+      const d = await cuerpoDe(req);
+      const limpio = t => String(t == null ? '' : t).trim().slice(0, 80);
+      const fila = {
+        nombre: limpio(d.nombre), equipo: limpio(d.equipo), marca: limpio(d.marca),
+        modelo: limpio(d.modelo), serial: limpio(d.serial),
+        quien: quienEs(sesion), en: new Date().toISOString(),
+      };
+      if(!fila.nombre || !fila.equipo){
+        return responder(res, 400, {message: 'Hacen falta la persona y el tipo de equipo.'});
+      }
+      const inv = leerInventario();
+      /* Si esa persona ya tenía ese mismo tipo de equipo apuntado aquí, se
+         corrige en vez de duplicarse: nadie quiere dos CPU para el mismo
+         puesto porque el serial se escribió mal la primera vez. */
+      const i = inv.findIndex(x => x.nombre === fila.nombre && x.equipo === fila.equipo);
+      if(i >= 0) inv[i] = fila; else inv.push(fila);
+      escribirJson(F_INV, inv);
+      console.log('  » inventario:', fila.nombre, '·', fila.equipo,
+                  fila.serial ? '· serial ' + fila.serial : '', '(' + fila.quien + ')');
+      return responder(res, 201, [fila]);
+    }
   }
 
   /* ---- lo que de una guía puede ver la casa ----

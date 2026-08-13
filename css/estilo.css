@@ -846,6 +846,17 @@ select.despierta{animation:destello .7s ease;}
 .clasificado.equipo{margin-top:8px;}
 .clasificado.equipo .va{font-variant-numeric:tabular-nums;}
 
+/* El aviso de que a esta persona le falta equipo en el inventario, y la línea
+ que dice lo que sí tiene. Van dentro de la ficha, pegados a los renglones,
+ que es donde el técnico está mirando cuando puede resolverlo. */
+.inv-aviso{margin:0 0 14px; align-items:center;}
+.inv-aviso .boton{margin-left:auto; flex:0 0 auto; white-space:nowrap;}
+.inv-tiene{
+  font-size:12px; color:var(--gray-soft); margin:0 0 14px;
+  display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+}
+.inv-tiene .enlace{margin-left:auto;}
+
 /* ===================== EN EL TELÉFONO =====================
    Todo lo de arriba está pensado para el monitor de una oficina y ahí funciona;
    este bloque —y solo este— es lo que cambia en una pantalla de mano. No toca

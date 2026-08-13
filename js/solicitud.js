@@ -279,6 +279,9 @@
   detalle.addEventListener('change', () => { yaLaVio = false; pintarAntes(true); });
 
   traerGuiasPublicas();
+  /* lo que GTIC fue apuntando desde la bandeja se suma a lo que trajo el
+     cuadro de Patrimonio: por eso se pide al servidor al abrir la página */
+  if(typeof inventarioTraer === 'function') inventarioTraer().then(pintarEquipo);
 
   /* "Cambiar" abre los desplegables con lo que el atajo dejó puesto. */
   $('botonAfinar').addEventListener('click', () => {

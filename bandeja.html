@@ -195,6 +195,44 @@
   </div>
 </div>
 
+<!-- ===================== APUNTAR UN EQUIPO =====================
+     Lo que falta del cuadro de Patrimonio, agregado desde la bandeja mientras
+     se atiende: es cuando el equipo está delante y el serial se puede leer. -->
+<div class="velo" id="veloEquipo" hidden>
+  <div class="hoja" style="max-width:520px">
+    <button type="button" class="cerrar" id="cerrarEquipo" aria-label="Cerrar">✕</button>
+    <h2>Equipo de <span id="equipoDeQuien"></span></h2>
+    <div class="bajada">Queda apuntado para siempre: la próxima solicitud de esta
+      persona llega con el serial puesto, y la Hoja de Servicio sale completa.</div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo c6">
+        <label for="eqTipo">Equipo *</label>
+        <select id="eqTipo"></select>
+      </div>
+      <div class="campo c6">
+        <label for="eqMarca">Marca</label>
+        <select id="eqMarca"></select>
+      </div>
+      <div class="campo c6">
+        <label for="eqModelo">Modelo</label>
+        <input type="text" id="eqModelo" placeholder="Ej. THINKCENTRE M92P">
+      </div>
+      <div class="campo c6">
+        <label for="eqSerial">Serial</label>
+        <input type="text" id="eqSerial" placeholder="El del costado del equipo">
+      </div>
+    </div>
+
+    <div class="aviso malo" id="avisoEquipo" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="guardarEquipo">Guardar en el inventario</button>
+      <button type="button" class="boton plano" id="cancelarEquipo">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== ESCRIBIR UNA GUÍA =====================
      Se abre desde "Qué sabemos" o desde una solicitud ya resuelta, y en ese
      caso viene con lo que el técnico escribió en observaciones. -->
@@ -257,6 +295,8 @@
 
 <script src="js/config.js"></script>
 <script src="js/catalogo.js"></script>
+<script src="js/directorio.js"></script>
+<script src="js/inventario.js"></script>
 <script src="js/local.js"></script>
 <script src="js/adjuntos.js"></script>
 <script src="js/hoja.js"></script>

@@ -439,3 +439,28 @@ function inventarioDe(nombre){
 function inventarioEquipo(nombre, tipo){
   return inventarioDe(nombre).find(e => e.equipo === tipo) || null;
 }
+
+/* Lo que GTIC fue agregando desde la bandeja, encima de lo que trajo el cuadro
+   de Patrimonio. Se mezcla al vuelo: lo apuntado a mano manda, porque es más
+   nuevo y porque alguien lo miró de frente. */
+function inventarioMezclar(lista){
+  (Array.isArray(lista) ? lista : []).forEach(x => {
+    const n = String((x && x.nombre) || '').trim();
+    if(!n || !x.equipo) return;
+    const suyos = (INVENTARIO[n] = INVENTARIO[n] || []);
+    const i = suyos.findIndex(e => e.equipo === x.equipo);
+    const fila = {equipo: x.equipo, marca: x.marca || '', modelo: x.modelo || '',
+                  serial: x.serial || ''};
+    if(i >= 0) suyos[i] = fila; else suyos.push(fila);
+  });
+}
+
+/* Traerlo del servidor. Las dos páginas lo llaman al arrancar; si falla, cada
+   una sigue con lo que trajo el cuadro, que es la mayor parte. */
+function inventarioTraer(){
+  if(typeof soporteHayBackend !== 'function' || !soporteHayBackend()) return Promise.resolve();
+  return fetch(SOPORTE_BACKEND.url + '/rest/v1/inventario', {headers: soporteCabeceras()})
+    .then(r => r.ok ? r.json() : [])
+    .then(inventarioMezclar)
+    .catch(() => {});
+}

@@ -818,6 +818,73 @@
     }
   }
 
+  /* ---------- apuntar el equipo de alguien ----------
+     Se abre desde la ficha, con lo que el técnico acabe de escribir en el
+     renglón ya puesto: el trabajo está hecho, guardarlo es un clic. */
+  let equipoDe = null;
+
+  function abrirEquipo(nombre){
+    equipoDe = nombre;
+    $('equipoDeQuien').textContent = nombre;
+    const r = document.querySelector('#renglones .renglon');
+    const dato = c => {
+      const el = r && r.querySelector('[data-campo=' + c + ']');
+      return el ? el.value : '';
+    };
+    const yaTiene = (typeof inventarioDe === 'function' ? inventarioDe(nombre) : [])
+      .find(e => e.equipo === (dato('equipo') || 'CPU'));
+
+    $('eqTipo').innerHTML = CAT_EQUIPOS
+      .map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+    $('eqMarca').innerHTML = '<option value="">—</option>' + CAT_MARCAS
+      .map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+    $('eqTipo').value   = dato('equipo') || (yaTiene && yaTiene.equipo) || 'CPU';
+    $('eqMarca').value  = dato('marca')  || (yaTiene && yaTiene.marca)  || '';
+    $('eqModelo').value = dato('modelo') || (yaTiene && yaTiene.modelo) || '';
+    $('eqSerial').value = dato('serial') || (yaTiene && yaTiene.serial) || '';
+    $('avisoEquipo').hidden = true;
+    $('veloEquipo').hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => $('eqSerial').focus(), 30);
+  }
+
+  function cerrarEquipo(){
+    $('veloEquipo').hidden = true;
+    equipoDe = null;
+    if($('velo').hidden && $('veloChat').hidden && $('veloPerfil').hidden &&
+       $('veloNueva').hidden && $('veloGuia').hidden){
+      document.body.style.overflow = '';
+    }
+  }
+
+  async function guardarEquipo(){
+    if(!equipoDe) return;
+    const boton = $('guardarEquipo');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    try{
+      const r = await pedir('/rest/v1/inventario', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+        body: JSON.stringify({
+          nombre: equipoDe, equipo: $('eqTipo').value, marca: $('eqMarca').value,
+          modelo: $('eqModelo').value.trim(), serial: $('eqSerial').value.trim(),
+        }),
+      });
+      inventarioMezclar(await r.json());
+      cerrarEquipo();
+      if(!$('velo').hidden) pintarFicha();
+    }catch(err){
+      $('avisoEquipo').innerHTML = '<span>⚠</span><div>No se pudo guardar: ' + esc(err.message) + '</div>';
+      $('avisoEquipo').hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar en el inventario';
+  }
+
+  $('cerrarEquipo').addEventListener('click', cerrarEquipo);
+  $('cancelarEquipo').addEventListener('click', cerrarEquipo);
+  $('guardarEquipo').addEventListener('click', guardarEquipo);
+  $('veloEquipo').addEventListener('click', e => { if(e.target === $('veloEquipo')) cerrarEquipo(); });
+
   $('botonNuevaGuia').addEventListener('click', () => abrirGuia(null, null));
   $('cerrarGuia').addEventListener('click', cerrarGuia);
   $('cancelarGuia').addEventListener('click', cerrarGuia);
@@ -1174,6 +1241,43 @@
       </div>`;
   }
 
+  /* ---------- el equipo de quien pidió ----------
+     Media casa no tiene su computadora en el cuadro de Patrimonio —o la tiene a
+     nombre de quien se fue— y eso se paga dos veces: la solicitud llega sin
+     serial, y el técnico lo copia a mano hoy y lo vuelve a copiar el mes que
+     viene. Aquí se avisa y se ofrece apuntarlo de una vez: el trabajo ya está
+     hecho —el serial está delante, en el renglón— y guardarlo es un clic.
+
+     Lo apuntado vale para todas las solicitudes que vengan, de cualquier
+     máquina: se guarda en el servidor, no en este navegador. */
+  function inventarioHtml(s){
+    const suyos = typeof inventarioDe === 'function' ? inventarioDe(s.usuario) : [];
+    const cpu = suyos.find(e => e.equipo === 'CPU');
+
+    if(!suyos.length){
+      return `<div class="aviso alerta inv-aviso">
+        <span>🖥️</span>
+        <div><b>${esc(String(s.usuario).split(' ')[0])} no tiene ningún equipo en el inventario.</b>
+          Cada solicitud suya va a llegar sin serial mientras siga así. Si lo tienes
+          delante, apúntalo y queda para siempre.</div>
+        <button type="button" class="boton plano chico" data-inv="${esc(s.usuario)}">Agregar su equipo</button>
+      </div>`;
+    }
+    if(!cpu){
+      return `<div class="aviso alerta inv-aviso">
+        <span>🖥️</span>
+        <div><b>De ${esc(String(s.usuario).split(' ')[0])} hay ${suyos.length === 1 ? 'un equipo' : suyos.length + ' equipos'}
+          apuntados, pero ninguna computadora.</b> Es justo la que más se pide.</div>
+        <button type="button" class="boton plano chico" data-inv="${esc(s.usuario)}">Agregar su CPU</button>
+      </div>`;
+    }
+    return `<div class="inv-tiene">
+      En el inventario: ${suyos.map(e => esc([e.equipo, e.marca, e.serial].filter(Boolean).join(' ')))
+        .join(' · ')}
+      <button type="button" class="enlace" data-inv="${esc(s.usuario)}">Corregir o agregar</button>
+    </div>`;
+  }
+
   function pintarFicha(){
     const s = abierta;
     $('hojaFicha').innerHTML = `
@@ -1205,6 +1309,7 @@
       ${saberHtml(s)}
 
       <div class="seccion">Renglones de equipo</div>
+      ${inventarioHtml(s)}
       <div id="renglones">${s.renglones.map(renglonHtml).join('')}</div>
       <button type="button" class="boton plano chico" id="botonAgregar"
         ${s.renglones.length >= 6 ? 'disabled' : ''}>+ Agregar renglón</button>
@@ -1391,6 +1496,7 @@
       mostrarBandeja();
       await cargar();
       cargarGuias();
+      inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
       escuchar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
@@ -1528,6 +1634,9 @@
     /* Pasar de un caso resuelto a una guía. Se lleva lo que hay escrito ahora
        mismo en observaciones, no lo último guardado: si el técnico acaba de
        escribir cómo lo resolvió, es justo eso lo que vale la pena guardar. */
+    const inv = e.target.closest('[data-inv]');
+    if(inv){ abrirEquipo(inv.dataset.inv); return; }
+
     if(e.target.id === 'botonAGuia'){
       const s = abierta;
       abrirGuia(null, {
@@ -1631,7 +1740,8 @@
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape') return;
     /* el de encima primero: el aviso va sobre todo, y el chat sobre la ficha */
-    if(!$('veloGuia').hidden) cerrarGuia();
+    if(!$('veloEquipo').hidden) cerrarEquipo();
+    else if(!$('veloGuia').hidden) cerrarGuia();
     else if(!$('veloNueva').hidden) cerrarNueva();
     else if(!$('veloChat').hidden) cerrarChat();
     else if(!$('veloPerfil').hidden) cerrarPerfil();
@@ -1667,7 +1777,7 @@
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    try{ await cargar(); cargarGuias(); escuchar(); }
+    try{ await cargar(); cargarGuias(); inventarioTraer(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();
