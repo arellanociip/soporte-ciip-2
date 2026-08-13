@@ -108,6 +108,7 @@
       $('clasificacionManual').hidden = true;
       yaLaVio = false;
       pintarAntes(true);
+      quitados = []; impresoraElegida = null;
       pintarEquipo();
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
@@ -117,6 +118,7 @@
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
       yaLaVio = false;
       pintarAntes(true);
+      quitados = []; impresoraElegida = null;
       pintarEquipo();
       if(a) detalle.focus();
     }
@@ -132,30 +134,88 @@
      directorio) y de qué es el problema (el atajo dice si mira el CPU o la
      impresora). Y se puede quitar: si el equipo no es ese, "No es ese" lo
      suelta y la hoja va sin él, como antes. */
-  let equipoAdjunto = null;
+  let equiposAdjuntos = [];
+  let quitados = [];      /* los que la persona soltó a mano en esta pasada */
+  let impresoraElegida = null;   /* cuando en su piso hay más de una */
+
+  const comoSeLlama = e => [e.equipo, e.marca, e.modelo,
+                            e.serial ? 'serial ' + e.serial : ''].filter(Boolean).join(' · ');
 
   function pintarEquipo(){
     const caja = $('miEquipo');
     if(!caja) return;
     const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
     const quien = $('usuario').value.trim();
-    equipoAdjunto = (a && a.equipo && quien && typeof inventarioEquipo === 'function')
-      ? inventarioEquipo(quien, a.equipo)
-      : null;
-    if(!equipoAdjunto){ caja.hidden = true; return; }
-    $('miEquipoTexto').textContent = [
-      equipoAdjunto.equipo,
-      equipoAdjunto.marca,
-      equipoAdjunto.modelo,
-      equipoAdjunto.serial ? 'serial ' + equipoAdjunto.serial : '',
-    ].filter(Boolean).join(' · ');
+    const tipos = (a && a.equipos) || [];
+    equiposAdjuntos = [];
+    let impresorasDelPiso = [];
+
+    if(quien && tipos.length && typeof inventarioDe === 'function'){
+      const suyos = inventarioDe(quien);
+      tipos.forEach(t => {
+        const e = suyos.find(x => x.equipo === t);
+        if(e && !quitados.includes(e.serial)) equiposAdjuntos.push(e);
+      });
+      /* Una impresora no es de nadie: la usa el que se sienta cerca. Si esta
+         persona no tiene una a su nombre, se ofrecen las de su piso. */
+      if(tipos.includes('IMPRESORA') && !equiposAdjuntos.some(e => e.equipo === 'IMPRESORA')
+         && typeof inventarioImpresorasDe === 'function'){
+        impresorasDelPiso = inventarioImpresorasDe($('piso').value)
+          .filter(i => !quitados.includes(i.serial));
+        /* la que ya eligió en el desplegable manda */
+        const elegida = impresorasDelPiso.find(i => i.serial === impresoraElegida);
+        if(elegida){
+          equiposAdjuntos.push(elegida);
+          impresorasDelPiso = [];
+        }else if(impresorasDelPiso.length === 1){
+          /* si en el piso hay una sola, es esa y no hay nada que preguntar */
+          equiposAdjuntos.push(impresorasDelPiso[0]);
+          impresorasDelPiso = [];
+        }
+      }
+    }
+
+    if(!equiposAdjuntos.length && impresorasDelPiso.length < 2){ caja.hidden = true; return; }
+
+    const lista = $('miEquipoLista');
+    lista.innerHTML = '';
+    equiposAdjuntos.forEach(e => {
+      const fila = document.createElement('div');
+      fila.className = 'eq-fila';
+      const t = document.createElement('span');
+      t.className = 'va';
+      t.textContent = comoSeLlama(e);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'enlace';
+      b.textContent = 'No es ese';
+      b.addEventListener('click', () => { quitados.push(e.serial); pintarEquipo(); });
+      fila.append(t, b);
+      lista.append(fila);
+    });
+
+    /* En un piso puede haber siete impresoras: no se adivina cuál. */
+    if(impresorasDelPiso.length > 1){
+      const fila = document.createElement('div');
+      fila.className = 'eq-fila';
+      const rot = document.createElement('span');
+      rot.className = 'et2';
+      rot.textContent = '¿Cuál usas?';
+      const sel = document.createElement('select');
+      sel.innerHTML = '<option value="">La del piso ' + escapar($('piso').value) + '…</option>' +
+        impresorasDelPiso.map((i, n) => `<option value="${n}">${escapar(
+          [i.marca, i.modelo, i.donde].filter(Boolean).join(' · '))}</option>`).join('');
+      sel.addEventListener('change', () => {
+        const e = impresorasDelPiso[Number(sel.value)];
+        if(!e) return;
+        impresoraElegida = e.serial;
+        pintarEquipo();
+      });
+      fila.append(rot, sel);
+      lista.append(fila);
+    }
     caja.hidden = false;
   }
-
-  $('botonOtroEquipo').addEventListener('click', () => {
-    equipoAdjunto = null;
-    $('miEquipo').hidden = true;
-  });
 
   /* ---------- lo que GTIC ya sabe de esto ----------
      De cada guía de la gerencia sale a esta página una sola cosa: el párrafo
@@ -571,14 +631,16 @@
       /* El equipo va como el primer renglón de la Hoja de Servicio, que es
          donde el técnico lo escribiría a mano. Va con la clasificación puesta
          para que la hoja salga completa de una vez. */
-      renglones:   equipoAdjunto ? [{
+      /* Un renglón por equipo: el CPU y su monitor son dos líneas de la hoja,
+         que para eso tiene seis. */
+      renglones:   equiposAdjuntos.map(e => ({
         tipo:    tipo.value || '',
         detalle: detalle.value || '',
-        equipo:  equipoAdjunto.equipo,
-        marca:   equipoAdjunto.marca,
-        modelo:  equipoAdjunto.modelo,
-        serial:  equipoAdjunto.serial,
-      }] : [],
+        equipo:  e.equipo,
+        marca:   e.marca,
+        modelo:  e.modelo,
+        serial:  e.serial,
+      })),
     };
   }
 

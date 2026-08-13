@@ -841,10 +841,24 @@ select.despierta{animation:destello .7s ease;}
   100%{background:var(--navy-soft);}
 }
 
-/* La línea del equipo: la misma caja que la de la clasificación, para que se
-   lean como lo que son —dos cosas que la página ya sabe y va a mandar—. */
-.clasificado.equipo{margin-top:8px;}
-.clasificado.equipo .va{font-variant-numeric:tabular-nums;}
+/* Los equipos que se mandan con la solicitud. La misma caja gris que la línea
+   de la clasificación —son dos cosas que la página ya sabe y va a mandar— pero
+   con una fila por equipo: la computadora son el CPU y su monitor, y a veces
+   hay que elegir cuál impresora del piso. */
+.equipos{
+  background:var(--block); border-radius:var(--r-sm);
+  padding:10px 14px; margin-top:8px; font-size:12.5px;
+}
+.equipos > .et{
+  font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--gray-soft); margin-bottom:6px;
+}
+.eq-fila{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:3px 0;}
+.eq-fila .va{font-weight:700; color:var(--navy); flex:1; min-width:0;
+  font-variant-numeric:tabular-nums; overflow-wrap:anywhere;}
+.eq-fila .et2{color:var(--gray); flex:0 0 auto;}
+.eq-fila select{flex:1 1 200px; padding:6px 9px; font-size:12.5px;}
+.eq-fila .enlace{flex:0 0 auto;}
 
 /* El aviso de que a esta persona le falta equipo en el inventario, y la línea
  que dice lo que sí tiene. Van dentro de la ficha, pegados a los renglones,

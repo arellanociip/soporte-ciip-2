@@ -440,6 +440,50 @@ function inventarioEquipo(nombre, tipo){
   return inventarioDe(nombre).find(e => e.equipo === tipo) || null;
 }
 
+
+/* ---------- las impresoras, que son del piso ----------
+   Una impresora no es de nadie: la usa todo el que se siente cerca. Por eso no
+   van con las personas sino con el piso, y quien pide soporte por la impresora
+   manda la de su planta sin tener que saber cuál es.
+
+   El piso de cada una sale de su responsable en el cuadro, cuando está en el
+   directorio; y si no, de la gerencia a la que pertenece, que sí sabemos dónde
+   se sienta. 16 impresoras colocadas; 0 se quedaron fuera porque su
+   gerencia no aparece en el listado del personal. */
+const IMPRESORAS_PISO = {
+  '1': [
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32259', donde:'PROMOCION DE INVERSIONES'},
+    {equipo:'IMPRESORA', marca:'HP', modelo:'MFP 4303', serial:'CNBRR4F5LT', donde:'PROMOCION DE INVERSIONES'},
+  ],
+  '2': [
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'F177002', donde:'GESTION COMUNICACIONAL'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32230', donde:'AUDITORIA INTERNA'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32286', donde:'CONSULTORIA JURIDICA'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32086', donde:'PROYECTOS DE INVERSION Y ACTIVOS'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2SN08118', donde:'GESTION COMUNICACIONAL'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'G2160', serial:'KNSP34014', donde:'CONSULTORIA JURIDICA'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'F171902', serial:'YCG68244', donde:'TECNOLOGIA DE LA INFORMACION Y COMUNICACION'},
+  ],
+  '3': [
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32238', donde:'GERENCIAL GENERAL OBSERVATORIO VENEZOLANO ANTIBLOQUEO'},
+  ],
+  '4': [
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32254', donde:'PLANIFICACION Y PRESUPUESTO'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF445DW', serial:'2TC32057', donde:'GESTION HUMANA'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF440', serial:'2TC32282', donde:'GESTION ADMINISTRATIVA'},
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'D1600', serial:'2SN08116', donde:'GESTION ADMINISTRATIVA'},
+    {equipo:'IMPRESORA', marca:'HP', modelo:'2775', serial:'CN1B99R523', donde:'GESTION ADMINISTRATIVA'},
+  ],
+  '8': [
+    {equipo:'IMPRESORA', marca:'CANON', modelo:'MF440', serial:'1111111111', donde:'GENERAL DEL DESPACHO'},
+  ],
+};
+
+/* Las del piso donde se sienta esa persona. */
+function inventarioImpresorasDe(piso){
+  return IMPRESORAS_PISO[String(piso || '').trim()] || [];
+}
+
 /* Lo que GTIC fue agregando desde la bandeja, encima de lo que trajo el cuadro
    de Patrimonio. Se mezcla al vuelo: lo apuntado a mano manda, porque es más
    nuevo y porque alguien lo miró de frente. */

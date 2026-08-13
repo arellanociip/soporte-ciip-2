@@ -167,6 +167,13 @@ navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
 renglón se toma solo lo que va impreso en la Hoja de Servicio —equipo, marca,
 modelo y serial— pegado a la persona que lo usa.
 
+La computadora va con su monitor: son dos renglones de la hoja, que para eso
+tiene seis. Y **las impresoras no son de nadie: son del piso** —las usa el que se
+sienta cerca—, así que quien pide soporte por la impresora manda la de su planta;
+si en su piso hay varias, la página le pregunta cuál. El piso de cada impresora
+sale de su responsable en el cuadro, y si no está en el listado, de la gerencia a
+la que pertenece: 16 impresoras colocadas, ninguna perdida.
+
 Para qué: el serial es el dato que nadie se sabe de memoria y el que más retrasa
 una hoja. Cuando alguien pide soporte por su computadora, la solicitud llega con
 el primer renglón lleno y el técnico se lo encuentra escrito. En el formulario
