@@ -350,6 +350,10 @@
     $('piso').value     = p.piso;
     $('oficina').value  = p.oficina;
     $('cargo').value    = p.cargo || '';
+    /* La cédula del listado solo si la persona no escribió otra: quien la
+       corrigió a mano tendrá sus razones —una cédula mal copiada en el listado,
+       un homónimo— y la lista no es una autoridad, es un punto de partida. */
+    if(p.cedula && !$('cedula').value.trim()) $('cedula').value = p.cedula;
     marcar('quienEres', '');
     mostrarRecuadro({usuario: p.nombre, gerencia: p.gerencia, piso: p.piso,
                      oficina: p.oficina, cedula: $('cedula').value});
