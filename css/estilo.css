@@ -1042,6 +1042,11 @@ select.despierta{animation:destello .7s ease;}
 }
 .chat-escribir .boton{flex:0 0 auto; padding:10px 16px;}
 .chat-nota{font-size:11px; color:var(--gray-soft); margin-top:6px;}
+/* cuando ya no se puede escribir: el hilo queda para leerlo */
+.chat-cerrado{
+  margin-top:11px; padding:10px 12px; border-radius:var(--r-sm);
+  background:var(--block); color:var(--gray); font-size:12.5px; text-align:center;
+}
 
 /* ---------- fotos y PDF ----------
    Un solo botón —el clip— con las dos opciones dentro. Dos botones sueltos en

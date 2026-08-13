@@ -1062,7 +1062,11 @@
   /* El botón que abre la conversación. Va en la fila y en la ficha; los dos
      abren la misma ventana, para que no haya dos sitios donde hablar. */
   function chatBotonHtml(s){
-    if(s.estado === 'anulada') return '';
+    /* Solo mientras se está atendiendo. Antes de tomarla no hay con quién
+       hablar —nadie se ha hecho cargo todavía— y después de cerrarla, el
+       asunto terminó: lo que quede por decir va en las observaciones, que sí
+       salen impresas en la hoja. */
+    if(s.estado !== 'en_proceso') return '';
     const n = Array.isArray(s.mensajes) ? s.mensajes.length : 0;
     return `<button type="button" class="chat-boton ${n ? 'hay' : ''}" data-chat="${esc(s.id)}"
       title="${n ? 'Ver la conversación con ' + esc(s.usuario) : 'Escribirle a ' + esc(s.usuario)}"
@@ -1092,8 +1096,9 @@
           : `<div class="chat-vacio">Puedes escribirle para pedirle un dato,
              avisarle a qué hora subes, o decirle que ya quedó.</div>`}
       </div>
+      ${s.estado !== 'en_proceso' ? '<div class="chat-cerrado">Esta conversación se cerró: la solicitud ya no está en proceso.</div>' : ''}
       <div class="adj-lista" id="adjLista" hidden></div>
-      <div class="chat-escribir">
+      <div class="chat-escribir" ${s.estado === 'en_proceso' ? '' : 'hidden'}>
         ${soporteAdjuntos.botonHtml()}
         <textarea id="chatTexto" rows="1" maxlength="1000"
                   placeholder="Escríbele a ${esc(String(s.usuario).split(' ')[0])}…"></textarea>

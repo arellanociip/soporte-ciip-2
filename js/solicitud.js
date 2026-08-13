@@ -849,7 +849,9 @@
   /* El botón que abre la conversación, en la fila. Sin técnico asignado no
      aparece: hasta que alguien la toma no hay con quién hablar. */
   function chatBotonHtml(s){
-    if(!s.tecnico || s.estado === 'anulada') return '';
+    /* Solo mientras un técnico la tiene en la mano: antes no hay a quién
+       escribirle, y una vez atendida la respuesta está en la hoja. */
+    if(!s.tecnico || s.estado !== 'en_proceso') return '';
     const n = Array.isArray(s.mensajes) ? s.mensajes.length : 0;
     return `<button type="button" class="chat-boton ${n ? 'hay' : ''}" data-chat="${escapar(s.id)}"
       title="${n ? 'Ver la conversación con ' + escapar(s.tecnico) : 'Escribirle a ' + escapar(s.tecnico)}"
@@ -878,8 +880,9 @@
           : `<div class="chat-vacio">Puedes escribirle si necesitas contarle algo más:<br>
              a qué hora estás, dónde te consigue, o cualquier detalle que ayude.</div>`}
       </div>
+      ${s.estado !== 'en_proceso' ? '<div class="chat-cerrado">Esta conversación se cerró: tu solicitud ya no está en proceso.</div>' : ''}
       <div class="adj-lista" id="adjLista" hidden></div>
-      <div class="chat-escribir">
+      <div class="chat-escribir" ${s.estado === 'en_proceso' ? '' : 'hidden'}>
         ${soporteAdjuntos.botonHtml()}
         <textarea id="chatTexto" rows="1" maxlength="1000"
                   placeholder="Escríbele a ${escapar(s.tecnico.split(' ')[0])}…"></textarea>

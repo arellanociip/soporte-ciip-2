@@ -639,8 +639,17 @@ async function atenderApi(req, res, url){
     const i = solicitudes.findIndex(s => s.id === id);
     if(i < 0) return responder(res, 404, {message: 'No existe esa solicitud.'});
     const s = solicitudes[i];
-    if(s.estado === 'anulada'){
-      return responder(res, 409, {message: 'Esa solicitud está anulada; ya no se puede escribir en ella.'});
+    /* Se habla mientras se atiende, y solo entonces. Antes de que un técnico la
+       tome no hay con quién hablar; después de cerrarla, lo que quede por decir
+       va en las observaciones, que sí salen impresas en la hoja. La regla vive
+       aquí y no solo en la página: los botones se pueden esquivar. */
+    if(s.estado !== 'en_proceso'){
+      const porque = s.estado === 'recibida'
+        ? 'Todavía no la ha tomado ningún técnico.'
+        : s.estado === 'anulada'
+          ? 'Esa solicitud está anulada.'
+          : 'Esa solicitud ya fue atendida.';
+      return responder(res, 409, {message: porque + ' La conversación solo está abierta mientras se atiende.'});
     }
 
     const ses = sesionDe(req);
