@@ -324,9 +324,65 @@
     const on = avisosEncendidos();
     b.textContent = on ? 'Avisos' : 'Avisos: en silencio';
     b.classList.toggle('apagado', !on);
-    b.title = on
-      ? 'Suena y avisa cuando entra una solicitud. Clic para silenciarlo.'
-      : 'Silenciado: las solicitudes siguen llegando, pero sin sonido. Clic para encenderlo.';
+    b.title = !on
+      ? 'Silenciado: las solicitudes siguen llegando, pero sin sonido. Clic para encenderlo.'
+      : !hayNotificaciones()
+        ? 'Suena y sale el cartel. El aviso en el escritorio de Windows no lo permite el ' +
+          'navegador por esta dirección: solo lo da en localhost o en https. Clic para silenciar.'
+        : 'Suena y avisa cuando entra una solicitud. Clic para silenciarlo.';
+    pintarAvisoPermiso();
+  }
+
+  /* ---------- el permiso para avisar en el escritorio ----------
+     El navegador no saca nada en el escritorio hasta que la persona lo
+     autoriza, y solo pregunta si se lo pide un clic: si se lo pide la página
+     sola al cargar, Edge lo silencia en una campanita de la barra de
+     direcciones que nadie ve. De ahí este cartel con su botón, que es el clic
+     que hace falta. Desaparece en cuanto el permiso está dado. */
+  function pintarAvisoPermiso(){
+    const caja = $('avisoPermiso');
+    if(!caja) return;
+    const texto = $('avisoPermisoTexto'), boton = $('botonPermitir');
+    if(!avisosEncendidos() || !hayNotificaciones() || Notification.permission === 'granted'){
+      caja.hidden = true;
+      return;
+    }
+    if(Notification.permission === 'default'){
+      texto.innerHTML = '<b>Falta un permiso.</b> El aviso dentro de esta página ya funciona, ' +
+        'pero para que Windows te lo muestre en el escritorio —aunque tengas la ventana ' +
+        'detrás de otra— hay que autorizarlo una sola vez.';
+      boton.hidden = false;
+    }else{
+      texto.innerHTML = '<b>El navegador tiene bloqueados los avisos de escritorio.</b> ' +
+        'Para devolvérselos: clic en el candado de la barra de direcciones → ' +
+        'Permisos para este sitio → Notificaciones → Permitir, y recarga la página. ' +
+        'Mientras tanto, el cartel y el sonido de esta página siguen funcionando.';
+      boton.hidden = true;
+    }
+    caja.hidden = false;
+  }
+
+  function pedirPermiso(){
+    if(!hayNotificaciones() || Notification.permission !== 'default') return;
+    let respuesta;
+    try{ respuesta = Notification.requestPermission(); }catch(e){ return; }
+    /* Los navegadores viejos contestan por función en vez de por promesa */
+    if(respuesta && respuesta.then) respuesta.then(alResponder);
+    else alResponder(Notification.permission);
+  }
+
+  function alResponder(estado){
+    pintarAvisoPermiso();
+    if(estado !== 'granted') return;
+    /* Uno de prueba en el momento: así se ve que quedó funcionando sin tener
+       que esperar a que alguien pida un soporte de verdad. */
+    try{
+      const n = new Notification('Avisos encendidos', {
+        body: 'Así vas a ver las solicitudes que entren, aunque tengas esta ventana detrás.',
+        icon: 'assets/logo_ciip.png', tag: 'prueba-avisos',
+      });
+      n.onclick = () => { window.focus(); n.close(); };
+    }catch(e){}
   }
 
   /* ================= traer y pintar ================= */
@@ -1116,7 +1172,6 @@
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
       pintarBotonAvisos();
-      pedirPermiso();
       await cargar();
       escuchar();
     }catch(err){
@@ -1144,17 +1199,10 @@
     const encender = !avisosEncendidos();
     localStorage.setItem(LLAVE_AVISOS, encender ? 'si' : 'no');
     pintarBotonAvisos();
-    if(encender) pedirPermiso();
   });
 
-  /* Se pide al entrar, que es cuando la persona acaba de decir que viene a
-     atender solicitudes. Si dice que no, no se vuelve a insistir: el navegador
-     recuerda la respuesta y aquí no se pregunta de nuevo. */
-  function pedirPermiso(){
-    if(!avisosEncendidos() || !hayNotificaciones()) return;
-    if(Notification.permission !== 'default') return;
-    try{ Notification.requestPermission(); }catch(e){}
-  }
+  /* El clic que el navegador está esperando para preguntar. */
+  $('botonPermitir').addEventListener('click', e => { e.preventDefault(); pedirPermiso(); });
 
   $('buscar').addEventListener('input', e => { busqueda = e.target.value; pintar(); });
   $('botonRecargar').addEventListener('click', () => cargar().catch(e => console.error(e)));
@@ -1370,7 +1418,6 @@
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
     pintarBotonAvisos();
-    pedirPermiso();
     try{ await cargar(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();

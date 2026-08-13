@@ -410,6 +410,10 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
 
+/* el cartel del permiso lleva su botón a la derecha, en la misma línea */
+#avisoPermiso{align-items:center;}
+#avisoPermiso .boton{margin-left:auto; flex:0 0 auto; white-space:nowrap;}
+
 /* ===================== BANDEJA ===================== */
 .barra{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;
