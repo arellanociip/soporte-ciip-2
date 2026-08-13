@@ -696,6 +696,8 @@
         ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
       </div>
       <div class="guia-cuerpo">${esc(g.cuerpo)}</div>
+      ${g.solucion ? `<div class="guia-publica"><b>Esto lo ve quien pide:</b>
+        ${esc(g.solucion)}</div>` : ''}
       <div class="guia-pie">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}
         ${g.origen ? ' · de la N° ' + esc(g.origen) : ''}
         <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button></div>
@@ -745,6 +747,10 @@
       .map(d => `<option value="${esc(d)}" ${d === cat ? 'selected' : ''}>${esc(d)}</option>`).join('');
     $('gTitulo').value = (g && g.titulo) || (semilla && semilla.titulo) || '';
     $('gCuerpo').value = (g && g.cuerpo) || (semilla && semilla.cuerpo) || '';
+    /* lo que ve la casa no se siembra de un caso: hay que escribirlo pensando
+       en quien no es técnico, y copiarlo de las observaciones sería justo lo
+       que no se puede publicar */
+    $('gSolucion').value = (g && g.solucion) || '';
     $('tituloVentanaGuia').textContent = g ? 'Corregir la guía' : 'Escribir una guía';
     $('borrarGuia').hidden = !g;
     $('avisoGuia').hidden = true;
@@ -774,7 +780,8 @@
     }
     const boton = $('guardarGuia');
     boton.disabled = true; boton.textContent = 'Guardando…';
-    const cuerpoJson = {titulo, cuerpo, categoria: $('gCategoria').value};
+    const cuerpoJson = {titulo, cuerpo, categoria: $('gCategoria').value,
+                        solucion: $('gSolucion').value.trim()};
     if(!guiaEnMano && guiaSemilla && guiaSemilla.origen) cuerpoJson.origen = guiaSemilla.origen;
     try{
       const r = await pedir('/rest/v1/guias' + (guiaEnMano ? '?id=eq.' + guiaEnMano.id : ''), {

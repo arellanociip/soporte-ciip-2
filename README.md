@@ -163,10 +163,21 @@ partir de ahí esa guía sale sola en las fichas del mismo tipo de servicio, o e
 aquellas cuyo texto la nombre. Y en el enlace **"Qué sabemos"** del encabezado
 están todas, buscables por título, contenido o tipo.
 
+**Lo que ve la casa.** Cada guía tiene además un campo aparte —*"Lo que puede
+intentar quien pide"*— que es lo único que sale de la gerencia. Al elegir el
+atajo en el formulario, quien va a pedir soporte de ese tipo lo ve justo encima
+del botón de enviar: *"Quizá lo resuelvas ahora mismo"*. Puede cerrarlo y enviar
+igual; no obliga a nada.
+
+Ese campo en blanco significa que la guía **no sale de GTIC**. El servidor lo
+sostiene con una ruta aparte, `/rest/v1/guias_publicas`, que devuelve solo el
+título y ese párrafo —nunca el cuerpo de la guía— y solo de las que lo tengan.
+Así lo que se publica se decide en un sitio y se lee de un vistazo.
+
 Se guardan en `datos/guias.json`, en el servidor y no en el navegador: lo que
-aprendió uno tiene que estar en la máquina del otro. Solo se leen con sesión
-iniciada —la página del usuario ni las pide—, así que ahí se pueden anotar mañas
-de la casa que no tienen por qué salir de la gerencia.
+aprendió uno tiene que estar en la máquina del otro. El cuerpo solo se lee con
+sesión iniciada, así que ahí se pueden anotar mañas de la casa —claves de
+equipos, a quién llamar— que no tienen por qué salir de la gerencia.
 
 ---
 

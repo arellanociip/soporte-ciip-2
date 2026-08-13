@@ -555,6 +555,21 @@ async function atenderApi(req, res, url){
     return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
   }
 
+  /* ---- lo que de una guía puede ver la casa ----
+     Sin cuenta, como el formulario. Devuelve SOLO el título y el párrafo que
+     el técnico escribió pensando en quien pide —nunca el cuerpo de la guía,
+     donde están las mañas internas— y solo de las guías que lo tengan. Una
+     guía sin ese párrafo no existe para esta ruta.
+
+     Es una ruta aparte y no un filtro sobre la otra a propósito: así lo que
+     sale de la gerencia se decide en un solo sitio y se lee de un vistazo. */
+  if(url.pathname === '/rest/v1/guias_publicas' && req.method === 'GET'){
+    const publicas = leerGuias()
+      .filter(g => String(g.solucion || '').trim())
+      .map(g => ({id: g.id, titulo: g.titulo, categoria: g.categoria, solucion: g.solucion}));
+    return responder(res, 200, publicas);
+  }
+
   /* ---- las guías: lo que GTIC ya sabe ----
      Solo con sesión, las cuatro operaciones. No hay lectura anónima a
      propósito: aquí se escriben mañas de la casa —a quién llamar, qué clave
@@ -584,6 +599,8 @@ async function atenderApi(req, res, url){
         titulo: titulo.slice(0, 160),
         categoria: String(datos.categoria || '').trim().slice(0, 120) || 'General',
         cuerpo: cuerpo.slice(0, 20000),
+        /* lo unico de la guia que ve quien pide; en blanco, no sale de GTIC */
+        solucion: String(datos.solucion || '').trim().slice(0, 4000) || null,
         /* de qué solicitud salió, cuando sale de una: sirve para volver al caso */
         origen: datos.origen ? String(datos.origen).slice(0, 40) : null,
         autor: quienEs(sesion),
@@ -605,7 +622,7 @@ async function atenderApi(req, res, url){
 
     if(req.method === 'PATCH'){
       const datos = await cuerpoDe(req);
-      ['titulo', 'categoria', 'cuerpo'].forEach(k => {
+      ['titulo', 'categoria', 'cuerpo', 'solucion'].forEach(k => {
         if(datos[k] !== undefined) guias[i][k] = String(datos[k]).trim().slice(0, 20000);
       });
       if(!guias[i].titulo || !guias[i].cuerpo){

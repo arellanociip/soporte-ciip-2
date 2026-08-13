@@ -413,6 +413,31 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
 
+/* ===================== PRUEBA ESTO PRIMERO =====================
+   Lo que GTIC ya sabe de este problema, en la página de quien pide. Va justo
+   encima del botón de enviar, que es el último momento en que sirve de algo, y
+   con la cruz bien a la vista: quien ya lo intentó todo la cierra y sigue. No
+   se pinta como una alerta —no ha pasado nada malo— sino como una nota. */
+.antesdepedir{
+  position:relative;
+  background:var(--navy-soft); border-radius:var(--r);
+  padding:16px 44px 16px 18px; margin:20px 0 0;
+  animation:surgirCorto .22s ease both;
+}
+.antesdepedir .ad-t{font-size:14px; font-weight:700; color:var(--navy);}
+.antesdepedir .ad-s{font-size:12px; color:var(--gray); margin-top:2px;}
+.ad-guia{
+  background:#fff; border-radius:var(--r-sm); padding:12px 14px; margin-top:11px;
+}
+.ad-guia b{display:block; font-size:13px; font-weight:700; margin-bottom:4px;}
+.ad-guia p{font-size:13px; line-height:1.6; color:var(--gray); white-space:pre-wrap;}
+.antesdepedir .cierra{
+  position:absolute; top:10px; right:10px;
+  width:28px; height:28px; border:none; background:none; cursor:pointer;
+  color:var(--navy); opacity:.55; border-radius:50%; font-size:14px; line-height:1;
+}
+.antesdepedir .cierra:hover{opacity:1; background:rgba(0,64,144,.10);}
+
 /* ===================== EL ACCESO DE GTIC =====================
    La primera pantalla de la gerencia, y durante meses la única cosa de este
    sitio que se veía sin terminar: una tarjeta suelta arriba a la izquierda.
@@ -998,6 +1023,22 @@ select.despierta{animation:destello .7s ease;}
 .guia.chica{box-shadow:none; padding:13px 15px;}
 .guia.chica .guia-cuerpo{
   display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* lo que de esa guía sale de la gerencia, marcado para que no haya duda */
+.guia-publica{
+  margin-top:11px; padding:10px 12px;
+  background:var(--good-bg); border-radius:var(--r-sm);
+  font-size:12.5px; line-height:1.55; color:var(--good);
+  white-space:pre-wrap; word-break:break-word;
+}
+.guia-publica b{display:block; font-size:10.5px; letter-spacing:.05em;
+  text-transform:uppercase; margin-bottom:3px;}
+
+/* la nota del campo que sí se publica: se lee antes de escribir, no después */
+.ayuda.destacada{
+  background:var(--good-bg); color:var(--good); border-radius:var(--r-sm);
+  padding:8px 10px; line-height:1.5;
 }
 
 .saber{display:flex; flex-direction:column; gap:12px;}

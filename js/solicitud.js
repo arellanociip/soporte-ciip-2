@@ -106,15 +106,71 @@
         catTipoEtiqueta(a.tipo) + (a.detalle ? ' · ' + a.detalle : '');
       $('clasificado').hidden = false;
       $('clasificacionManual').hidden = true;
+      antesCerrado = false;
+      pintarAntes();
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
       tipo.value = '';
       tipo.dispatchEvent(new Event('change'));
       $('clasificado').hidden = true;
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
+      antesCerrado = false;
+      pintarAntes();
       if(a) detalle.focus();
     }
   }
+
+  /* ---------- lo que GTIC ya sabe de esto ----------
+     De cada guía de la gerencia sale a esta página una sola cosa: el párrafo
+     que el técnico escribió pensando en quien pide. Ni el cuerpo de la guía,
+     ni quién la escribió, ni de qué solicitud salió — eso es de GTIC y se
+     queda allá. El servidor tampoco lo manda: la ruta que atiende esta página
+     devuelve solo el título y ese párrafo.
+
+     Sale al clasificar el problema y se puede cerrar. No estorba el envío ni
+     obliga a nada: quien ya lo intentó todo sigue de largo y manda su
+     solicitud, que para eso vino. */
+  let guiasPublicas = [];
+  let antesCerrado = false;
+
+  async function traerGuiasPublicas(){
+    if(!soporteHayBackend()) return;
+    try{
+      const r = await fetch(SOPORTE_BACKEND.url + '/rest/v1/guias_publicas',
+                            {headers: soporteCabeceras()});
+      if(r.ok) guiasPublicas = await r.json();
+    }catch(e){ /* sin esto la página funciona igual: es una ayuda, no un paso */ }
+    pintarAntes();
+  }
+
+  function pintarAntes(){
+    const caja = $('antesDePedir');
+    if(!caja) return;
+    const cual = (detalle.value || '').trim().toUpperCase();
+    const vienen = cual
+      ? guiasPublicas.filter(g => String(g.categoria || '').trim().toUpperCase() === cual)
+      : [];
+    if(antesCerrado || !vienen.length){ caja.hidden = true; return; }
+
+    $('antesLista').innerHTML = vienen.slice(0, 3).map(g => {
+      const t = document.createElement('div');
+      t.className = 'ad-guia';
+      const h = document.createElement('b'); h.textContent = g.titulo;
+      const p = document.createElement('p'); p.textContent = g.solucion;
+      t.append(h, p);
+      return t.outerHTML;
+    }).join('');
+    caja.hidden = false;
+  }
+
+  $('cerrarAntes').addEventListener('click', () => {
+    antesCerrado = true;
+    $('antesDePedir').hidden = true;
+  });
+  /* al cambiar de problema vuelve a ofrecerse: es otra pregunta */
+  detalle.addEventListener('change', () => { antesCerrado = false; pintarAntes(); });
+
+  traerGuiasPublicas();
 
   /* "Cambiar" abre los desplegables con lo que el atajo dejó puesto. */
   $('botonAfinar').addEventListener('click', () => {
