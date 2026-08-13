@@ -161,6 +161,30 @@ navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
 
 ---
 
+## El equipo de cada quien
+
+`js/inventario.js` sale del CUADRO_INVENTARIO_OFICINA de Patrimonio: de cada
+renglón se toma solo lo que va impreso en la Hoja de Servicio —equipo, marca,
+modelo y serial— pegado a la persona que lo usa.
+
+Para qué: el serial es el dato que nadie se sabe de memoria y el que más retrasa
+una hoja. Cuando alguien pide soporte por su computadora, la solicitud llega con
+el primer renglón lleno y el técnico se lo encuentra escrito. En el formulario
+sale una línea —*Tu equipo · CPU · LENOVO · TINKCENTRE M92P · serial MJ30DK8*—
+con un *"No es ese"* que lo suelta.
+
+**245 equipos de 94 personas.** Se pegaron primero por cédula, que es exacta, y
+si el cuadro no la traía, por nombre y solo cuando señala a una única persona del
+directorio: ante la duda se deja fuera, que más vale una hoja sin serial que una
+con el serial de otro. Los 124 renglones restantes son de equipos sin dueño
+asignado en el cuadro ("VACANTE", "SIN USUARIO") o de gente que ya no está en el
+listado del personal.
+
+Es un punto de partida, no una autoridad: si el técnico ve que el equipo no es
+ese, lo corrige en la ficha y manda lo que corrigió.
+
+---
+
 ## Qué sabemos: la base de conocimiento
 
 Vive dentro de la bandeja, detrás de la clave, y funciona por dos vías que se
@@ -399,6 +423,7 @@ servir.cmd          levantarlo CON ventana, para trabajar en el codigo
 js/config.js        dónde se guarda: local, supabase o nada
 js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
 js/directorio.js    quién trabaja dónde, para no escribirlo cada vez
+js/inventario.js    qué equipo usa cada quien, para no escribir el serial
 js/local.js         el modo prueba: el almacén del navegador cuando no hay servidor
 js/adjuntos.js      el clip del chat: fotos y PDF, iguales en las dos páginas
 js/hoja.js          la Hoja de Servicio: la misma para imprimir y para el PDF

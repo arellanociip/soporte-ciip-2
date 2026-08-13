@@ -147,6 +147,7 @@ const CAT_ATAJOS = [
       'INSTALACION DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
       'UPGRADE DE HARDWARE DE PCS Y PORTÁTILES (AUMENTO DE MEMORIA RAM, CAMBIO DE PROCESADOR, DISCO DURO, TARJETAS GRÁFICAS, ETC.)',
     ],
+    equipo: 'CPU',   /* el del inventario que va con la solicitud */
     ejemplo: 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.',
     icono: '<svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/></svg>',
   },
@@ -157,6 +158,7 @@ const CAT_ATAJOS = [
     tipo: 'SOPORTE_TECNICO', detalle: 'MOVILIZACION Y/O REUBICACION DE ACTIVOS TECNOLOGICOS',
     familia: ['MOVILIZACION Y/O REUBICACION DE ACTIVOS TECNOLOGICOS',
               'INSTALACION Y/O CONFIGURACION DE DISPOSITIVO DE PROYECCION DE IMAGEN'],
+    equipo: 'CPU',   /* el del inventario que va con la solicitud */
     ejemplo: 'Ej. Me mudo de la oficina 2-6 a la 3-01 y hay que llevar la computadora y el monitor.',
     icono: '<svg viewBox="0 0 24 24"><path d="M5 9V6a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 13h18"/><path d="M7 21h10a2 2 0 002-2v-6H5v6a2 2 0 002 2z"/></svg>',
   },
@@ -167,6 +169,7 @@ const CAT_ATAJOS = [
     tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACION Y/O CONFIGURACION DE IMPRESORA',
     familia: ['INSTALACION Y/O CONFIGURACION DE IMPRESORA',
               'SOLUCION DE PROBLEMAS DE IMPRESIÓN'],
+    equipo: 'IMPRESORA',   /* el del inventario que va con la solicitud */
     ejemplo: 'Ej. No puedo imprimir desde el lunes: la impresora no aparece en la lista.',
     icono: '<svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 01-2-2v-3a2 2 0 012-2h16a2 2 0 012 2v3a2 2 0 01-2 2h-2"/></svg>',
   },
@@ -177,6 +180,7 @@ const CAT_ATAJOS = [
     tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACION DE CUENTA USUARIO',
     familia: ['CONFIGURACION DE CUENTA USUARIO', 'MANEJO DE SOFTWARE',
               'RESPALDO Y/O RECUPERACION DE ARCHIVOS'],
+    equipo: 'CPU',   /* el del inventario que va con la solicitud */
     ejemplo: 'Ej. Necesito que me configuren el correo institucional en el equipo nuevo.',
     icono: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>',
   },
@@ -186,6 +190,7 @@ const CAT_ATAJOS = [
     sub: 'Sin conexión, va y viene',
     tipo: 'SOPORTE_TECNICO', detalle: 'CONECTIVIDAD DE RED O INTERNET',
     familia: ['CONECTIVIDAD DE RED O INTERNET'],
+    equipo: 'CPU',   /* el del inventario que va con la solicitud */
     ejemplo: 'Ej. Desde ayer el equipo no agarra internet; el cable está conectado.',
     icono: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114 0"/><path d="M8.5 16.11a6 6 0 017 0"/><line x1="12" y1="20" x2="12" y2="20.01"/></svg>',
   },

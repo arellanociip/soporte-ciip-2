@@ -500,6 +500,21 @@ function crearSolicitud(datos){
     const e = new Error('Faltan datos obligatorios: gerencia, usuario y descripción.');
     e.codigo = 400; throw e;
   }
+
+  /* El equipo, si el formulario lo mandó: sale del inventario de la casa —el
+     serial que nadie se sabe de memoria— y llega ya escrito en el primer
+     renglón de la hoja. Se copia campo por campo y recortado: viene del
+     navegador, y de ahí no se acepta nada tal cual. */
+  if(Array.isArray(datos.renglones)){
+    fila.renglones = datos.renglones.slice(0, 6).map(r => ({
+      tipo:    String((r && r.tipo)    || '').slice(0, 120),
+      detalle: String((r && r.detalle) || '').slice(0, 200),
+      equipo:  String((r && r.equipo)  || '').slice(0, 60),
+      marca:   String((r && r.marca)   || '').slice(0, 60),
+      modelo:  String((r && r.modelo)  || '').slice(0, 80),
+      serial:  String((r && r.serial)  || '').slice(0, 80),
+    })).filter(r => Object.values(r).some(v => v));
+  }
   solicitudes.push(fila);
   escribirJson(F_SOLIC, solicitudes);
   return fila;

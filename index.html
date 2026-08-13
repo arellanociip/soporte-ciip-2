@@ -236,6 +236,14 @@
         <button type="button" id="botonAfinar">Cambiar</button>
       </div>
 
+      <!-- El equipo que la casa tiene registrado a tu nombre. Se manda con la
+           solicitud para que el técnico no tenga que preguntarte el serial. -->
+      <div class="clasificado equipo" id="miEquipo" hidden>
+        <span class="et">Tu equipo</span>
+        <span class="va" id="miEquipoTexto"></span>
+        <button type="button" id="botonOtroEquipo">No es ese</button>
+      </div>
+
       <!-- Los desplegables completos: salen con "Otra cosa" o con "Cambiar". -->
       <div class="rejilla" id="clasificacionManual" hidden>
         <div class="campo c6">
@@ -305,6 +313,7 @@
 <script src="js/config.js"></script>
 <script src="js/catalogo.js"></script>
 <script src="js/directorio.js"></script>
+<script src="js/inventario.js"></script>
 <script src="js/local.js"></script>
 <script src="js/adjuntos.js"></script>
 <script src="js/solicitud.js"></script>

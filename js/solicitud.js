@@ -108,6 +108,7 @@
       $('clasificacionManual').hidden = true;
       yaLaVio = false;
       pintarAntes(true);
+      pintarEquipo();
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
       tipo.value = '';
@@ -116,9 +117,45 @@
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
       yaLaVio = false;
       pintarAntes(true);
+      pintarEquipo();
       if(a) detalle.focus();
     }
   }
+
+  /* ---------- el equipo de quien pide ----------
+     El serial es el dato que nadie se sabe de memoria y el que más retrasa una
+     Hoja de Servicio: hay que ir hasta el puesto, agacharse y copiarlo del
+     costado del CPU. La casa ya lo tiene en el cuadro de Patrimonio, así que
+     va con la solicitud y el técnico se lo encuentra escrito.
+
+     Se manda solo cuando las dos cosas están claras: quién eres (elegido del
+     directorio) y de qué es el problema (el atajo dice si mira el CPU o la
+     impresora). Y se puede quitar: si el equipo no es ese, "No es ese" lo
+     suelta y la hoja va sin él, como antes. */
+  let equipoAdjunto = null;
+
+  function pintarEquipo(){
+    const caja = $('miEquipo');
+    if(!caja) return;
+    const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
+    const quien = $('usuario').value.trim();
+    equipoAdjunto = (a && a.equipo && quien && typeof inventarioEquipo === 'function')
+      ? inventarioEquipo(quien, a.equipo)
+      : null;
+    if(!equipoAdjunto){ caja.hidden = true; return; }
+    $('miEquipoTexto').textContent = [
+      equipoAdjunto.equipo,
+      equipoAdjunto.marca,
+      equipoAdjunto.modelo,
+      equipoAdjunto.serial ? 'serial ' + equipoAdjunto.serial : '',
+    ].filter(Boolean).join(' · ');
+    caja.hidden = false;
+  }
+
+  $('botonOtroEquipo').addEventListener('click', () => {
+    equipoAdjunto = null;
+    $('miEquipo').hidden = true;
+  });
 
   /* ---------- lo que GTIC ya sabe de esto ----------
      De cada guía de la gerencia sale a esta página una sola cosa: el párrafo
@@ -346,6 +383,7 @@
 
     CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
     $('quienEres').value = yo.usuario;
+    pintarEquipo();
     mostrarRecuadro(yo);
     return true;
   }
@@ -374,6 +412,7 @@
        un homónimo— y la lista no es una autoridad, es un punto de partida. */
     if(p.cedula && !$('cedula').value.trim()) $('cedula').value = p.cedula;
     marcar('quienEres', '');
+    pintarEquipo();
     mostrarRecuadro({usuario: p.nombre, gerencia: p.gerencia, piso: p.piso,
                      oficina: p.oficina, cedula: $('cedula').value});
     pintarAvance();
@@ -526,6 +565,17 @@
       descripcion: desc.value.trim(),
       tipo:        tipo.value || null,
       detalle:     detalle.value || null,
+      /* El equipo va como el primer renglón de la Hoja de Servicio, que es
+         donde el técnico lo escribiría a mano. Va con la clasificación puesta
+         para que la hoja salga completa de una vez. */
+      renglones:   equipoAdjunto ? [{
+        tipo:    tipo.value || '',
+        detalle: detalle.value || '',
+        equipo:  equipoAdjunto.equipo,
+        marca:   equipoAdjunto.marca,
+        modelo:  equipoAdjunto.modelo,
+        serial:  equipoAdjunto.serial,
+      }] : [],
     };
   }
 

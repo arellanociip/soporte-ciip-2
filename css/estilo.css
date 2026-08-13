@@ -841,6 +841,11 @@ select.despierta{animation:destello .7s ease;}
   100%{background:var(--navy-soft);}
 }
 
+/* La línea del equipo: la misma caja que la de la clasificación, para que se
+   lean como lo que son —dos cosas que la página ya sabe y va a mandar—. */
+.clasificado.equipo{margin-top:8px;}
+.clasificado.equipo .va{font-variant-numeric:tabular-nums;}
+
 /* ===================== EN EL TELÉFONO =====================
    Todo lo de arriba está pensado para el monitor de una oficina y ahí funciona;
    este bloque —y solo este— es lo que cambia en una pantalla de mano. No toca
