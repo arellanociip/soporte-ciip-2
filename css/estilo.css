@@ -413,30 +413,34 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
 
-/* ===================== PRUEBA ESTO PRIMERO =====================
-   Lo que GTIC ya sabe de este problema, en la página de quien pide. Va justo
-   encima del botón de enviar, que es el último momento en que sirve de algo, y
-   con la cruz bien a la vista: quien ya lo intentó todo la cierra y sigue. No
-   se pinta como una alerta —no ha pasado nada malo— sino como una nota. */
-.antesdepedir{
-  position:relative;
-  background:var(--navy-soft); border-radius:var(--r);
-  padding:16px 44px 16px 18px; margin:20px 0 0;
+/* ===================== QUIZÁ LO RESUELVAS TÚ =====================
+   Lo que GTIC ya sabe de este problema, del lado de quien pide. Se abre en su
+   propia ventana al elegir el problema —ahí es cuando sirve— y en el
+   formulario queda solo una línea para volver a abrirla. Metido en la página,
+   el texto crecía hacia abajo cada vez que GTIC escribía una guía y empujaba
+   el botón de enviar fuera de la vista. */
+.ad-linea{
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  background:var(--navy-soft); border-radius:var(--r-sm);
+  padding:11px 14px; margin:18px 0 0;
+  font-size:12.5px; color:var(--gray);
   animation:surgirCorto .22s ease both;
 }
-.antesdepedir .ad-t{font-size:14px; font-weight:700; color:var(--navy);}
-.antesdepedir .ad-s{font-size:12px; color:var(--gray); margin-top:2px;}
-.ad-guia{
-  background:#fff; border-radius:var(--r-sm); padding:12px 14px; margin-top:11px;
+.ad-linea .ic{font-size:15px; line-height:1;}
+.ad-linea .enlace{margin-left:auto; font-size:12.5px;}
+
+.hoja.hoja-ayuda{max-width:560px;}
+.ay-cinta{font-size:18px; font-weight:700; color:var(--navy); padding-right:30px;}
+.ay-sub{font-size:12.5px; color:var(--gray-soft); margin-top:3px; margin-bottom:16px;}
+.ay-guia{
+  background:var(--block); border-radius:var(--r-sm); padding:14px 16px;
 }
-.ad-guia b{display:block; font-size:13px; font-weight:700; margin-bottom:4px;}
-.ad-guia p{font-size:13px; line-height:1.6; color:var(--gray); white-space:pre-wrap;}
-.antesdepedir .cierra{
-  position:absolute; top:10px; right:10px;
-  width:28px; height:28px; border:none; background:none; cursor:pointer;
-  color:var(--navy); opacity:.55; border-radius:50%; font-size:14px; line-height:1;
+.ay-guia + .ay-guia{margin-top:10px;}
+.ay-guia b{display:block; font-size:14px; font-weight:700; margin-bottom:6px;}
+.ay-guia p{
+  font-size:13.5px; line-height:1.65; color:var(--ink); white-space:pre-wrap;
+  max-height:340px; overflow:auto;   /* si escribió una carta, rueda dentro */
 }
-.antesdepedir .cierra:hover{opacity:1; background:rgba(0,64,144,.10);}
 
 /* ===================== EL ACCESO DE GTIC =====================
    La primera pantalla de la gerencia, y durante meses la única cosa de este

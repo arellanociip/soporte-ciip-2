@@ -254,14 +254,13 @@
       </div>
 
       <!-- ===================== PRUEBA ESTO PRIMERO =====================
-           Lo que GTIC ya sabe de este tipo de soporte, escrito para quien no
-           es técnico. Sale al elegir el atajo y se puede cerrar; no estorba el
-           envío ni obliga a nada, que es lo que lo haría insoportable. -->
-      <div class="antesdepedir" id="antesDePedir" hidden>
-        <button type="button" class="cierra" id="cerrarAntes" aria-label="Cerrar">✕</button>
-        <div class="ad-t">Quizá lo resuelvas ahora mismo</div>
-        <div class="ad-s">Le pasó a otros y esto lo arregló. Si no funciona, sigue y envía la solicitud.</div>
-        <div id="antesLista"></div>
+           Lo que GTIC ya sabe de este tipo de soporte. Se abre en su propia
+           ventana al elegir el problema —ahí es cuando sirve— y esta línea
+           queda para volver a abrirla cuando uno quiera. -->
+      <div class="ad-linea" id="ayudaLinea" hidden>
+        <span class="ic">💡</span>
+        <span>GTIC ya sabe algo de esto y quizá lo resuelvas tú mismo en un minuto.</span>
+        <button type="button" class="enlace" id="abrirAyuda">Ver qué intentar</button>
       </div>
 
       <div class="botones">
@@ -278,6 +277,24 @@
 <!-- ===================== LA CONVERSACIÓN =====================
      En su propia ventana, para que el hilo no empuje la planilla hacia abajo
      ni se mezcle con ella. -->
+<!-- ===================== QUIZÁ LO RESUELVAS TÚ =====================
+     Lo que GTIC dejó escrito para este problema, en su propia ventana. Se abre
+     al elegir el problema, que es cuando sirve; después estorbaría. Se cierra
+     de cuatro maneras y ninguna obliga a nada: quien ya lo intentó todo cierra
+     y manda su solicitud, que para eso vino. -->
+<div class="velo" id="veloAyuda" hidden>
+  <div class="hoja hoja-ayuda">
+    <button type="button" class="cerrar" id="cerrarAyuda" aria-label="Cerrar">✕</button>
+    <div class="ay-cinta">Quizá lo resuelvas ahora mismo</div>
+    <div class="ay-sub">Esto le pasó a otros y así se arregló. Toma un minuto.</div>
+    <div id="ayudaCuerpo"></div>
+    <div class="botones">
+      <button type="button" class="boton primario" id="ayudaIntentar">Voy a intentarlo</button>
+      <button type="button" class="boton plano" id="ayudaSeguir">Ya lo intenté · seguir con la solicitud</button>
+    </div>
+  </div>
+</div>
+
 <div class="velo" id="veloChat" hidden>
   <div class="hoja hoja-chat">
     <button type="button" class="cerrar" id="cerrarChat" aria-label="Cerrar">✕</button>

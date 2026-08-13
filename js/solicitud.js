@@ -106,16 +106,16 @@
         catTipoEtiqueta(a.tipo) + (a.detalle ? ' · ' + a.detalle : '');
       $('clasificado').hidden = false;
       $('clasificacionManual').hidden = true;
-      antesCerrado = false;
-      pintarAntes();
+      yaLaVio = false;
+      pintarAntes(true);
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
       tipo.value = '';
       tipo.dispatchEvent(new Event('change'));
       $('clasificado').hidden = true;
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
-      antesCerrado = false;
-      pintarAntes();
+      yaLaVio = false;
+      pintarAntes(true);
       if(a) detalle.focus();
     }
   }
@@ -131,7 +131,6 @@
      obliga a nada: quien ya lo intentó todo sigue de largo y manda su
      solicitud, que para eso vino. */
   let guiasPublicas = [];
-  let antesCerrado = false;
 
   async function traerGuiasPublicas(){
     if(!soporteHayBackend()) return;
@@ -140,35 +139,65 @@
                             {headers: soporteCabeceras()});
       if(r.ok) guiasPublicas = await r.json();
     }catch(e){ /* sin esto la página funciona igual: es una ayuda, no un paso */ }
-    pintarAntes();
+    pintarAntes(false);
   }
 
-  function pintarAntes(){
-    const caja = $('antesDePedir');
-    if(!caja) return;
+  /* Las que hablan del problema que se acaba de elegir. */
+  function ayudaDeAhora(){
     const cual = (detalle.value || '').trim().toUpperCase();
-    const vienen = cual
-      ? guiasPublicas.filter(g => String(g.categoria || '').trim().toUpperCase() === cual)
-      : [];
-    if(antesCerrado || !vienen.length){ caja.hidden = true; return; }
+    if(!cual) return [];
+    return guiasPublicas.filter(g => String(g.categoria || '').trim().toUpperCase() === cual);
+  }
 
-    $('antesLista').innerHTML = vienen.slice(0, 3).map(g => {
+  /* La línea de abajo solo dice que existe; lo que hay escrito se lee en la
+     ventana. Así el formulario no crece cada vez que GTIC escribe una guía. */
+  function pintarAntes(abrirla){
+    const linea = $('ayudaLinea');
+    if(!linea) return;
+    const vienen = ayudaDeAhora();
+    linea.hidden = !vienen.length;
+    if(!vienen.length){ cerrarAyuda(); return; }
+    if(abrirla && !yaLaVio) abrirAyuda();
+  }
+
+  /* Se abre sola una vez por problema elegido. Volver a abrirla es un clic en
+     la línea; volver a metérsela por los ojos, no. */
+  let yaLaVio = false;
+
+  function abrirAyuda(){
+    const vienen = ayudaDeAhora();
+    if(!vienen.length) return;
+    const caja = $('ayudaCuerpo');
+    caja.innerHTML = '';
+    vienen.slice(0, 3).forEach(g => {
       const t = document.createElement('div');
-      t.className = 'ad-guia';
+      t.className = 'ay-guia';
       const h = document.createElement('b'); h.textContent = g.titulo;
       const p = document.createElement('p'); p.textContent = g.solucion;
       t.append(h, p);
-      return t.outerHTML;
-    }).join('');
-    caja.hidden = false;
+      caja.append(t);
+    });
+    yaLaVio = true;
+    $('veloAyuda').hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => $('ayudaIntentar').focus(), 30);
   }
 
-  $('cerrarAntes').addEventListener('click', () => {
-    antesCerrado = true;
-    $('antesDePedir').hidden = true;
-  });
+  function cerrarAyuda(){
+    if($('veloAyuda').hidden) return;
+    $('veloAyuda').hidden = true;
+    if($('veloChat').hidden) document.body.style.overflow = '';
+  }
+
+  $('abrirAyuda').addEventListener('click', abrirAyuda);
+  $('cerrarAyuda').addEventListener('click', cerrarAyuda);
+  $('ayudaIntentar').addEventListener('click', cerrarAyuda);
+  /* "ya lo intenté" cierra y deja el cursor donde toca escribir lo que pasó */
+  $('ayudaSeguir').addEventListener('click', () => { cerrarAyuda(); desc.focus(); });
+  $('veloAyuda').addEventListener('click', e => { if(e.target === $('veloAyuda')) cerrarAyuda(); });
+
   /* al cambiar de problema vuelve a ofrecerse: es otra pregunta */
-  detalle.addEventListener('change', () => { antesCerrado = false; pintarAntes(); });
+  detalle.addEventListener('change', () => { yaLaVio = false; pintarAntes(true); });
 
   traerGuiasPublicas();
 
@@ -908,7 +937,9 @@
     }
   });
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && !$('veloChat').hidden) cerrarChat();
+    if(e.key !== 'Escape') return;
+    if(!$('veloAyuda').hidden) cerrarAyuda();
+    else if(!$('veloChat').hidden) cerrarChat();
   });
 
   /* ---------- retirar una solicitud ----------
