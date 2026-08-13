@@ -314,10 +314,14 @@
   /* Pinta el recuadro verde con quien esté identificado. */
   function mostrarRecuadro(yo){
     $('recordadoNombre').textContent = yo.usuario;
+    /* La cédula no se pinta, aunque vaya en la solicitud y salga impresa en la
+       Hoja de Servicio. Este recuadro aparece solo, sin que nadie lo pida, en
+       una pantalla que en la mayoría de las oficinas ve más gente que su dueño;
+       y para confirmar que la página te reconoció bastan el nombre y dónde
+       estás. Quien quiera verla o corregirla, la tiene en "Corregir". */
     $('recordadoDonde').textContent = [
       yo.gerencia,
       (yo.piso ? 'Piso ' + yo.piso : '') + (yo.oficina ? ', of. ' + yo.oficina : ''),
-      yo.cedula ? 'C.I. ' + yo.cedula : '',
     ].filter(Boolean).join(' · ');
     mostrarIdentidad('recordado');
   }
