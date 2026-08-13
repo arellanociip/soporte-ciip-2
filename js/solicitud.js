@@ -832,6 +832,88 @@
 
   const VISTO = '<svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>';
 
+  /* ---------- el plazo para llevarse la hoja ----------
+     La Hoja de Servicio lleva el nombre, la cédula, el teléfono y el cargo de
+     quien pidió el soporte, y esta pantalla se abre lo mismo en el puesto de
+     uno que en la computadora de recepción o en la de la sala de reuniones.
+     Por eso el enlace no se queda encendido: dura cinco minutos desde que
+     aparece a la vista —lo que toma bajarlo— y después se apaga.
+
+     Lo que se apaga es el enlace, no el documento: la hoja sigue guardada en
+     el servidor de GTIC, y para volver a tenerla se le pide a la gerencia. Es
+     la misma idea del botón de borrar el rastro, pero sin tener que acordarse
+     de pulsarlo. */
+  const PLAZO_HOJA = 5 * 60 * 1000;
+  const AVISA_HOJA = 60 * 1000;   /* cuando queda esto, el reloj se pone rojo */
+  /* la circunferencia del aro de r=9 (2·π·9). Si cambia el radio, cambia aquí */
+  const VUELTA = 56.55;
+
+  const RELOJITO = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>';
+
+  /* 4:07, no "247 segundos": un plazo se lee como se lee un reloj */
+  function enReloj(ms){
+    const t = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  }
+
+  /* El aro que se vacía. Va lleno al empezar y no queda nada al vencerse, que
+     es como se lee un plazo sin tener que leer los números. */
+  const aroHtml = queda =>
+    `<span class="reloj" aria-hidden="true"><svg viewBox="0 0 24 24">
+       <circle class="pista" cx="12" cy="12" r="9"/>
+       <circle class="arco" cx="12" cy="12" r="9"
+               style="stroke-dashoffset:${(VUELTA * (1 - queda / PLAZO_HOJA)).toFixed(2)}"/>
+     </svg></span>`;
+
+  /* Vencido no se deja el botón apagado y sin explicar: se dice qué pasó y
+     dónde está la hoja, que es lo único que la persona necesita saber. */
+  const vencidaHtml = () =>
+    `<div class="mis-vencido">${RELOJITO}<span>Se venció el plazo para bajarla.
+     La hoja queda guardada en GTIC: pídesela a la gerencia.</span></div>`;
+
+  function hojaHtml(s){
+    /* El plazo arranca la primera vez que esta pantalla enseña el botón, y
+       solo si está a la vista: un repintado en una pestaña de atrás no le
+       gasta a nadie sus cinco minutos. */
+    const desde = (window.soporteMias && soporteMias.plazoHoja)
+      ? soporteMias.plazoHoja(s.id, !document.hidden) : null;
+    /* Sin plazo anotado —todavía no arrancó, o el navegador no deja
+       guardarlo— el botón sale entero y sin cuenta atrás. */
+    const queda = desde === null ? PLAZO_HOJA : desde + PLAZO_HOJA - Date.now();
+    if(queda <= 0) return vencidaHtml();
+    return `<a class="mis-pdf${queda <= AVISA_HOJA ? ' apurando' : ''}"
+          href="${escapar(SOPORTE_BACKEND.url)}/rest/v1/hoja?id=eq.${escapar(s.id)}"
+          download ${desde === null ? '' : `data-vence="${desde + PLAZO_HOJA}"`}
+          title="Descargar la Hoja de Servicio en PDF. El enlace dura cinco minutos; después hay que pedírsela a GTIC."
+          >${PAPEL}<span>Hoja de Servicio</span>${aroHtml(queda)}<b class="queda">${enReloj(queda)}</b></a>`;
+  }
+
+  /* La cuenta atrás corre en su propio latido, aparte del repintado de la
+     lista: la lista se rehace cada quince segundos o cuando llega un aviso, y
+     un plazo que solo bajara ahí se vería a saltos. Esto toca únicamente los
+     números y el aro, sin rehacer nada, para no borrarle a nadie lo que esté
+     escribiendo en la conversación. */
+  let latido = null;
+
+  function latirPlazos(){
+    clearInterval(latido);
+    latido = null;
+    if(!document.querySelector('.mis-pdf[data-vence]')) return;
+    latido = setInterval(() => {
+      const chips = document.querySelectorAll('.mis-pdf[data-vence]');
+      if(!chips.length){ clearInterval(latido); latido = null; return; }
+      chips.forEach(a => {
+        const queda = Number(a.dataset.vence) - Date.now();
+        if(queda <= 0){ a.outerHTML = vencidaHtml(); return; }
+        a.classList.toggle('apurando', queda <= AVISA_HOJA);
+        const n = a.querySelector('.queda');
+        if(n) n.textContent = enReloj(queda);
+        const arco = a.querySelector('.arco');
+        if(arco) arco.style.strokeDashoffset = (VUELTA * (1 - queda / PLAZO_HOJA)).toFixed(2);
+      });
+    }, 1000);
+  }
+
   function pasosHtml(s){
     /* anulada no recorrió el camino, así que dibujarlo mentiría */
     if(s.estado === 'anulada'){
@@ -844,11 +926,9 @@
     /* Al lado del camino, cuando ya está recorrido: la Hoja de Servicio firmada
        es el comprobante de que esto pasó, y quien lo pidió tiene derecho a
        guardárselo sin ir a pedírselo a GTIC. Va aquí y no en otro sitio porque
-       es justo donde uno mira al ver que ya está atendida. */
-    const hoja = s.estado === 'atendida'
-      ? `<a class="mis-pdf" href="${escapar(SOPORTE_BACKEND.url)}/rest/v1/hoja?id=eq.${escapar(s.id)}"
-            download title="Descargar la Hoja de Servicio en PDF">${PAPEL} Hoja de Servicio</a>`
-      : '';
+       es justo donde uno mira al ver que ya está atendida. Con su plazo: el
+       comprobante es de uno, pero la pantalla puede no serlo. */
+    const hoja = s.estado === 'atendida' ? hojaHtml(s) : '';
     return '<div class="pasos-fila"><div class="pasos">' + ETAPAS.map((e, i) => {
       const clase = i < donde ? 'hecho' : (i === donde ? 'ahora' : '');
       /* la última, alcanzada, es un fin: se marca cumplida y no "en curso" */
@@ -1346,6 +1426,7 @@
     }
     $('misLista').classList.toggle('una-sola', visibles.length <= 1);
     $('misLista').scrollTop = 0;
+    latirPlazos();
     revisarVelo();
     bloquearSiHayAbierta(abiertas[0] || null);
 

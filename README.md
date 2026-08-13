@@ -118,7 +118,11 @@ Lo que sigue abierto, a sabiendas:
   sirve el servidor a cualquiera que abra el formulario. Fue una decisión, y está
   explicada en la cabecera de cada archivo.
 - **La Hoja en PDF se baja con el `id` de la solicitud**, sin clave: es lo que
-  permite que quien pidió el soporte se la lleve. Ese id no se adivina.
+  permite que quien pidió el soporte se la lleve. Ese id no se adivina. El plazo
+  de cinco minutos apaga el enlace en la pantalla de quien pidió, que es lo que
+  se quería —que no quede encendido en una máquina prestada—, pero no cierra la
+  dirección: quien se copie el enlace entero puede volver a pedirla. Cerrarla de
+  verdad es tarea del servidor y todavía no está hecha.
 - **El rastro queda en la máquina.** El id que prueba que una solicitud es tuya
   vive en el navegador desde el que la enviaste, y con él se ve su estado, se
   habla con el técnico y se baja la Hoja con tu cédula y tu teléfono. En la
@@ -284,8 +288,23 @@ Cuando una solicitud queda atendida, a quien la pidió le sale junto al camino
 de su solicitud un enlace: **Hoja de Servicio**. Baja el mismo documento que
 GTIC imprime y firma, en PDF, sin pasar por el diálogo de imprimir.
 
-En la bandeja está en los dos sitios: un botón **PDF** en cada fila atendida —para
-archivar sin abrir nada— y otro dentro de la ficha, al lado de Imprimir.
+Ese enlace dura **cinco minutos**, con su reloj al lado: un aro que se vacía y
+los minutos bajando, y el último minuto en rojo. Cuando se acaba, en su sitio
+queda la frase que dice dónde está la hoja —guardada en GTIC— y que hay que
+pedírsela a la gerencia.
+
+El plazo es porque la hoja lleva nombre, cédula, teléfono y cargo, y esa
+pantalla se abre lo mismo en el puesto de uno que en la computadora de
+recepción: el comprobante es de uno, pero la pantalla puede no serlo. Cuenta
+desde que el botón aparece a la vista —no desde que GTIC cierra la solicitud—
+para que a nadie se le venza mientras almuerza, y se anota en el navegador
+junto al resguardo, así que recargar la página no lo reinicia. Lo que se apaga
+es el enlace en esa pantalla, no el archivo: en el servidor de GTIC la hoja
+sigue completa.
+
+En la bandeja no hay plazo, que es de quien la archiva: un botón **PDF** en cada
+fila atendida —para archivar sin abrir nada— y otro dentro de la ficha, al lado
+de Imprimir.
 
 No es una segunda versión hecha a mano: la hoja se arma una sola vez
 () y de ahí salen las dos cosas —lo que va a la impresora desde la

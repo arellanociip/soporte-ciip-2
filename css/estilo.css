@@ -260,7 +260,10 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
    altura del camino, y se montaba sobre la bola de "Atendida": el camino se
    reparte el ancho entero y ahí no sobra sitio. Va en su propia línea, pegado a
    la derecha, y el camino sigue exactamente como estaba. */
-.pasos-fila{flex:1 1 100%;}
+/* min-width:0 porque es un renglón de una fila flexible: sin eso, el renglón
+   no puede encogerse por debajo de lo que ocupa el botón del papel, y en el
+   teléfono la tarjeta se podía arrastrar de lado. */
+.pasos-fila{flex:1 1 100%; min-width:0;}
 .mis-pdf{
   display:flex; align-items:center; gap:5px;
   margin:0 2px 8px auto; width:max-content;
@@ -275,6 +278,49 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 }
 .mis-pdf:hover{border-color:var(--navy); background:var(--navy-soft);}
 .mis-pdf:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.22);}
+
+/* ---------- el plazo de la hoja ----------
+   El enlace dura cinco minutos desde que aparece (js/solicitud.js). El aro se
+   vacía y los números bajan: el aro se ve sin leer y los números dicen cuánto
+   queda exactamente, que es lo que uno quiere saber cuando va quedando poco.
+   El aro va después del rótulo, no antes, para que lo primero que se lea siga
+   siendo qué es esto y no cuánto falta. */
+.mis-pdf .reloj{
+  display:flex; margin-left:3px; padding-left:8px;
+  border-left:1px solid var(--line-soft);
+}
+.mis-pdf .reloj svg{width:14px; height:14px; transform:rotate(-90deg);}
+.mis-pdf .pista{stroke:var(--line); stroke-width:2.6;}
+.mis-pdf .arco{
+  stroke:var(--navy-medio); stroke-width:2.6; stroke-linecap:round;
+  stroke-dasharray:56.55; transition:stroke-dashoffset 1s linear, stroke .2s ease;
+}
+.mis-pdf .queda{font-size:11px; font-weight:700; font-variant-numeric:tabular-nums;
+  color:var(--navy-medio); min-width:26px;}
+/* El último minuto se pone rojo y respira: es el aviso de que si no lo bajas
+   ahora, hay que ir a pedirlo. */
+.mis-pdf.apurando{border-color:var(--rust); background:var(--rust-bg); color:var(--rust);
+  animation:latirPlazo 1s ease-in-out infinite;}
+.mis-pdf.apurando .arco, .mis-pdf.apurando .queda{stroke:var(--rust); color:var(--rust);}
+@keyframes latirPlazo{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.04);}
+}
+@media (prefers-reduced-motion:reduce){
+  .mis-pdf.apurando{animation:none;}
+  .mis-pdf .arco{transition:none;}
+}
+/* Vencido: el sitio del botón no queda vacío ni con un botón muerto, sino con
+   la frase que dice dónde está la hoja ahora. */
+.mis-vencido{
+  display:flex; align-items:center; gap:6px;
+  margin:0 2px 8px auto; max-width:100%; width:max-content;
+  font-size:11px; line-height:1.35; color:var(--gray-soft);
+}
+.mis-vencido svg{
+  width:13px; height:13px; flex:0 0 13px; fill:none; stroke:currentColor;
+  stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
+}
 .pasos{
   flex:1 1 100%; display:flex; align-items:flex-start;
   margin:10px 0 2px; padding:0 2px;

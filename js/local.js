@@ -111,6 +111,37 @@
 
     vaciar(){ localStorage.removeItem(LLAVE_MIAS); },
 
+    /* ---------- cuándo empezó a correr el plazo de la hoja ----------
+       La Hoja de Servicio lleva nombre, cédula, teléfono y cargo. El enlace
+       para bajarla no se queda encendido para siempre en una pantalla que
+       igual es la de recepción: dura unos minutos desde que uno lo ve.
+
+       El momento se guarda aquí, con el resguardo, y no en una variable de la
+       página: si viviera en la página, recargar sería volver a empezar y el
+       plazo no querría decir nada.
+
+       `arrancar` es falso cuando la pantalla no está a la vista —una pestaña
+       en segundo plano que se repinta sola—: el plazo cuenta desde que la
+       persona lo ve, no desde que GTIC cerró la solicitud, o quien estuviera
+       almorzando volvería al puesto con el plazo vencido sin haber visto
+       nunca el botón. Devuelve null mientras no haya arrancado. */
+    plazoHoja(id, arrancar){
+      const mias = window.soporteMias.leer();
+      const m = mias.find(x => x.id === id);
+      if(!m) return null;
+      if(!m.hoja_desde){
+        if(!arrancar) return null;
+        m.hoja_desde = Date.now();
+        /* Si el navegador no deja escribir —modo privado, disco lleno— el
+           plazo no se puede sostener y el enlace se queda abierto. Es lo
+           menos malo: dejar sin su comprobante a quien no podemos ni contar
+           el tiempo sería castigarlo por algo que no hizo. */
+        try{ localStorage.setItem(LLAVE_MIAS, JSON.stringify(mias)); }
+        catch(e){ return null; }
+      }
+      return m.hoja_desde;
+    },
+
     /* Lo viejo se suelta solo. El resguardo sirve para seguir lo que está en
        curso y para bajar la hoja de lo que se acaba de cerrar; una solicitud
        atendida hace tres meses no tiene por qué seguir en el navegador de una
