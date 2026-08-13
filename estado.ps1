@@ -47,7 +47,7 @@ Write-Host ""
 $log = Join-Path $carpeta "datos\servidor.log"
 if (Test-Path $log) {
   Write-Host "  Ultimas lineas del registro del servidor:"
-  Get-Content $log -Tail 6 | ForEach-Object { Write-Host ("    " + $_) }
+  Get-Content $log -Tail 6 -Encoding UTF8 | ForEach-Object { Write-Host ("    " + $_) }
 } else {
   Write-Host "  (todavia no hay registro del servidor)"
 }
