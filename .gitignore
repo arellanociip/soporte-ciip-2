@@ -5,3 +5,6 @@ _*
 # Las solicitudes reales y las huellas de las claves de GTIC. Nunca al
 # repositorio: son datos de la casa, no codigo.
 datos/
+
+# Lo que el vigia va apuntando en la maquina donde corre.
+vigia.log

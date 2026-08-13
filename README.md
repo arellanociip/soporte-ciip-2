@@ -157,6 +157,13 @@ Para que arranque solo con Windows, doble clic en **`vigia-al-encender.cmd`** un
 vez. Se quita borrando el acceso directo: `Windows+R`, escribe `shell:startup`, y
 borra "Vigia de la bandeja".
 
+**Si no salta, lo primero es mirar si está andando**: su ventanita tiene que
+estar abierta (busca "Vigia de la bandeja" en la barra de tareas). Y todo lo que
+hace queda apuntado en **`vigia.log`**, al lado del programa: ahí se ve la hora
+de cada solicitud que le llegó y si consiguió traer la ventana. Si el archivo no
+crece cuando entra una solicitud, es que el vigía no está corriendo o no llega al
+servidor. Dos a la vez no se pueden: el segundo avisa y se cierra solo.
+
 **En la máquina de otro compañero funciona igual**: copia la carpeta —bastan
 `vigia.cmd` y `vigia.ps1`— y doble clic allí. Va en PowerShell a propósito, que
 ya viene con Windows: no hay que instalarle nada. Node solo hace falta en esta

@@ -92,8 +92,21 @@ public class Ventana {
 }
 "@
 
+# Todo lo que dice queda además en vigia.log, al lado del programa. Sin eso, el
+# día que no salte no hay manera de saber si fue que no se enteró, que no
+# encontró la ventana o que Windows no soltó el foco.
+$Registro = Join-Path $PSScriptRoot "vigia.log"
+
 function Escribir($texto) {
-  Write-Host ("  " + (Get-Date -Format "HH:mm:ss") + "  " + $texto)
+  $linea = "  " + (Get-Date -Format "dd/MM HH:mm:ss") + "  " + $texto
+  Write-Host $linea
+  try {
+    # que no crezca sin fin: por encima de 200 KB se empieza de nuevo
+    if ((Test-Path $Registro) -and (Get-Item $Registro).Length -gt 200000) {
+      Remove-Item $Registro -Force
+    }
+    Add-Content -Path $Registro -Value $linea -Encoding UTF8
+  } catch { }
 }
 
 function Show-Bandeja {
@@ -113,6 +126,17 @@ function Show-Bandeja {
   # la sesión y el permiso de los avisos son los que ya están dados.
   Start-Process "msedge.exe" -ArgumentList "--app=$Pagina"
   Escribir "llegó una solicitud -> abriendo la bandeja"
+}
+
+# Uno solo por máquina. Si no, un doble clic de más deja dos vigías y la
+# bandeja da dos saltos por cada solicitud.
+$cerrojo = New-Object System.Threading.Mutex($false, "Local\VigiaBandejaGTIC")
+if (-not $cerrojo.WaitOne(0)) {
+  Write-Host ""
+  Write-Host "  Ya hay un vigía andando en esta máquina. No hace falta otro."
+  Write-Host ""
+  Start-Sleep -Seconds 4
+  exit
 }
 
 Write-Host ""
