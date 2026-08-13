@@ -648,54 +648,54 @@ select.despierta{animation:destello .7s ease;}
 .hoja{animation:surgir .28s ease both;}
 
 /* ===================== EL AVISO DE QUE LLEGÓ ALGO =====================
-   El cartel de la esquina. Va por encima de las ventanas emergentes (z-index
+   Una ventana delante de todo. Va por encima de la ficha y del chat (z-index
    mayor que el del velo) a propósito: si entra una solicitud mientras el
-   técnico llena una ficha, el aviso tiene que verse igual. Abajo a la derecha
-   para no taparle nada de lo que está leyendo. */
-.avisos{
-  position:fixed; right:18px; bottom:18px; z-index:60;
-  display:flex; flex-direction:column; gap:9px; max-width:340px;
-  pointer-events:none;   /* el espacio vacío de la columna no estorba los clics */
-}
-.push{
-  pointer-events:auto;
-  background:var(--card); border:1px solid var(--line);
-  border-left:4px solid var(--navy); border-radius:var(--r);
-  box-shadow:0 4px 12px rgba(14,20,36,.10), 0 14px 34px rgba(14,20,36,.14);
-  padding:12px 14px; text-align:left; cursor:pointer; font-family:inherit;
-  animation:entrarAviso .26s cubic-bezier(.2,.9,.3,1.2) both;
-}
-.push:hover{border-color:var(--line); border-left-color:var(--navy-deep); background:#FAFCFF;}
-.push:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.25);}
-.push-tit{
-  display:flex; align-items:center; gap:7px;
-  font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
-  color:var(--navy);
-}
-/* el punto late dos veces y se queda quieto: llama sin quedarse llamando */
-.push .punto{
-  width:8px; height:8px; border-radius:50%; background:var(--navy); flex:0 0 auto;
-  animation:latir 1.1s ease-out 2;
-}
-.push-num{font-size:13px; font-weight:700; margin-top:5px;}
-.push-que{
-  font-size:12.5px; color:var(--gray); margin-top:2px;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-}
-.push.yendose{animation:salirAviso .3s ease both;}
+   técnico llena una ficha, el aviso tiene que verse igual, y al cerrarlo lo
+   que estaba abierto sigue intacto detrás. */
+.velo-nueva{z-index:58; background:rgba(14,20,36,.55);}
+.hoja-nueva{max-width:440px; padding:0; overflow:hidden;}
 
-@keyframes entrarAviso{
-  from{opacity:0; transform:translateX(24px) scale(.97);}
-  to{opacity:1; transform:none;}
+/* la cinta azul de arriba: se ve de reojo desde el otro lado de la oficina */
+.nueva-cinta{
+  background:var(--navy); color:#fff;
+  display:flex; align-items:center; gap:9px;
+  padding:12px 22px;
+  font-size:11.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase;
 }
-@keyframes salirAviso{
-  from{opacity:1; transform:none;}
-  to{opacity:0; transform:translateX(24px);}
+/* el punto late tres veces y se queda quieto: llama sin quedarse llamando */
+.nueva-cinta .punto{
+  width:9px; height:9px; border-radius:50%; background:#fff; flex:0 0 auto;
+  animation:latir 1.1s ease-out 3;
 }
+.nueva-mas{
+  margin-left:auto; background:rgba(255,255,255,.18); border-radius:20px;
+  padding:3px 10px; letter-spacing:.2px; text-transform:none; font-weight:700;
+}
+.nueva-num{
+  padding:18px 22px 0; font-size:13px; font-weight:800; color:var(--navy);
+  font-variant-numeric:tabular-nums;
+}
+.nueva-num small{font-weight:600; color:var(--gray-soft); margin-left:6px;}
+.nueva-quien{padding:2px 22px 0; font-size:19px; font-weight:700; line-height:1.25;}
+.nueva-donde{padding:3px 22px 0; font-size:12.5px; color:var(--gray-soft);}
+.nueva-tel{padding:8px 22px 0; font-size:13px; color:var(--gray);}
+.nueva-clase{
+  margin:12px 22px 0; display:inline-block;
+  background:var(--navy-soft); color:var(--navy); border-radius:20px;
+  padding:4px 12px; font-size:11.5px; font-weight:700;
+}
+.nueva-que{
+  margin:12px 22px 0; padding:12px 14px;
+  background:var(--block); border-radius:var(--r-sm);
+  font-size:13.5px; line-height:1.55;
+  max-height:190px; overflow:auto;   /* si escribió una carta, que ruede dentro */
+}
+.hoja-nueva .botones{padding:0 22px 20px; margin-top:18px;}
+
 @keyframes latir{
-  0%{box-shadow:0 0 0 0 rgba(0,64,144,.45);}
-  70%{box-shadow:0 0 0 7px rgba(0,64,144,0);}
-  100%{box-shadow:0 0 0 0 rgba(0,64,144,0);}
+  0%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}
+  70%{box-shadow:0 0 0 8px rgba(255,255,255,0);}
+  100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
 }
 
 /* La recién llegada, marcada en la cola. El fondo se apaga solo en unos

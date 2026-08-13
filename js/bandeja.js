@@ -258,30 +258,65 @@
     }catch(e){}
   }
 
-  /* El cartel de la esquina. Es un botón: llevar a la solicitud es lo que uno
-     quiere hacer al verlo. */
-  function cartel(s){
-    const caja = $('avisos');
-    if(!caja) return;
-    const el = document.createElement('button');
-    el.type = 'button';
-    el.className = 'push';
-    el.innerHTML =
-      '<div class="push-tit"><span class="punto"></span>Llegó una solicitud</div>' +
-      '<div class="push-num">N° ' + String(s.numero).padStart(3,'0') + '-' + esc(String(s.anio)) +
-      ' · ' + esc(s.usuario) + '</div>' +
-      '<div class="push-que">' + esc(s.descripcion) + '</div>';
-    el.addEventListener('click', () => { irA(s.id); quitar(); });
-    caja.prepend(el);
-    while(caja.children.length > 3) caja.lastElementChild.remove();
+  /* ---------- la ventana del aviso ----------
+     Delante de todo y con la solicitud entera dentro: quién es, dónde está,
+     su teléfono y qué le pasa. Con eso el técnico decide sin abrir nada más, y
+     puede tomarla desde aquí mismo.
 
-    let ido = false;
-    function quitar(){
-      if(ido) return; ido = true;
-      el.classList.add('yendose');
-      setTimeout(() => el.remove(), 320);
+     Si mientras está abierta entra otra, no se apila otra ventana encima: se
+     repinta esta con la última y avisa de cuántas van. */
+  let nuevasEnCola = [];
+
+  function abrirNueva(nuevas){
+    /* la más reciente primero, y sin repetir si el aviso llega dos veces */
+    nuevas.forEach(s => { if(!nuevasEnCola.some(x => x.id === s.id)) nuevasEnCola.unshift(s); });
+    if(!nuevasEnCola.length) return;
+    pintarNueva();
+    $('veloNueva').hidden = false;
+    document.body.style.overflow = 'hidden';
+    /* el foco en el botón principal: así Enter y Escape hacen lo obvio y quien
+       usa el teclado no queda perdido detrás de la ventana */
+    requestAnimationFrame(() => { const b = $('nuevaTomar'); if(b) b.focus(); });
+  }
+
+  function pintarNueva(){
+    const s = nuevasEnCola[0];
+    if(!s) return;
+    const otras = nuevasEnCola.length - 1;
+    const donde = [s.gerencia, s.piso ? 'Piso ' + s.piso : '', s.oficina ? 'of. ' + s.oficina : '']
+      .filter(Boolean).join(' · ');
+    const clasificacion = [s.tipo, s.detalle].filter(Boolean).join(' · ');
+
+    $('hojaNueva').innerHTML = `
+      <div class="nueva-cinta">
+        <span class="punto"></span>Llegó una solicitud
+        ${otras ? `<span class="nueva-mas">y ${otras} más sin ver</span>` : ''}
+      </div>
+      <div class="nueva-num">N° ${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}
+        <small>${esc(hora(s.creada_en))}</small></div>
+      <div class="nueva-quien">${esc(s.usuario)}</div>
+      <div class="nueva-donde">${esc(donde)}</div>
+      ${s.telefono ? `<div class="nueva-tel">Teléfono: <b>${esc(s.telefono)}</b></div>` : ''}
+      ${clasificacion ? `<div class="nueva-clase">${esc(clasificacion)}</div>` : ''}
+      <div class="nueva-que">${esc(s.descripcion)}</div>
+      <div class="botones">
+        <button type="button" class="boton primario" id="nuevaTomar">Atenderla ahora</button>
+        <button type="button" class="boton plano" id="nuevaVer">Ver la ficha</button>
+        <button type="button" class="boton plano" id="nuevaDespues">Después</button>
+      </div>`;
+  }
+
+  /* Cerrar la del frente. Si detrás quedan más, se pasa a la siguiente en vez
+     de irse: si no, las de en medio se perderían de vista. */
+  function cerrarNueva(todas){
+    if(todas) nuevasEnCola = [];
+    else nuevasEnCola.shift();
+    if(nuevasEnCola.length){ pintarNueva(); return; }
+    $('veloNueva').hidden = true;
+    /* el desplazamiento del fondo solo se devuelve si no queda otra ventana */
+    if($('velo').hidden && $('veloChat').hidden && $('veloPerfil').hidden){
+      document.body.style.overflow = '';
     }
-    setTimeout(quitar, 14000);
   }
 
   /* Colocar la pantalla en una solicitud: lo que haga falta para que se vea. */
@@ -302,15 +337,12 @@
   function avisarDe(nuevas){
     if(document.hidden){ sinLeer += nuevas.length; marcarTitulo(); }
     if(avisosEncendidos()) sonar();
-    /* del más viejo al más nuevo, para que el último en entrar quede arriba */
-    nuevas.slice().reverse().forEach(s => { cartel(s); notificar(s); });
+    nuevas.slice().reverse().forEach(notificar);
 
-    /* La cola se coloca sola, salvo que haya una ventana abierta encima:
-       moverle el suelo a quien está escribiendo observaciones o conversando
-       sería quitarle lo que hace. El cartel igual se ve, y la marca en la fila
-       lo espera. */
-    const hayVentana = !$('velo').hidden || !$('veloPerfil').hidden || !$('veloChat').hidden;
-    if(!hayVentana) irA(nuevas[0].id);
+    /* La cola de atrás se coloca primero —para que al cerrar la ventana la
+       solicitud esté a la vista y no haya que buscarla— y encima va el aviso. */
+    irA(nuevas[0].id);
+    abrirNueva(nuevas);
 
     /* la marca dura lo que dura la sorpresa */
     setTimeout(() => {
@@ -1221,6 +1253,28 @@
     pintarBotonAvisos();
   });
 
+  /* ---------- los gestos de la ventana del aviso ----------
+     Se atienden desde el velo porque la ventana se repinta entera cada vez que
+     entra otra solicitud, y unos escuchas fijos aquí sobreviven a eso. */
+  $('veloNueva').addEventListener('click', async e => {
+    const s = nuevasEnCola[0];
+    if(e.target === $('veloNueva')) return cerrarNueva();
+    if(e.target.id === 'nuevaDespues') return cerrarNueva();
+    if(e.target.id === 'nuevaVer'){
+      if(s){ cerrarNueva(true); abrir(s.id); }
+      return;
+    }
+    if(e.target.id === 'nuevaTomar'){
+      if(!s) return;
+      const boton = e.target;
+      /* La misma vía que el botón de la fila: queda a nombre de quien la toma
+         y en proceso. Si falla, la ventana se queda para volver a intentar. */
+      const fila = $('lista').querySelector('.fila[data-id="' + s.id + '"] [data-accion]');
+      await accionRapida(s.id, 'en_proceso', fila || boton);
+      cerrarNueva();
+    }
+  });
+
   /* El clic que el navegador está esperando para preguntar. Cuando no hay nada
      que preguntar —por dirección de red no los da— el mismo botón sirve para
      dar el asunto por leído. */
@@ -1411,8 +1465,9 @@
 
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape') return;
-    /* el de encima primero: el chat puede estar sobre la ficha */
-    if(!$('veloChat').hidden) cerrarChat();
+    /* el de encima primero: el aviso va sobre todo, y el chat sobre la ficha */
+    if(!$('veloNueva').hidden) cerrarNueva();
+    else if(!$('veloChat').hidden) cerrarChat();
     else if(!$('veloPerfil').hidden) cerrarPerfil();
     else if(!$('velo').hidden) cerrar();
   });
