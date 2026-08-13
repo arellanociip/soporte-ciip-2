@@ -17,6 +17,7 @@
       <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
     </div>
     <div class="der" id="cabDerecha" hidden>
+      <a href="#" id="botonAvisos" title="Aviso al llegar una solicitud">Avisos</a>
       <a href="#" id="botonStats">Estadísticas</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
@@ -153,6 +154,12 @@
     <div id="chatCuerpo"></div>
   </div>
 </div>
+
+<!-- ===================== LOS AVISOS =====================
+     El cartel de esquina que anuncia lo que acaba de entrar. Va fuera de
+     <main> y por encima de las ventanas emergentes: si llega una solicitud
+     mientras el técnico llena una ficha, el aviso tiene que verse igual. -->
+<div class="avisos" id="avisos" aria-live="polite" aria-label="Solicitudes que acaban de llegar"></div>
 
 <!-- Lo que sale por la impresora: la Hoja de Servicio del Excel, rehecha. -->
 <div id="impresion"></div>

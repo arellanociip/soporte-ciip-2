@@ -153,11 +153,11 @@
      El aviso no dice qué cambió, solo que algo cambió, y la bandeja vuelve a
      pedir la lista con su sesión.
 
-     No se recarga si hay una ficha abierta: cambiar el suelo bajo alguien que
-     está escribiendo observaciones le borraría lo que lleva. Al cerrarla se
-     pone al día. */
+     La cola se actualiza aunque haya una ficha abierta: lo que se escribe en
+     ella es una copia aparte —no sale de la lista—, así que repintar la cola
+     de atrás no le borra nada a nadie. Lo que sí se espera al cierre es mover
+     la pantalla: eso está en avisarDe(). */
   let linea = null;
-  let pendienteDeRecargar = false;
 
   function escuchar(){
     if(linea || enPrueba || typeof EventSource === 'undefined') return;
@@ -165,16 +165,168 @@
     try{
       linea = new EventSource(B.url + '/rest/v1/eventos');
       linea.onmessage = () => {
-        /* Con la ficha abierta se espera: cambiarle el suelo a quien escribe
-           observaciones le borraría lo que lleva. Con solo el chat abierto no,
-           que ahí lo que llega es justamente lo que se está esperando. */
-        if(!$('velo').hidden || !$('veloPerfil').hidden){ pendienteDeRecargar = true; return; }
         cargar()
           .then(() => { if(!$('veloChat').hidden) pintarChat(); })
           .catch(e => console.warn('No se pudo actualizar sola:', e));
       };
       linea.onerror = () => {};
     }catch(e){ linea = null; }
+  }
+
+  /* ================= el aviso de que llegó algo =================
+     El servidor avisa al instante, pero de nada sirve si el técnico está
+     mirando otra ventana o tiene la cola filtrada por "Atendidas". Así que al
+     entrar una solicitud nueva:
+
+       · suena un aviso corto y sale un cartel en la esquina,
+       · el título de la pestaña lleva la cuenta —(2) Bandeja…— para que se vea
+         en la barra de tareas sin tener la página delante,
+       · Windows la anuncia con su propia notificación, si el navegador deja, y
+       · la cola se coloca sola en la recién llegada: cierra las estadísticas,
+         suelta el filtro y la búsqueda si la estaban escondiendo, la trae a la
+         vista y la deja marcada un rato.
+
+     Lo único que no hace es abrir la ficha: eso es del técnico, y una ventana
+     que se abre sola encima de lo que uno estaba escribiendo es un estorbo, no
+     un aviso. */
+  const LLAVE_AVISOS = 'soporte_avisos';
+  const TITULO = document.title;
+
+  let conocidas = null;    /* null = todavía no se ha cargado nada */
+  let sinLeer = 0;         /* llegadas mientras la pestaña no se mira */
+  const recien = new Set();/* las que están marcadas en la cola */
+
+  const avisosEncendidos = () => localStorage.getItem(LLAVE_AVISOS) !== 'no';
+
+  /* La notificación del sistema solo existe en "contexto seguro": localhost o
+     https. Por la red de la oficina se entra por http://192.168…, donde el
+     navegador no la ofrece; ahí quedan el sonido, el cartel y el título, que no
+     dependen de permiso de nadie. */
+  const hayNotificaciones = () => typeof Notification !== 'undefined' && window.isSecureContext;
+
+  /* Cuáles de estas no estaban antes. La primera carga solo toma nota: si no,
+     al entrar saltarían de golpe todas las solicitudes del año. */
+  function llegadas(lista){
+    const ids = new Set(lista.map(s => s.id));
+    if(conocidas === null){ conocidas = ids; return []; }
+    const nuevas = lista.filter(s => !conocidas.has(s.id) && s.estado === 'recibida');
+    conocidas = ids;
+    return nuevas;
+  }
+
+  /* Dos notas cortas, hechas por el navegador: no hay archivo de sonido que
+     cargar ni que se pueda perder. El navegador no deja sonar hasta que la
+     persona haya tocado la página, y para cuando llega la primera solicitud ya
+     hizo clic en Entrar. */
+  let sonido = null;
+  function sonar(){
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      sonido = sonido || new AC();
+      if(sonido.state === 'suspended') sonido.resume();
+      const t = sonido.currentTime;
+      [[784, 0], [1046.5, 0.13]].forEach(([hz, d]) => {
+        const o = sonido.createOscillator(), g = sonido.createGain();
+        o.type = 'sine'; o.frequency.value = hz;
+        g.gain.setValueAtTime(0.0001, t + d);
+        g.gain.exponentialRampToValueAtTime(0.18, t + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.12);
+        o.connect(g).connect(sonido.destination);
+        o.start(t + d); o.stop(t + d + 0.14);
+      });
+    }catch(e){ /* sin sonido se sigue viendo el cartel */ }
+  }
+
+  function marcarTitulo(){
+    document.title = sinLeer ? '(' + sinLeer + ') ' + TITULO : TITULO;
+  }
+  function leido(){ if(sinLeer){ sinLeer = 0; marcarTitulo(); } }
+  window.addEventListener('focus', leido);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) leido(); });
+
+  function notificar(s){
+    if(!avisosEncendidos() || !hayNotificaciones() || Notification.permission !== 'granted') return;
+    try{
+      const n = new Notification('Llegó una solicitud · N° ' + String(s.numero).padStart(3,'0'), {
+        body: s.usuario + '\n' + (s.descripcion || ''),
+        icon: 'assets/logo_ciip.png',
+        tag: 'solicitud-' + s.id,   /* si llega dos veces el mismo aviso, no se duplica */
+      });
+      n.onclick = () => { window.focus(); leido(); irA(s.id); n.close(); };
+    }catch(e){}
+  }
+
+  /* El cartel de la esquina. Es un botón: llevar a la solicitud es lo que uno
+     quiere hacer al verlo. */
+  function cartel(s){
+    const caja = $('avisos');
+    if(!caja) return;
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'push';
+    el.innerHTML =
+      '<div class="push-tit"><span class="punto"></span>Llegó una solicitud</div>' +
+      '<div class="push-num">N° ' + String(s.numero).padStart(3,'0') + '-' + esc(String(s.anio)) +
+      ' · ' + esc(s.usuario) + '</div>' +
+      '<div class="push-que">' + esc(s.descripcion) + '</div>';
+    el.addEventListener('click', () => { irA(s.id); quitar(); });
+    caja.prepend(el);
+    while(caja.children.length > 3) caja.lastElementChild.remove();
+
+    let ido = false;
+    function quitar(){
+      if(ido) return; ido = true;
+      el.classList.add('yendose');
+      setTimeout(() => el.remove(), 320);
+    }
+    setTimeout(quitar, 14000);
+  }
+
+  /* Colocar la pantalla en una solicitud: lo que haga falta para que se vea. */
+  function irA(id){
+    if($('panelStats') && !$('panelStats').hidden) verStats(false);
+    if(!solicitudes.some(s => s.id === id)) return;
+    /* si el filtro o la búsqueda la esconden, se sueltan: más vale perder el
+       filtro que perder la solicitud */
+    if(!visibles().some(s => s.id === id)){
+      busqueda = ''; $('buscar').value = '';
+      filtro = 'pendientes';
+      pintar();
+    }
+    const fila = $('lista').querySelector('.fila[data-id="' + id + '"]');
+    if(fila) fila.scrollIntoView({block: 'center', behavior: 'smooth'});
+  }
+
+  function avisarDe(nuevas){
+    if(document.hidden){ sinLeer += nuevas.length; marcarTitulo(); }
+    if(avisosEncendidos()) sonar();
+    /* del más viejo al más nuevo, para que el último en entrar quede arriba */
+    nuevas.slice().reverse().forEach(s => { cartel(s); notificar(s); });
+
+    /* La cola se coloca sola, salvo que haya una ventana abierta encima:
+       moverle el suelo a quien está escribiendo observaciones o conversando
+       sería quitarle lo que hace. El cartel igual se ve, y la marca en la fila
+       lo espera. */
+    const hayVentana = !$('velo').hidden || !$('veloPerfil').hidden || !$('veloChat').hidden;
+    if(!hayVentana) irA(nuevas[0].id);
+
+    /* la marca dura lo que dura la sorpresa */
+    setTimeout(() => {
+      nuevas.forEach(s => recien.delete(s.id));
+      if(!$('pantallaBandeja').hidden) pintar();
+    }, 30000);
+  }
+
+  function pintarBotonAvisos(){
+    const b = $('botonAvisos');
+    if(!b) return;
+    const on = avisosEncendidos();
+    b.textContent = on ? 'Avisos' : 'Avisos: en silencio';
+    b.classList.toggle('apagado', !on);
+    b.title = on
+      ? 'Suena y avisa cuando entra una solicitud. Clic para silenciarlo.'
+      : 'Silenciado: las solicitudes siguen llegando, pero sin sonido. Clic para encenderlo.';
   }
 
   /* ================= traer y pintar ================= */
@@ -185,7 +337,10 @@
       const r = await pedir('/rest/v1/solicitudes?select=*&order=creada_en.desc', {});
       solicitudes = await r.json();
     }
+    const nuevas = llegadas(solicitudes);
+    nuevas.forEach(s => recien.add(s.id));
     pintar();
+    if(nuevas.length) avisarDe(nuevas);
   }
 
   function visibles(){
@@ -258,7 +413,7 @@
   }
 
   function filaHtml(s){
-    return `<div class="fila" data-id="${esc(s.id)}">
+    return `<div class="fila${recien.has(s.id) ? ' recien' : ''}" data-id="${esc(s.id)}">
       <div class="num">${String(s.numero).padStart(3,'0')}<small>${esc(String(s.anio))}</small></div>
       <div>
         <div class="quien">${esc(s.usuario)}</div>
@@ -421,6 +576,7 @@
   function abrir(id){
     const s = solicitudes.find(x => x.id === id);
     if(!s) return;
+    recien.delete(id);   /* ya la vio: la marca de recién llegada sobra */
     /* Copia de trabajo: lo que se edite en la ficha no toca la lista hasta que
        el servidor confirme el guardado. */
     abierta = JSON.parse(JSON.stringify(s));
@@ -439,10 +595,12 @@
     $('velo').hidden = true;
     abierta = null;
     document.body.style.overflow = '';
-    /* mientras la ficha estuvo abierta llegaron avisos que no se aplicaron */
-    if(pendienteDeRecargar){
-      pendienteDeRecargar = false;
-      cargar().catch(e => console.warn('No se pudo actualizar:', e));
+    /* Si mientras la ficha estaba abierta entró algo, ahora sí se puede mover
+       la pantalla hasta ello: es lo primero que hay que ver al soltar lo que
+       uno tenía entre manos. */
+    if(recien.size){
+      const ultima = solicitudes.find(s => recien.has(s.id));
+      if(ultima) irA(ultima.id);
     }
   }
 
@@ -957,6 +1115,8 @@
     try{
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
+      pintarBotonAvisos();
+      pedirPermiso();
       await cargar();
       escuchar();
     }catch(err){
@@ -970,8 +1130,31 @@
     e.preventDefault();
     borrarSesion();
     solicitudes = [];
+    /* quien entre después empieza de cero: si no, la primera carga del
+       siguiente turno anunciaría como "recién llegado" todo lo del anterior */
+    conocidas = null; recien.clear(); leido();
     mostrarAcceso();
   });
+
+  /* El interruptor del aviso. Silenciarlo apaga el sonido y la notificación de
+     Windows; el cartel y la marca en la cola quedan, que son lo que no molesta
+     a nadie en una oficina con gente al lado. */
+  $('botonAvisos').addEventListener('click', e => {
+    e.preventDefault();
+    const encender = !avisosEncendidos();
+    localStorage.setItem(LLAVE_AVISOS, encender ? 'si' : 'no');
+    pintarBotonAvisos();
+    if(encender) pedirPermiso();
+  });
+
+  /* Se pide al entrar, que es cuando la persona acaba de decir que viene a
+     atender solicitudes. Si dice que no, no se vuelve a insistir: el navegador
+     recuerda la respuesta y aquí no se pregunta de nuevo. */
+  function pedirPermiso(){
+    if(!avisosEncendidos() || !hayNotificaciones()) return;
+    if(Notification.permission !== 'default') return;
+    try{ Notification.requestPermission(); }catch(e){}
+  }
 
   $('buscar').addEventListener('input', e => { busqueda = e.target.value; pintar(); });
   $('botonRecargar').addEventListener('click', () => cargar().catch(e => console.error(e)));
@@ -989,6 +1172,7 @@
   async function accionRapida(id, estado, boton){
     const s = solicitudes.find(x => x.id === id);
     if(!s) return;
+    recien.delete(id);
     const yo = yoTecnico();
     const cambios = {estado};
     if(!s.tecnico && yo.nombre){
@@ -1179,11 +1363,14 @@
       botonVaciar.addEventListener('click', vaciarPrueba);
       $('botonRecargar').after(botonVaciar);
       mostrarBandeja();
+      pintarBotonAvisos();
       await cargar();
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
+    pintarBotonAvisos();
+    pedirPermiso();
     try{ await cargar(); escuchar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
