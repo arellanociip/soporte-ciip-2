@@ -721,6 +721,9 @@
     {clave: 'atendida',   rot: 'Atendida',   guia: 'Resuelta y firmada',
      pie: s => s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta'},
   ];
+  /* la hoja con su esquina doblada: el papel que uno se lleva */
+  const PAPEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><polyline points="14 3 14 8 19 8"/><polyline points="9 14 12 17 15 14"/><line x1="12" y1="11" x2="12" y2="17"/></svg>';
+
   const VISTO = '<svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>';
 
   function pasosHtml(s){
@@ -732,7 +735,15 @@
         Si sigues necesitando ayuda, puedes pedir una nueva.</div>`;
     }
     const donde = ETAPAS.findIndex(e => e.clave === s.estado);
-    return '<div class="pasos">' + ETAPAS.map((e, i) => {
+    /* Al lado del camino, cuando ya está recorrido: la Hoja de Servicio firmada
+       es el comprobante de que esto pasó, y quien lo pidió tiene derecho a
+       guardárselo sin ir a pedírselo a GTIC. Va aquí y no en otro sitio porque
+       es justo donde uno mira al ver que ya está atendida. */
+    const hoja = s.estado === 'atendida'
+      ? `<a class="mis-pdf" href="${escapar(SOPORTE_BACKEND.url)}/rest/v1/hoja?id=eq.${escapar(s.id)}"
+            download title="Descargar la Hoja de Servicio en PDF">${PAPEL} Hoja de Servicio</a>`
+      : '';
+    return '<div class="pasos-fila"><div class="pasos">' + ETAPAS.map((e, i) => {
       const clase = i < donde ? 'hecho' : (i === donde ? 'ahora' : '');
       /* la última, alcanzada, es un fin: se marca cumplida y no "en curso" */
       const cumplida = i < donde || (i === donde && e.clave === 'atendida');
@@ -741,7 +752,7 @@
         <div class="rot">${escapar(e.rot)}</div>
         <div class="cuando">${i <= donde ? escapar(e.pie(s)) : ''}</div>
       </div>`;
-    }).join('') + '</div>';
+    }).join('') + '</div>' + hoja + '</div>';
   }
 
   /* ---------- la conversación con el técnico ----------

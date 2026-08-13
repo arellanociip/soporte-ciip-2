@@ -384,6 +384,51 @@ function adjuntosValidos(lista){
                 tamano: Number(a.tamano) || 0}));
 }
 
+/* ---------- imprimir con el navegador que ya está instalado ----------
+   Edge trae un modo sin ventana que imprime una página a PDF. Es lo que
+   convierte la Hoja de Servicio en un archivo idéntico al que sale por la
+   impresora, sin librerías ni plantillas duplicadas.
+
+   Devuelve null —sin ruido— si no encuentra el navegador o si algo falla: la
+   ruta que llama a esto tiene su plan B. */
+const NAVEGADORES = [
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+];
+
+function pdfDelNavegador(id){
+  return new Promise(listo => {
+    const navegador = NAVEGADORES.find(p => fs.existsSync(p));
+    if(!navegador) return listo(null);
+
+    const os = require('os');
+    const salida = path.join(os.tmpdir(), 'hoja-' + crypto.randomBytes(6).toString('hex') + '.pdf');
+    const perfil = path.join(os.tmpdir(), 'edge-hoja-' + crypto.randomBytes(4).toString('hex'));
+
+    const {execFile} = require('child_process');
+    execFile(navegador, [
+      '--headless=new', '--disable-gpu', '--no-first-run',
+      '--user-data-dir=' + perfil,
+      /* la página pide sus datos al servidor; hay que darle tiempo a que
+         llegue la respuesta antes de imprimir */
+      '--virtual-time-budget=8000',
+      '--no-pdf-header-footer',
+      '--print-to-pdf=' + salida,
+      'http://127.0.0.1:' + PUERTO + '/hoja.html?id=eq.' + id,
+    ], {timeout: 25000}, () => {
+      let cuerpo = null;
+      try{
+        if(fs.existsSync(salida) && fs.statSync(salida).size > 800) cuerpo = fs.readFileSync(salida);
+      }catch(e){}
+      try{ fs.unlinkSync(salida); }catch(e){}
+      try{ fs.rmSync(perfil, {recursive: true, force: true}); }catch(e){}
+      listo(cuerpo);
+    });
+  });
+}
+
 /* ================= la API ================= */
 const CAMPOS_QUE_LLEGAN = ['gerencia','usuario','cedula','telefono','piso','oficina','cargo',
                            'descripcion','tipo','detalle'];
@@ -604,6 +649,38 @@ async function atenderApi(req, res, url){
     return responder(res, 200, [s.mensajes[s.mensajes.length - 1]]);
   }
 
+  /* ---- la Hoja de Servicio en PDF ----
+     El mismo papel que sale por la impresora de la bandeja, para quien pidió el
+     soporte. Se hace abriendo hoja.html con el navegador sin ventana y
+     diciéndole que imprima a PDF: así el documento es exactamente el que ya
+     existe —con su logo y su formato— y no una segunda versión hecha a mano que
+     se iría separando de la primera con cada retoque.
+
+     Si el navegador no está o falla, se arma un PDF más sencillo aquí mismo
+     (pdf.js), que dice lo mismo aunque se vea más pobre. Antes de eso, nadie se
+     queda sin su comprobante. */
+  if(url.pathname === '/rest/v1/hoja' && req.method === 'GET'){
+    const filtro = url.searchParams.get('id') || '';
+    const id = filtro.startsWith('eq.') ? filtro.slice(3) : filtro;
+    if(!/^[0-9a-f-]{36}$/i.test(id)){
+      return responder(res, 400, {message: 'Falta el identificador de la solicitud.'});
+    }
+    const s = leerSolicitudes().find(x => x.id === id);
+    if(!s) return responder(res, 404, {message: 'No existe esa solicitud.'});
+
+    const nombre = 'Hoja de Servicio ' + String(s.numero).padStart(3, '0') + '-' + s.anio + '.pdf';
+    let cuerpo = await pdfDelNavegador(id);
+    if(!cuerpo) cuerpo = require('./pdf.js').hojaPdf(s);
+
+    res.writeHead(200, {
+      'Content-Type': 'application/pdf',
+      'Content-Length': cuerpo.length,
+      'Content-Disposition': 'attachment; filename="' + nombre.replace(/[^ -~]/g, '') + '"',
+      'Cache-Control': 'no-store',
+    });
+    return res.end(cuerpo);
+  }
+
   /* ---- subir una foto o un PDF ----
      Sin cuenta, como el resto de la conversación: la prueba de que uno tiene
      algo que ver con esa solicitud es su id imposible de adivinar, el mismo
@@ -771,12 +848,21 @@ async function atenderApi(req, res, url){
       }
       const s = leerSolicitudes().find(x => x.id === id);
       if(!s) return responder(res, 200, []);
+      /* Sus propios datos van completos: son los que esa misma persona
+         escribió, y hacen falta para que su Hoja de Servicio en PDF salga
+         igual que la que firma en papel. Del técnico va lo que la hoja
+         imprime, que es lo que ella va a tener delante de todos modos. */
       return responder(res, 200, [{
         id: s.id, numero: s.numero, anio: s.anio, estado: s.estado,
+        gerencia: s.gerencia, usuario: s.usuario, cedula: s.cedula,
+        telefono: s.telefono, piso: s.piso, oficina: s.oficina,
         descripcion: s.descripcion, tipo: s.tipo, detalle: s.detalle,
         cargo: s.cargo || null,
+        renglones: Array.isArray(s.renglones) ? s.renglones : [],
         creada_en: s.creada_en, atendida_en: s.atendida_en,
         tecnico: s.tecnico, tecnico_cargo: s.tecnico_cargo || null,
+        tecnico_cedula: s.tecnico_cedula || null,
+        tecnico_telefono: s.tecnico_telefono || null,
         observaciones: s.observaciones,
         anulada_por: s.anulada_por || null,
         mensajes: Array.isArray(s.mensajes) ? s.mensajes : [],

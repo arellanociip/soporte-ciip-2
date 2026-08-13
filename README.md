@@ -196,6 +196,25 @@ equipos, a quién llamar— que no tienen por qué salir de la gerencia.
 
 ---
 
+## La Hoja de Servicio en PDF
+
+Cuando una solicitud queda atendida, a quien la pidió le sale junto al camino
+de su solicitud un enlace: **Hoja de Servicio**. Baja el mismo documento que
+GTIC imprime y firma, en PDF, sin pasar por el diálogo de imprimir.
+
+No es una segunda versión hecha a mano: la hoja se arma una sola vez
+() y de ahí salen las dos cosas —lo que va a la impresora desde la
+bandeja y lo que se convierte en PDF—. Para convertirla, el servidor abre
+ con Edge sin ventana y le dice que imprima a PDF; así el archivo es
+exactamente el documento que ya existía, con su logo y su formato. Tarda unos
+dos segundos.
+
+Si Edge no estuviera, el servidor arma un PDF más sencillo él mismo
+(, escrito a mano, sin librerías): se ve más pobre, pero dice lo mismo
+y nadie se queda sin su comprobante.
+
+---
+
 ## Fotos y PDF en la conversación
 
 Dentro del chat, el clip abre un menú con dos opciones: **foto o imagen** y
@@ -379,6 +398,9 @@ js/catalogo.js      gerencias, tipos, detalles, atajos, equipos y marcas
 js/directorio.js    quién trabaja dónde, para no escribirlo cada vez
 js/local.js         el modo prueba: el almacén del navegador cuando no hay servidor
 js/adjuntos.js      el clip del chat: fotos y PDF, iguales en las dos páginas
+js/hoja.js          la Hoja de Servicio: la misma para imprimir y para el PDF
+hoja.html           esa hoja sola en una página; es lo que el servidor convierte en PDF
+pdf.js              el PDF de reserva, hecho a mano, por si no hay navegador
 js/solicitud.js     la lógica del formulario
 js/bandeja.js       acceso, cola, atención, guías e impresión
 sql/esquema.sql     la tabla en Supabase, para el día que se mude

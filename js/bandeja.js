@@ -1280,93 +1280,14 @@
   /* Rehace el formato del Excel con lo que hay en pantalla —no con lo guardado—
      para que el técnico pueda imprimir lo que acaba de escribir. */
   function imprimir(){
-    const s = abierta;
-    const tec = tecnicoActual();
-    const renglones = leerRenglones();
-    const f = new Date();
-    const RENGLONES_HOJA = 6;   /* la tabla del Excel siempre tuvo seis filas */
-
-    const filas = Array.from({length: RENGLONES_HOJA}, (_, i) => {
-      const r = renglones[i] || {};
-      return `<tr>
-        <td style="text-align:center">${i+1}</td>
-        <td>${esc(r.tipo||'')}</td><td>${esc(r.detalle||'')}</td>
-        <td>${esc(r.equipo||'')}</td><td>${esc(r.marca||'')}</td>
-        <td>${esc(r.modelo||'')}</td><td>${esc(r.serial||'')}</td>
-      </tr>`;
-    }).join('');
-
-    $('impresion').innerHTML = `<div class="hs">
-      <div class="hs-cab">
-        <img src="assets/logo_ciip_navy.png" alt="CIIP">
-        <div class="hs-n">N° GTIC-HS/<b>${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}</b>
-          <div>${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}</div>
-        </div>
-      </div>
-
-      <h1>HOJA DE SERVICIO</h1>
-
-      <table>
-        <tr><th colspan="6">GERENCIA SOLICITANTE:</th></tr>
-        <tr><td colspan="6" style="text-align:center; font-weight:bold">${esc(s.gerencia)}</td></tr>
-        <tr>
-          <th>USUARIO:</th><th>C.I.</th><th>TELEF.</th><th>PISO:</th><th colspan="2">OFICINA:</th>
-        </tr>
-        <tr>
-          <td>${esc(s.usuario)}</td><td>${esc(s.cedula||'S/N')}</td><td>${esc(s.telefono||'S/N')}</td>
-          <td style="text-align:center">${esc(s.piso)}</td><td colspan="2" style="text-align:center">${esc(s.oficina)}</td>
-        </tr>
-      </table>
-
-      <div class="hs-titulo">RESUMEN DE LA SOLICITUD</div>
-      <div class="hs-titulo" style="border-top:none">DESCRIPCION DE LA SITUACION PLANTEADA POR EL USUARIO</div>
-      <div class="hs-caja">${esc(s.descripcion)}</div>
-
-      <table>
-        <tr>
-          <th style="width:4%">ITEM</th><th style="width:14%">TIPO DE SERVICIO</th>
-          <th style="width:32%">DETALLE DE SERVICIO</th><th style="width:12%">EQUIPO</th>
-          <th style="width:10%">MARCA</th><th style="width:12%">MODELO</th><th style="width:16%">SERIAL</th>
-        </tr>
-        ${filas}
-      </table>
-
-      <div class="hs-titulo">OBSERVACIONES:</div>
-      <div class="hs-caja">${esc($('fObs').value.trim())}</div>
-
-      <div class="hs-nota">LA PRESENTE DEJA CONSTANCIA Y CONFORMIDAD DE LA ATENCION PRESTADA POR LA
-      GERENCIA DE TECNOLOGIA DE LA INFORMACION Y COMUNICACIÓN.</div>
-
-      <div class="hs-firmas">
-        <div class="hs-bloque">
-          <div class="hs-fh">DATOS DEL USUARIO</div>
-          <div class="hs-fila">
-            <div class="hs-fb">
-              NOMBRE Y APELLIDO: ${esc(s.usuario)}<br>
-              C.I. N°.: ${esc(s.cedula||'S/N')}<br>
-              TELEFONO: ${esc(s.telefono||'S/N')}<br>
-              CARGO: ${s.cargo ? esc(s.cargo) : '<span class="lin"></span>'}<br>
-              FIRMA: <span class="lin"></span>
-            </div>
-            <div class="hs-sello">SELLO</div>
-          </div>
-        </div>
-        <div class="hs-bloque">
-          <div class="hs-fh">TECNICO DE SOPORTE</div>
-          <div class="hs-fila">
-            <div class="hs-fb">
-              NOMBRE Y APELLIDO: ${esc(tec.nombre || '')}<br>
-              C.I. N°.: ${tec.cedula ? esc(tec.cedula) : '<span class="lin"></span>'}<br>
-              TELEFONO: ${tec.telefono ? esc(tec.telefono) : '<span class="lin"></span>'}<br>
-              CARGO: ${tec.cargo ? esc(tec.cargo) : '<span class="lin"></span>'}<br>
-              FIRMA: <span class="lin"></span>
-            </div>
-            <div class="hs-sello">SELLO</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-
+    /* La hoja se arma en js/hoja.js, que es la misma que se convierte en PDF
+       para quien pidio el soporte: un solo papel, dos salidas. Desde aqui va
+       con lo que hay en pantalla ahora mismo —el tecnico y las observaciones
+       sin guardar todavia—, porque se imprime para firmar en el momento. */
+    $('impresion').innerHTML = hojaServicioHtml(
+      Object.assign({}, abierta, {renglones: leerRenglones()}),
+      tecnicoActual(),
+      $('fObs').value.trim());
     window.print();
   }
 

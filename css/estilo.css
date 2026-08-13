@@ -256,6 +256,25 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 /* ---------- por dónde va ----------
    Las tres etapas del trámite, para que se vea el camino y no solo el punto:
    entra, la toma un técnico, se cierra. Ocupa una línea y no pide leer. */
+/* El camino, y encima el papel. Se probó a ponerlo flotando a la derecha, a la
+   altura del camino, y se montaba sobre la bola de "Atendida": el camino se
+   reparte el ancho entero y ahí no sobra sitio. Va en su propia línea, pegado a
+   la derecha, y el camino sigue exactamente como estaba. */
+.pasos-fila{flex:1 1 100%;}
+.mis-pdf{
+  display:flex; align-items:center; gap:5px;
+  margin:0 2px 8px auto; width:max-content;
+  font-size:11px; font-weight:700; color:var(--navy); text-decoration:none;
+  background:#fff; border:1px solid var(--line); border-radius:20px;
+  padding:4px 11px 4px 9px;
+  transition:border-color .14s ease, background .14s ease;
+}
+.mis-pdf svg{
+  width:13px; height:13px; fill:none; stroke:currentColor;
+  stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
+}
+.mis-pdf:hover{border-color:var(--navy); background:var(--navy-soft);}
+.mis-pdf:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(0,64,144,.22);}
 .pasos{
   flex:1 1 100%; display:flex; align-items:flex-start;
   margin:10px 0 2px; padding:0 2px;
