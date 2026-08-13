@@ -190,6 +190,7 @@
      que se abre sola encima de lo que uno estaba escribiendo es un estorbo, no
      un aviso. */
   const LLAVE_AVISOS = 'soporte_avisos';
+  const LLAVE_RED = 'soporte_aviso_red';   /* "ya me lo explicaste" */
   const TITULO = document.title;
 
   let conocidas = null;    /* null = todavía no se ha cargado nada */
@@ -343,10 +344,29 @@
     const caja = $('avisoPermiso');
     if(!caja) return;
     const texto = $('avisoPermisoTexto'), boton = $('botonPermitir');
-    if(!avisosEncendidos() || !hayNotificaciones() || Notification.permission === 'granted'){
-      caja.hidden = true;
+    caja.hidden = true;
+    if(!avisosEncendidos()) return;
+
+    /* Por dirección de red el navegador no le da avisos de escritorio a
+       ninguna página, haga lo que haga. Decirlo aquí evita la media hora de
+       buscar en los ajustes de Windows algo que no está en Windows. */
+    if(!hayNotificaciones()){
+      if(localStorage.getItem(LLAVE_RED) === 'visto') return;
+      texto.innerHTML = '<b>Por esta dirección no hay aviso de escritorio.</b> El navegador solo ' +
+        'se lo permite a las páginas abiertas como <code>localhost</code> o con <code>https</code>, ' +
+        'y esta viene por dirección de red. Aquí quedan el sonido, el cartel de la esquina y la ' +
+        'cuenta en el título de la pestaña. En la máquina donde corre el servidor, entrando por ' +
+        '<code>http://localhost:8123/bandeja.html</code> Windows sí avisa.';
+      boton.hidden = false;
+      boton.textContent = 'Entendido';
+      boton.dataset.hace = 'esconder';
+      caja.hidden = false;
       return;
     }
+    if(Notification.permission === 'granted') return;
+
+    boton.dataset.hace = 'permitir';
+    boton.textContent = 'Permitir';
     if(Notification.permission === 'default'){
       texto.innerHTML = '<b>Falta un permiso.</b> El aviso dentro de esta página ya funciona, ' +
         'pero para que Windows te lo muestre en el escritorio —aunque tengas la ventana ' +
@@ -1201,8 +1221,18 @@
     pintarBotonAvisos();
   });
 
-  /* El clic que el navegador está esperando para preguntar. */
-  $('botonPermitir').addEventListener('click', e => { e.preventDefault(); pedirPermiso(); });
+  /* El clic que el navegador está esperando para preguntar. Cuando no hay nada
+     que preguntar —por dirección de red no los da— el mismo botón sirve para
+     dar el asunto por leído. */
+  $('botonPermitir').addEventListener('click', e => {
+    e.preventDefault();
+    if(e.target.dataset.hace === 'esconder'){
+      localStorage.setItem(LLAVE_RED, 'visto');
+      pintarAvisoPermiso();
+      return;
+    }
+    pedirPermiso();
+  });
 
   $('buscar').addEventListener('input', e => { busqueda = e.target.value; pintar(); });
   $('botonRecargar').addEventListener('click', () => cargar().catch(e => console.error(e)));
