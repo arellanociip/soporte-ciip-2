@@ -140,3 +140,11 @@ grant select, insert, update on gtic.solicitudes to authenticated;
 --   Panel → Project Settings → API → "Exposed schemas" → agregar  gtic
 -- Sin eso, todas las llamadas responden 404 aunque la tabla exista.
 notify pgrst, 'reload schema';
+
+-- ---------------------------------------------------------------------
+-- Después de esto: sql/migracion_01_solicitudes_sin_cuenta.sql
+-- ---------------------------------------------------------------------
+-- Este archivo quedó corto frente a lo que el formulario y la bandeja ya
+-- mandan (faltan columnas, y falta cómo dejar una solicitud sin abrirle a
+-- `anon` la lectura de la tabla). Corre también esa migración, en
+-- cualquier proyecto, nuevo o ya puesto en marcha.

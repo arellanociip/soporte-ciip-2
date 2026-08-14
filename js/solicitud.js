@@ -618,9 +618,24 @@
 
   async function mandarAlServidor(datos){
     const B = window.SOPORTE_BACKEND;
-    /* Con el servidor de casa, B.url va vacío: la petición sale al mismo sitio
-       que sirvió la página, que es exactamente lo que se quiere. */
-    const r = await fetch(B.url + '/rest/v1/solicitudes', {
+    const viaRpc = B.servidor === 'supabase';
+    /* Contra Supabase, insertar y devolver la fila en el mismo paso pediría
+       que anon pueda LEER la tabla completa —y eso dejaría ver la cola de
+       todos a cualquiera, que es justo lo que no se quiere—. Por eso ahí se
+       llama a una función (RPC) que inserta con los permisos de quien es
+       dueño de la tabla y entrega de vuelta solo lo mínimo (ver
+       sql/migracion_01_solicitudes_sin_cuenta.sql). Con el servidor de casa
+       se sigue hablando con la tabla tal cual, que es lo que servidor.js
+       entiende, y B.url va vacío: la petición sale al mismo sitio que sirvió
+       la página. */
+    const ruta = viaRpc ? '/rest/v1/rpc/crear_solicitud' : '/rest/v1/solicitudes';
+    const payload = viaRpc ? {
+      p_gerencia: datos.gerencia, p_usuario: datos.usuario, p_cedula: datos.cedula,
+      p_telefono: datos.telefono, p_piso: datos.piso, p_oficina: datos.oficina,
+      p_cargo: datos.cargo, p_descripcion: datos.descripcion, p_tipo: datos.tipo,
+      p_detalle: datos.detalle, p_renglones: datos.renglones,
+    } : datos;
+    const r = await fetch(B.url + ruta, {
       method: 'POST',
       headers: Object.assign({
         'Content-Type': 'application/json',
@@ -628,8 +643,8 @@
            número, porque quien envía no tiene permiso para releerla después. */
         'Prefer': 'return=representation',
       }, soporteCabeceras(),
-         B.servidor === 'supabase' ? {'Authorization': 'Bearer ' + B.anonKey} : {}),
-      body: JSON.stringify(datos),
+         viaRpc ? {'Authorization': 'Bearer ' + B.anonKey} : {}),
+      body: JSON.stringify(payload),
     });
     if(!r.ok){
       const cuerpo = await r.json().catch(() => ({}));
@@ -823,8 +838,19 @@
       return soporteLocal.leer().find(s => s.id === m.id) || null;
     }
     const B = window.SOPORTE_BACKEND;
-    const r = await fetch(B.url + '/rest/v1/solicitudes?id=eq.' + encodeURIComponent(m.id),
-      {headers: soporteCabeceras()});
+    const viaRpc = B.servidor === 'supabase';
+    /* Igual que al crearla: sin permiso de leer la tabla, la única forma de
+       consultar la propia solicitud por su id sin abrir la lectura de todas
+       es una función que corre con los permisos de quien es dueño. */
+    const r = viaRpc
+      ? await fetch(B.url + '/rest/v1/rpc/consultar_solicitud', {
+          method: 'POST',
+          headers: Object.assign({'Content-Type': 'application/json'},
+            soporteCabeceras(), {'Authorization': 'Bearer ' + B.anonKey}),
+          body: JSON.stringify({p_id: m.id}),
+        })
+      : await fetch(B.url + '/rest/v1/solicitudes?id=eq.' + encodeURIComponent(m.id),
+          {headers: soporteCabeceras()});
     if(!r.ok) throw new Error('HTTP ' + r.status);
     const filas = await r.json();
     return Array.isArray(filas) ? filas[0] : filas;
