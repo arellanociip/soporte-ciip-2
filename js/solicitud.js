@@ -1449,6 +1449,11 @@
     if(!document.hidden && soporteMias.leer().length) pintarMias();
   });
 
+  /* Entrar o salir cambia de dónde sale la lista, así que hay que rehacerla.
+     Al entrar, además, se adoptó lo que este navegador tuviera anotado (ver
+     js/cuenta.js), y eso también hay que reflejarlo. */
+  window.addEventListener('soporte:sesion', () => { pintarMias(); vigilar(); });
+
   /* Pulsar el anillo despliega el historial completo, y volver a pulsarlo
      regresa a lo que sigue en curso. */
   let verHistorial = false;
@@ -1467,12 +1472,38 @@
      tocara nada y poder avisárselo. */
   let estadoMostrado = null;
 
+  /* De dónde sale lo que uno ha pedido.
+
+     Sin cuenta, de este navegador: los id que quedaron anotados al enviar, y
+     se consulta uno por uno. Es el resguardo de papel que uno se lleva.
+
+     Con cuenta, del servidor: lo que esté a nombre de quien entró, venga del
+     equipo que venga. Eso es exactamente lo que la cuenta compra, y por eso
+     se pregunta aunque este navegador no tenga nada anotado.
+
+     Si el servidor no contesta se cae de vuelta a lo del navegador: peor es
+     dejar a alguien sin ver lo suyo por un tropiezo de red. */
+  async function traerMias(mias){
+    if(window.soporteCuenta && soporteCuenta.dentro()){
+      try{
+        const r = await soporteCuenta.pedir('/rest/v1/rpc/mis_solicitudes',
+                                            {method: 'POST', body: '{}'});
+        if(r && r.ok) return await r.json();
+      }catch(e){ console.warn('No se pudo traer lo tuyo del servidor:', e); }
+    }
+    /* Todas a la vez: son pocas y así no se espera una detrás de otra. */
+    return (await Promise.all(mias.map(m =>
+      consultarUna(m).catch(e => { console.warn('No se pudo consultar', m.id, e); return null; })
+    ))).filter(Boolean);
+  }
+
   async function pintarMias(){
     const corrida = ++corridaMias;
+    const conCuenta = !!(window.soporteCuenta && soporteCuenta.dentro());
     const mias = soporteMias.leer();
     $('misSolicitudes').hidden = false;
 
-    if(!mias.length){
+    if(!conCuenta && !mias.length){
       $('misResumen').textContent = 'Aquí seguirás tu solicitud en cuanto la envíes';
       $('misLista').innerHTML = caminoVacioHtml();
       $('botonRefrescarMias').hidden = true;
@@ -1487,10 +1518,7 @@
     $('botonRefrescarMias').hidden = false;
     $('misResumen').textContent = 'Consultando…';
 
-    /* Todas a la vez: son pocas y así no se espera una detrás de otra. */
-    const filas = (await Promise.all(mias.map(m =>
-      consultarUna(m).catch(e => { console.warn('No se pudo consultar', m.id, e); return null; })
-    ))).filter(Boolean);
+    const filas = await traerMias(mias);
 
     /* llegó tarde: ya hay una consulta más nueva pintando */
     if(corrida !== corridaMias) return;
@@ -1500,6 +1528,19 @@
     if(chatId && !$('veloChat').hidden) pintarChat();
 
     if(!filas.length){
+      /* Con cuenta, no tener nada no es un fallo: es que esa persona no ha
+         pedido nada todavía. Decirle "revisa la conexión" sería mentirle. */
+      if(conCuenta){
+        $('misResumen').textContent = 'Aquí seguirás tu solicitud en cuanto la envíes';
+        $('misLista').innerHTML = caminoVacioHtml();
+        $('botonRefrescarMias').hidden = true;
+        $('misAnilloBoton').disabled = true;
+        $('misAnilloBoton').title = 'Todavía no has pedido nada';
+        pintarAnilloMias(null);
+        revisarVelo();
+        bloquearSiHayAbierta(null);
+        return;
+      }
       $('misResumen').textContent = 'No se pudo consultar el estado. Revisa la conexión.';
       $('misLista').innerHTML = '';
       return;
