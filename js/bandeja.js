@@ -190,6 +190,45 @@
     }catch(e){ linea = null; }
   }
 
+  /* La línea de avisos es del servidor de casa. Contra Supabase no existe
+     —los avisos en vivo allá hablan por otro camino— y sin nada que la
+     reemplace la cola se quedaba quieta: al técnico le entraba una solicitud
+     y no se enteraba hasta pulsar "Actualizar".
+
+     Así que se pregunta cada tanto, igual que hace la planilla. Con la línea
+     abierta se pregunta cada minuto, que es solo una red por si un aviso se
+     perdiera; sin ella es lo único que hay, y entonces se pregunta más
+     seguido. Con la pestaña de atrás no se pregunta: nadie está mirando. */
+  const CADA_ESCUCHANDO = 60000;
+  const CADA_SIN_LINEA  = 15000;
+  let reloj = null;
+
+  function refrescar(){
+    return cargar()
+      .then(() => { if(!$('veloChat').hidden) pintarChat(); })
+      .catch(e => console.warn('No se pudo actualizar sola:', e));
+  }
+
+  function vigilar(){
+    clearInterval(reloj);
+    if(enPrueba) return;
+    escuchar();
+    reloj = setInterval(() => { if(!document.hidden) refrescar(); },
+                        linea ? CADA_ESCUCHANDO : CADA_SIN_LINEA);
+  }
+
+  function dejarDeVigilar(){
+    clearInterval(reloj);
+    reloj = null;
+    if(linea){ linea.close(); linea = null; }
+  }
+
+  /* Volver a la pestaña es el momento en que a uno le interesa lo que pasó
+     mientras no miraba: no hay por qué esperar al siguiente turno del reloj. */
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && reloj) refrescar();
+  });
+
   /* ================= el aviso de que llegó algo =================
      El servidor avisa al instante, pero de nada sirve si el técnico está
      mirando otra ventana o tiene la cola filtrada por "Atendidas". Así que al
@@ -1537,7 +1576,7 @@
       await cargar();
       cargarGuias();
       inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
-      escuchar();
+      vigilar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
       aviso.hidden = false;
@@ -1556,6 +1595,9 @@
         .catch(() => {});
     }
     borrarSesion();
+    /* y que se calle el reloj: sin sesión, cada turno suyo sería una pregunta
+       que el servidor rebota con un 401 */
+    dejarDeVigilar();
     solicitudes = [];
     /* quien entre después empieza de cero: si no, la primera carga del
        siguiente turno anunciaría como "recién llegado" todo lo del anterior */
@@ -1825,7 +1867,7 @@
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    try{ await cargar(); cargarGuias(); inventarioTraer(); escuchar(); }
+    try{ await cargar(); cargarGuias(); inventarioTraer(); vigilar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();

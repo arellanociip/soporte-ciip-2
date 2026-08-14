@@ -107,6 +107,61 @@
     setTimeout(() => { const m = caja.querySelector('.adj-mal'); if(m) m.remove(); }, 6000);
   }
 
+  /* ---------- subir contra la nube ----------
+     El servidor de casa recibe el archivo dentro de un JSON y lo deja en
+     datos/adjuntos/. Supabase no tiene esa ruta: allá los archivos viven en
+     Storage, que se sube por su propia dirección y devuelve la suya. Todo lo
+     demás —achicar la foto, el tope de cuatro, la lista de pendientes— es
+     igual, así que solo cambia este trozo. */
+  function aBlob(datos){
+    const coma = datos.indexOf(',');
+    const tipo = (datos.slice(0, coma).match(/^data:([^;]+)/) || [, 'application/octet-stream'])[1];
+    const crudo = atob(datos.slice(coma + 1));
+    const bytes = new Uint8Array(crudo.length);
+    for(let i = 0; i < crudo.length; i++) bytes[i] = crudo.charCodeAt(i);
+    return new Blob([bytes], {type: tipo});
+  }
+
+  async function subirANube(archivo, datos){
+    const B = window.SOPORTE_BACKEND;
+    const blob = aBlob(datos);
+    const ext = blob.type === 'application/pdf' ? 'pdf'
+              : blob.type === 'image/png'       ? 'png' : 'jpg';
+
+    /* El nombre en el depósito no es el que puso la persona: dos "captura.png"
+       de dos personas distintas se pisarían, y un nombre traído del escritorio
+       de alguien puede venir con cualquier cosa dentro. Se guarda bajo la
+       carpeta de su solicitud, con un nombre al azar —los mismos 32 caracteres
+       que usa servidor.js—, y el nombre de verdad viaja aparte, como dato. */
+    const azar = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    const ruta = solicitudId + '/' + azar + '.' + ext;
+
+    const r = await fetch(B.url + '/storage/v1/object/adjuntos/' + ruta, {
+      method: 'POST',
+      headers: {
+        'Content-Type': blob.type,
+        'apikey': B.anonKey,
+        'Authorization': 'Bearer ' + B.anonKey,
+        /* que no se pueda pisar lo ya subido: si el nombre al azar coincidiera
+           —no va a pasar, pero el depósito no tiene por qué confiar en eso—
+           que falle en vez de borrar el archivo de otro */
+        'x-upsert': 'false',
+      },
+      body: blob,
+    });
+    if(!r.ok){
+      const c = await r.json().catch(() => ({}));
+      throw new Error(c.message || c.error || ('HTTP ' + r.status));
+    }
+    return {
+      url: B.url + '/storage/v1/object/public/adjuntos/' + ruta,
+      nombre: String(archivo.name || '').slice(0, 120),
+      tipo: blob.type,
+      tamano: blob.size,
+    };
+  }
+
   async function subir(archivos){
     const boton = $('adjBoton');
     for(const archivo of Array.from(archivos)){
@@ -123,16 +178,22 @@
       if(boton) boton.classList.add('subiendo');
       try{
         const datos = await aDatos(archivo);
-        const r = await fetch(SOPORTE_BACKEND.url + '/rest/v1/rpc/subir_adjunto', {
-          method: 'POST',
-          headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
-          body: JSON.stringify({id: solicitudId, nombre: archivo.name, datos}),
-        });
-        if(!r.ok){
-          const c = await r.json().catch(() => ({}));
-          throw new Error(c.message || ('HTTP ' + r.status));
+        let subido;
+        if(SOPORTE_BACKEND.servidor === 'supabase'){
+          subido = await subirANube(archivo, datos);
+        }else{
+          const r = await fetch(SOPORTE_BACKEND.url + '/rest/v1/rpc/subir_adjunto', {
+            method: 'POST',
+            headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
+            body: JSON.stringify({id: solicitudId, nombre: archivo.name, datos}),
+          });
+          if(!r.ok){
+            const c = await r.json().catch(() => ({}));
+            throw new Error(c.message || ('HTTP ' + r.status));
+          }
+          subido = (await r.json())[0];
         }
-        pendientes.push((await r.json())[0]);
+        pendientes.push(subido);
         pintarLista();
         alCambiar();
       }catch(e){

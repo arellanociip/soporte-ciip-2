@@ -653,7 +653,13 @@
          anota la que ya existe para poder seguirla desde aquí. */
       if(r.status === 409){
         const e = new Error(cuerpo.message || 'Ya tienes una solicitud abierta.');
-        e.yaAbierta = cuerpo.abierta || null;
+        /* El servidor de casa manda la que ya existe en `abierta`. Supabase
+           solo deja salir los cuatro campos de su propio error, así que la
+           misma ficha viaja como texto en `details` (ver la migración 02).
+           Sin esto, la regla se anunciaría como una falla de conexión. */
+        e.yaAbierta = cuerpo.abierta || (function(){
+          try{ return JSON.parse(cuerpo.details); }catch(_){ return null; }
+        })();
         throw e;
       }
       throw new Error('HTTP ' + r.status + (cuerpo.message ? ' · ' + cuerpo.message : ''));
