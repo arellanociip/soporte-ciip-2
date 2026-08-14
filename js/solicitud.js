@@ -98,9 +98,16 @@
     const a = (atajoElegido === id) ? null : CAT_ATAJOS.find(x => x.id === id);
     atajoElegido = a ? a.id : null;
     /* Cambiar de atajo suelta lo que se hubiera afinado del anterior: sus
-       opciones no existen aquí. La primera del nuevo viene marcada, que es la
-       que este atajo ya usaba antes de tener segundo escalón. */
-    subatajoElegido = (a && a.opciones && a.opciones.length) ? a.opciones[0].id : null;
+       opciones no existen aquí. Y el segundo escalón abre en blanco, sin
+       ninguna marcada: una tarjeta encendida que nadie pulsó se lee como
+       respuesta ya dada, y quien la ve pasa de largo sin mirar las otras
+       siete. La pregunta es "¿qué le pasa exactamente?", así que tiene que
+       estar sin contestar hasta que alguien la conteste.
+       No se pierde nada esperando: mientras no elija, la clasificación sale
+       del atajo, y el atajo trae el mismo tipo y detalle que traía su primera
+       opción —ver aplicarClasificacion, `opcionActual() || a`—. Lo único que
+       no se adelanta es el equipo sugerido, que es de la opción concreta. */
+    subatajoElegido = null;
     /* el campo oculto es lo que ve la revisión y lo que cuenta el anillo */
     $('atajo').value = atajoElegido || '';
     if(revisandoAlSalir) revisarCampo('atajo');
