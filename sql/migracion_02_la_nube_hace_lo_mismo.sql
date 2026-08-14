@@ -507,18 +507,50 @@ grant execute on function gtic.retirar_solicitud(uuid) to anon, authenticated;
 -- El tope de 8 MB y la lista de tipos permitidos no son adorno: son lo que
 -- sustituye a la comprobación que sí hace servidor.js (ver la nota al
 -- final).
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('adjuntos', 'adjuntos', true, 8388608,
-        array['image/jpeg', 'image/png', 'application/pdf'])
-on conflict (id) do update
-  set public             = excluded.public,
-      file_size_limit    = excluded.file_size_limit,
-      allowed_mime_types = excluded.allowed_mime_types;
+-- Esta parte va envuelta y con red, y no por adorno: el SQL Editor de
+-- Supabase corre TODO el archivo en una sola transacción, así que un fallo
+-- aquí abajo se lleva por delante las ocho secciones de arriba, que no
+-- tienen nada que ver. Y fallar es posible: storage.objects no pertenece a
+-- `postgres` sino a `supabase_storage_admin`, y crear una política sobre
+-- una tabla ajena exige ser su dueño.
+--
+-- Si algo de esto no pasa, el archivo NO se cae: avisa por consola y sigue.
+-- Lo que quede sin hacer se arregla en dos clics desde el panel:
+--   Storage → New bucket → nombre `adjuntos`, marcarlo Public,
+--             tope 8 MB, tipos image/jpeg, image/png, application/pdf
+--   Storage → Policies → permitir INSERT a anon y authenticated
+-- Todo lo demás de la migración funciona igual sin esto; lo único que se
+-- queda esperando es el botón de adjuntar una foto al chat.
+do $deposito$
+begin
+  begin
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('adjuntos', 'adjuntos', true, 8388608,
+            array['image/jpeg', 'image/png', 'application/pdf'])
+    on conflict (id) do update
+      set public             = excluded.public,
+          file_size_limit    = excluded.file_size_limit,
+          allowed_mime_types = excluded.allowed_mime_types;
+    raise notice 'Depósito `adjuntos` listo.';
+  /* Se atrapa cualquier cosa, a conciencia: da igual POR QUÉ no se pudo
+     —que falte el esquema, que la tabla sea de otro dueño, que Supabase
+     cambie sus columnas—. Esta sección es opcional y jamás debe tumbar las
+     ocho de arriba. El motivo exacto sale impreso, así que nada se oculta. */
+  exception when others then
+    raise notice 'No se pudo crear el depósito `adjuntos` desde aquí (%). Créalo en el panel: Storage → New bucket.', sqlerrm;
+  end;
 
-drop policy if exists "cualquiera: subir un adjunto" on storage.objects;
-create policy "cualquiera: subir un adjunto"
-  on storage.objects for insert to anon, authenticated
-  with check (bucket_id = 'adjuntos');
+  begin
+    execute $p$drop policy if exists "cualquiera: subir un adjunto" on storage.objects$p$;
+    execute $p$create policy "cualquiera: subir un adjunto"
+              on storage.objects for insert to anon, authenticated
+              with check (bucket_id = 'adjuntos')$p$;
+    raise notice 'Permiso de subida al depósito `adjuntos` puesto.';
+  exception when others then
+    raise notice 'No se pudo poner el permiso de subida desde aquí (%). Ponlo en el panel: Storage → Policies.', sqlerrm;
+  end;
+end;
+$deposito$;
 
 
 -- ---------------------------------------------------------------------
