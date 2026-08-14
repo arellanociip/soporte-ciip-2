@@ -110,7 +110,13 @@
       b.setAttribute('aria-pressed', String(b.dataset.id === atajoElegido)));
 
     pintarSubatajos(a);
-    aplicarClasificacion(true);
+    /* La ayuda se enseña cuando el problema ya es concreto. Si este atajo
+       tiene segundo escalón, todavía no lo es —"la computadora no sirve" son
+       ocho problemas distintos—, así que se espera a que la persona diga cuál
+       es el suyo. Los que no tienen escalón sí la abren aquí: para ellos este
+       clic es el último. */
+    const hayEscalon = !!(a && a.opciones && a.opciones.length);
+    aplicarClasificacion(!hayEscalon);
   }
 
   /* El segundo escalón, dibujado. Se retira entero cuando el atajo no tiene
@@ -128,7 +134,12 @@
       b.className = 'subatajo';
       b.dataset.id = o.id;
       b.setAttribute('aria-pressed', String(o.id === subatajoElegido));
-      b.innerHTML = '<span class="t"></span><span class="s"></span>';
+      /* o.icono es SVG escrito en js/catalogo.js, nunca dato de entrada: se
+         inserta como marcado a propósito, igual que el de los atajos. El
+         título y la bajada sí van por textContent, que esos sí podrían venir
+         de fuera algún día. */
+      b.innerHTML = `<span class="ic">${o.icono || ''}</span>
+        <span class="t"></span><span class="s"></span>`;
       b.querySelector('.t').textContent = o.titulo;
       b.querySelector('.s').textContent = o.sub || '';
       b.addEventListener('click', () => elegirSubatajo(o.id));
@@ -144,11 +155,10 @@
     subatajoElegido = id;
     $('subatajosLista').querySelectorAll('.subatajo').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.id === subatajoElegido)));
-    /* Sin reabrir la ventana de ayuda: se abrió al elegir el atajo y aquí la
-       persona está comparando las opciones. Ocho tarjetas son ocho ventanas
-       saltando encima de lo que está leyendo. La línea de abajo sí se rehace,
-       así que la guía de SU problema queda a un clic. */
-    aplicarClasificacion(false);
+    /* Aquí sí se abre: es el momento en que el problema deja de ser una
+       familia y pasa a ser uno solo, y por tanto el primero en que la guía que
+       se puede enseñar es la suya y no ocho a la vez. */
+    aplicarClasificacion(true);
   }
 
   /* Lo que acaba guardado. Sale de la opción concreta cuando hay una, y si no
@@ -179,9 +189,9 @@
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
     }
 
-    /* Cambiar de atajo es cambiar de problema: la ayuda de antes ya no es la
-       suya y vuelve a poder abrirse sola. Afinar dentro del mismo atajo no,
-       que ahí la ventana ya se enseñó. */
+    /* `reabrir` es "el problema ya quedó dicho del todo": al afinar dentro de
+       un atajo, o al elegir uno que no tiene nada que afinar. Solo entonces la
+       ventana vale la pena, porque solo entonces la guía es una y no ocho. */
     if(reabrir) yaLaVio = false;
     pintarAntes(reabrir);
     quitados = [];
