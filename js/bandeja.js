@@ -92,7 +92,15 @@
     return s;
   }
 
-  async function refrescar(){
+  /* Renovar el testigo con el de refresco.
+     NO se llama `refrescar` a propósito. Más abajo hay otra función con ese
+     nombre —la que recarga la lista— y como las declaraciones se izan, la de
+     abajo pisaba a esta en TODO el archivo. Así que pedir() creía estar
+     renovando la sesión y lo que hacía era recargar la bandeja: el testigo
+     vencido no se renovaba nunca, y la primera petición que caducaba echaba
+     al técnico a la pantalla de acceso. Dos funciones distintas, dos nombres
+     distintos. */
+  async function renovarSesion(){
     const s = sesion();
     if(!s || !s.refresco) return null;
     const r = await fetch(B.url + '/auth/v1/token?grant_type=refresh_token', {
@@ -111,7 +119,7 @@
      de acceso en vez de dejar la bandeja en blanco sin explicación. */
   async function pedir(ruta, opts, reintento){
     let s = sesion();
-    if(s && s.expira && Date.now() > s.expira) s = (await refrescar()) || s;
+    if(s && s.expira && Date.now() > s.expira) s = (await renovarSesion()) || s;
     if(!s){ mostrarAcceso(); throw new Error('Sin sesión'); }
 
     opts = opts || {};
@@ -121,7 +129,7 @@
     }));
 
     if((r.status === 401 || r.status === 403) && !reintento){
-      if(await refrescar()) return pedir(ruta, opts, true);
+      if(await renovarSesion()) return pedir(ruta, opts, true);
       borrarSesion(); mostrarAcceso();
       throw new Error('La sesión venció');
     }
