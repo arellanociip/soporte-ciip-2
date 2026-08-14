@@ -220,6 +220,18 @@
       <div class="campo" style="margin-bottom:18px">
         <label id="rotuloAtajos">¿Con qué necesitas ayuda? *</label>
         <div class="atajos" id="atajos" role="group" aria-labelledby="rotuloAtajos"></div>
+
+        <!-- ===================== EL SEGUNDO ESCALÓN =====================
+             El atajo dice de qué se habla; esto dice qué le pasa. Sale solo
+             cuando el atajo elegido tiene opciones —"Red o internet" y "Otra
+             cosa" no las tienen, porque no hay nada que afinar— y viene con la
+             primera ya marcada: quien no quiera precisar más no tiene que hacer
+             nada. Lo llena js/solicitud.js. -->
+        <div class="subatajos" id="subatajos" hidden>
+          <div class="sub-rotulo" id="rotuloSub">¿Qué le pasa exactamente?</div>
+          <div class="sub-rejilla" id="subatajosLista" role="group" aria-labelledby="rotuloSub"></div>
+        </div>
+
         <!-- Guarda el atajo elegido para que la revisión lo trate como un campo
              más: es lo que permite reclamarlo igual que a los otros. -->
         <input type="hidden" id="atajo" name="atajo">

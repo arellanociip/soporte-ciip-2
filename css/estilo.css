@@ -416,6 +416,58 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .atajo.otra{border-style:dashed;}
 .atajo.otra .ic{color:var(--gray-soft);}
 
+/* ===================== EL SEGUNDO ESCALÓN =====================
+   Qué le pasa exactamente, dentro del atajo que ya se eligió. Va sangrado y
+   con una línea a la izquierda para que se lea como lo que es: algo que
+   cuelga de la tarjeta de arriba, no otra fila de opciones al mismo nivel.
+   Sin icono y más pequeño, por lo mismo: si pesara igual que un atajo, la
+   pantalla tendría dos veces la misma pregunta. */
+.subatajos{
+  margin-top:14px; padding-left:14px;
+  border-left:2px solid var(--navy-soft);
+  animation:subEntra .18s ease;
+}
+@keyframes subEntra{
+  from{opacity:0; transform:translateY(-4px);}
+  to{opacity:1; transform:none;}
+}
+@media (prefers-reduced-motion:reduce){ .subatajos{animation:none;} }
+
+.sub-rotulo{
+  font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--gray-soft); margin-bottom:9px;
+}
+
+.sub-rejilla{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+@media (max-width:900px){ .sub-rejilla{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:420px){ .sub-rejilla{grid-template-columns:1fr;} }
+
+.subatajo{
+  display:block; text-align:left; font-family:inherit; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:var(--r-sm);
+  background:#fff; padding:9px 11px; cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+}
+.subatajo:hover{border-color:var(--navy); background:#FAFCFF;}
+.subatajo:focus-visible{outline:none; border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(0,64,144,.18);}
+.subatajo[aria-pressed="true"]{border-color:var(--navy); background:var(--navy-soft);}
+/* Más pequeño que el del atajo —20 contra 26— y en gris hasta que la tarjeta
+   se marca: son dieciséis dibujos en pantalla, y todos en azul a la vez
+   competirían con los seis de arriba, que son los que mandan. */
+.subatajo .ic{display:block; width:20px; height:20px; margin-bottom:7px;
+  color:var(--gray-soft); transition:color .15s ease;}
+.subatajo .ic svg{width:100%; height:100%; fill:none; stroke:currentColor;
+  stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+.subatajo:hover .ic{color:var(--navy);}
+.subatajo[aria-pressed="true"] .ic{color:var(--navy);}
+.subatajo .ic:empty{display:none;}
+
+.subatajo .t{display:block; font-size:12.5px; font-weight:700; line-height:1.25;}
+.subatajo .s{display:block; font-size:10.5px; color:var(--gray-soft); margin-top:2px;}
+/* una opción sin bajada no deja un hueco debajo del título */
+.subatajo .s:empty{display:none;}
+
 /* Cómo quedó clasificado tras elegir un atajo */
 .clasificado{
   display:flex; align-items:center; gap:9px; flex-wrap:wrap;
