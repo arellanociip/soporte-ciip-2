@@ -149,6 +149,42 @@ const CAT_ATAJOS = [
     ],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.',
+    /* El segundo escalón. Un atajo dice de qué habla; esto dice qué le pasa.
+       Sin él, "la computadora no sirve" se registraba SIEMPRE como
+       OPERATIVIDAD DE CPU aunque lo roto fuera el monitor, y el técnico
+       llegaba al puesto con la idea equivocada.
+
+       El primero de la lista es el que ya venía por omisión, y sale marcado
+       solo: quien no quiera afinar no tiene que hacer nada y todo se comporta
+       como antes. Quien afine, clasifica bien y recibe la guía de SU problema
+       en vez de las ocho de la familia. */
+    opciones: [
+      {id: 'cpu-enciende', titulo: 'No enciende o se apaga', sub: 'Muerta, o se reinicia sola',
+       tipo: 'SOPORTE_TECNICO', detalle: 'OPERATIVIDAD DE CPU', equipos: ['CPU'],
+       ejemplo: 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.'},
+      {id: 'cpu-pantalla', titulo: 'La pantalla no muestra nada', sub: 'Negra, rayada, parpadea',
+       tipo: 'SOPORTE_TECNICO', detalle: 'OPERATIVIDAD DEL MONITOR', equipos: ['MONITOR'],
+       ejemplo: 'Ej. El monitor queda en negro aunque el CPU suena y prende su lucecita.'},
+      {id: 'cpu-perifericos', titulo: 'Teclado, mouse u otro', sub: 'No responde o falla',
+       tipo: 'SOPORTE_TECNICO', detalle: 'OPERATIVIDAD DE OTROS PERIFÉRICOS DE LA COMPUTADORA',
+       equipos: ['CPU'], ejemplo: 'Ej. El teclado dejó de escribir varias teclas desde ayer.'},
+      {id: 'cpu-lenta', titulo: 'Va lentísima', sub: 'Hay que limpiarla o formatearla',
+       tipo: 'SOPORTE_TECNICO', detalle: 'FORMATEO Y LIMPIEZA DEL ORDENADOR Y/O INSTALACIÓN DE APLICACIONES',
+       equipos: ['CPU'], ejemplo: 'Ej. La computadora tarda diez minutos en abrir cualquier programa.'},
+      {id: 'cpu-danada', titulo: 'Está dañada', sub: 'Hay que repararla',
+       tipo: 'SOPORTE_TECNICO', detalle: 'MANTENIMIENTO CORRECTIVO', equipos: ['CPU'],
+       ejemplo: 'Ej. Hace un ruido fuerte y desde entonces no arranca.'},
+      {id: 'cpu-preventivo', titulo: 'Revisión preventiva', sub: 'Limpieza de rutina',
+       tipo: 'SOPORTE_TECNICO', detalle: 'MANTENIMIENTO PREVENTIVO', equipos: ['CPU'],
+       ejemplo: 'Ej. Hace más de un año que no le hacen mantenimiento al equipo.'},
+      {id: 'cpu-nueva', titulo: 'Equipo nuevo sin sistema', sub: 'Dejarlo listo para trabajar',
+       tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACIÓN DE SISTEMA OPERATIVO (EQUIPOS NUEVOS)',
+       equipos: ['CPU'], ejemplo: 'Ej. Llegó una computadora nueva y hay que instalarle todo.'},
+      {id: 'cpu-upgrade', titulo: 'Ampliar memoria o disco', sub: 'Más RAM, disco nuevo',
+       tipo: 'SOPORTE_TECNICO',
+       detalle: 'UPGRADE DE HARDWARE DE PCS Y PORTÁTILES (AUMENTO DE MEMORIA RAM, CAMBIO DE PROCESADOR, DISCO DURO, TARJETAS GRÁFICAS, ETC.)',
+       equipos: ['CPU'], ejemplo: 'Ej. El equipo se queda sin espacio; hace falta un disco más grande.'},
+    ],
     icono: '<svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/></svg>',
   },
   {
@@ -160,6 +196,16 @@ const CAT_ATAJOS = [
               'INSTALACIÓN Y/O CONFIGURACIÓN DE DISPOSITIVO DE PROYECCIÓN DE IMAGEN'],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. Me mudo de la oficina 2-6 a la 3-01 y hay que llevar la computadora y el monitor.',
+    opciones: [
+      {id: 'mud-puesto', titulo: 'Mudanza de puesto u oficina', sub: 'Llevar el equipo a otro sitio',
+       tipo: 'SOPORTE_TECNICO', detalle: 'MOVILIZACIÓN Y/O REUBICACIÓN DE ACTIVOS TECNOLÓGICOS',
+       equipos: ['CPU', 'MONITOR'],
+       ejemplo: 'Ej. Me mudo de la oficina 2-6 a la 3-01 y hay que llevar la computadora y el monitor.'},
+      {id: 'mud-videobeam', titulo: 'Instalar un videobeam', sub: 'Proyector para una sala',
+       tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACIÓN Y/O CONFIGURACIÓN DE DISPOSITIVO DE PROYECCIÓN DE IMAGEN',
+       equipos: ['VIDEOBEAM'],
+       ejemplo: 'Ej. Hay una reunión el jueves en la sala del piso 5 y hace falta montar el videobeam.'},
+    ],
     icono: '<svg viewBox="0 0 24 24"><path d="M5 9V6a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 13h18"/><path d="M7 21h10a2 2 0 002-2v-6H5v6a2 2 0 002 2z"/></svg>',
   },
   {
@@ -171,6 +217,16 @@ const CAT_ATAJOS = [
               'SOLUCIÓN DE PROBLEMAS DE IMPRESIÓN'],
     equipos: ['IMPRESORA'],   /* y si no tiene, la del piso: son de todos */
     ejemplo: 'Ej. No puedo imprimir desde el lunes: la impresora no aparece en la lista.',
+    opciones: [
+      {id: 'imp-instalar', titulo: 'Hay que instalarla', sub: 'No aparece en la lista',
+       tipo: 'SOPORTE_TECNICO', detalle: 'INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
+       equipos: ['IMPRESORA'],
+       ejemplo: 'Ej. Cambiaron mi computadora y la impresora del piso ya no aparece para escoger.'},
+      {id: 'imp-noimprime', titulo: 'No imprime o sale mal', sub: 'Hojas en blanco, atascos, manchas',
+       tipo: 'SOPORTE_TECNICO', detalle: 'SOLUCIÓN DE PROBLEMAS DE IMPRESIÓN',
+       equipos: ['IMPRESORA'],
+       ejemplo: 'Ej. Manda a imprimir pero la hoja sale en blanco, y a veces se traba el papel.'},
+    ],
     icono: '<svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 01-2-2v-3a2 2 0 012-2h16a2 2 0 012 2v3a2 2 0 01-2 2h-2"/></svg>',
   },
   {
@@ -179,9 +235,27 @@ const CAT_ATAJOS = [
     sub: 'Clave, cuenta, configuración',
     tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACIÓN DE CUENTA USUARIO',
     familia: ['CONFIGURACIÓN DE CUENTA USUARIO', 'MANEJO DE SOFTWARE',
-              'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS'],
+              'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS', 'MANEJO DE DISPOSITIVOS'],
     equipos: ['CPU', 'MONITOR'],   /* los del inventario que van con la solicitud */
     ejemplo: 'Ej. Necesito que me configuren el correo institucional en el equipo nuevo.',
+    /* Aquí el segundo escalón hace algo que el primero no podía: tres de estas
+       cuatro son ASISTENCIA, no SOPORTE_TÉCNICO. Antes todas se registraban
+       como soporte técnico —el tipo lo ponía el atajo— y la Hoja de Servicio
+       salía con el renglón equivocado. Cada opción trae el suyo. */
+    opciones: [
+      {id: 'usr-cuenta', titulo: 'Clave o cuenta', sub: 'Correo, usuario, permisos',
+       tipo: 'SOPORTE_TECNICO', detalle: 'CONFIGURACIÓN DE CUENTA USUARIO',
+       ejemplo: 'Ej. Necesito que me configuren el correo institucional en el equipo nuevo.'},
+      {id: 'usr-programa', titulo: 'No sé usar un programa', sub: 'Que me enseñen',
+       tipo: 'ASISTENCIA', detalle: 'MANEJO DE SOFTWARE',
+       ejemplo: 'Ej. Tengo que armar un cuadro en Excel y no sé cómo hacer las fórmulas.'},
+      {id: 'usr-archivos', titulo: 'Recuperar o respaldar archivos', sub: 'Se borró, o hay que copiarlo',
+       tipo: 'ASISTENCIA', detalle: 'RESPALDO Y/O RECUPERACIÓN DE ARCHIVOS',
+       ejemplo: 'Ej. Borré sin querer una carpeta con los informes del mes pasado.'},
+      {id: 'usr-dispositivo', titulo: 'Enseñarme a usar un equipo', sub: 'Impresora, videobeam, teléfono',
+       tipo: 'ASISTENCIA', detalle: 'MANEJO DE DISPOSITIVOS',
+       ejemplo: 'Ej. Nunca he usado el teléfono IP y no sé cómo transferir una llamada.'},
+    ],
     icono: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>',
   },
   {

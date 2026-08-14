@@ -65,6 +65,16 @@
      que siguen siendo la única fuente de la clasificación. Así la Hoja de
      Servicio sale igual venga de un atajo o de los desplegables. */
   let atajoElegido = null;
+  /* Cuál de las opciones concretas del atajo está marcada. Queda en null
+     cuando el atajo no tiene segundo escalón —"Red o internet" y "Otra cosa"
+     no lo tienen, porque no hay nada que afinar— o cuando no hay atajo. */
+  let subatajoElegido = null;
+
+  const opcionActual = () => {
+    const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
+    if(!a || !a.opciones) return null;
+    return a.opciones.find(o => o.id === subatajoElegido) || null;
+  };
 
   const AYUDA_POR_DEFECTO = 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.';
 
@@ -87,6 +97,10 @@
     /* volver a pulsar el mismo lo suelta: nadie queda atrapado en una opción */
     const a = (atajoElegido === id) ? null : CAT_ATAJOS.find(x => x.id === id);
     atajoElegido = a ? a.id : null;
+    /* Cambiar de atajo suelta lo que se hubiera afinado del anterior: sus
+       opciones no existen aquí. La primera del nuevo viene marcada, que es la
+       que este atajo ya usaba antes de tener segundo escalón. */
+    subatajoElegido = (a && a.opciones && a.opciones.length) ? a.opciones[0].id : null;
     /* el campo oculto es lo que ve la revisión y lo que cuenta el anillo */
     $('atajo').value = atajoElegido || '';
     if(revisandoAlSalir) revisarCampo('atajo');
@@ -95,33 +109,84 @@
     $('atajos').querySelectorAll('.atajo').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.id === atajoElegido)));
 
-    /* el texto guía de la descripción se adapta: es donde la gente se traba */
-    desc.placeholder = a ? a.ejemplo : AYUDA_POR_DEFECTO;
+    pintarSubatajos(a);
+    aplicarClasificacion(true);
+  }
 
-    if(a && a.tipo){
-      tipo.value = a.tipo;
+  /* El segundo escalón, dibujado. Se retira entero cuando el atajo no tiene
+     opciones: una sola tarjeta que no se puede cambiar no es una elección, es
+     un adorno que estorba. */
+  function pintarSubatajos(a){
+    const caja = $('subatajos'), lista = $('subatajosLista');
+    if(!caja || !lista) return;
+    const opciones = (a && a.opciones) || [];
+    caja.hidden = !opciones.length;
+    lista.innerHTML = '';
+    opciones.forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button';                       /* si no, envía el formulario */
+      b.className = 'subatajo';
+      b.dataset.id = o.id;
+      b.setAttribute('aria-pressed', String(o.id === subatajoElegido));
+      b.innerHTML = '<span class="t"></span><span class="s"></span>';
+      b.querySelector('.t').textContent = o.titulo;
+      b.querySelector('.s').textContent = o.sub || '';
+      b.addEventListener('click', () => elegirSubatajo(o.id));
+      lista.append(b);
+    });
+  }
+
+  function elegirSubatajo(id){
+    /* Volver a pulsar la marcada no la suelta, al revés que en los atajos:
+       aquí siempre hay una puesta, y quedarse sin ninguna solo devolvería una
+       clasificación más pobre sin que nadie lo haya pedido. */
+    if(subatajoElegido === id) return;
+    subatajoElegido = id;
+    $('subatajosLista').querySelectorAll('.subatajo').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.id === subatajoElegido)));
+    /* Sin reabrir la ventana de ayuda: se abrió al elegir el atajo y aquí la
+       persona está comparando las opciones. Ocho tarjetas son ocho ventanas
+       saltando encima de lo que está leyendo. La línea de abajo sí se rehace,
+       así que la guía de SU problema queda a un clic. */
+    aplicarClasificacion(false);
+  }
+
+  /* Lo que acaba guardado. Sale de la opción concreta cuando hay una, y si no
+     del atajo, que es como funcionaba cuando no existía el segundo escalón.
+     Los desplegables siguen siendo la única fuente de la clasificación: esto
+     solo los rellena, así que la Hoja de Servicio sale igual venga de donde
+     venga. */
+  function aplicarClasificacion(reabrir){
+    const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
+    const cual = opcionActual() || a;
+
+    /* el texto guía de la descripción se adapta: es donde la gente se traba */
+    desc.placeholder = (cual && cual.ejemplo) || AYUDA_POR_DEFECTO;
+
+    if(cual && cual.tipo){
+      tipo.value = cual.tipo;
       tipo.dispatchEvent(new Event('change'));   /* rehace la lista de detalles */
-      detalle.value = a.detalle || '';
+      detalle.value = cual.detalle || '';
       $('clasificadoTexto').textContent =
-        catTipoEtiqueta(a.tipo) + (a.detalle ? ' · ' + a.detalle : '');
+        catTipoEtiqueta(cual.tipo) + (cual.detalle ? ' · ' + cual.detalle : '');
       $('clasificado').hidden = false;
       $('clasificacionManual').hidden = true;
-      yaLaVio = false;
-      pintarAntes(true);
-      quitados = [];
-      pintarEquipo();
     }else{
       /* "Otra cosa", o ningún atajo: los desplegables completos */
       tipo.value = '';
       tipo.dispatchEvent(new Event('change'));
       $('clasificado').hidden = true;
       $('clasificacionManual').hidden = !a;   /* solo "Otra cosa" los abre */
-      yaLaVio = false;
-      pintarAntes(true);
-      quitados = [];
-      pintarEquipo();
-      if(a) detalle.focus();
     }
+
+    /* Cambiar de atajo es cambiar de problema: la ayuda de antes ya no es la
+       suya y vuelve a poder abrirse sola. Afinar dentro del mismo atajo no,
+       que ahí la ventana ya se enseñó. */
+    if(reabrir) yaLaVio = false;
+    pintarAntes(reabrir);
+    quitados = [];
+    pintarEquipo();
+    if(a && !(cual && cual.tipo)) detalle.focus();
   }
 
   /* ---------- el equipo de quien pide ----------
@@ -145,7 +210,11 @@
     if(!caja) return;
     const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
     const quien = $('usuario').value.trim();
-    const tipos = (a && a.equipos) || [];
+    /* Con una opción concreta marcada manda la suya: si lo roto es la pantalla
+       va el monitor y no el CPU, que es el equipo que el técnico necesita
+       tener delante. Sin ella, los del atajo, como antes. */
+    const o = opcionActual();
+    const tipos = (o && o.equipos) || (a && a.equipos) || [];
     equiposAdjuntos = [];
 
     if(quien && tipos.length && typeof inventarioDe === 'function'){
@@ -214,9 +283,15 @@
      exactamente cuál es. */
   function ayudaDeAhora(){
     const a = CAT_ATAJOS.find(x => x.id === atajoElegido);
-    const cuales = (a && a.familia && a.familia.length)
-      ? a.familia.map(d => d.trim().toUpperCase())
-      : [(detalle.value || '').trim().toUpperCase()].filter(Boolean);
+    const o = opcionActual();
+    /* Con una opción concreta marcada se busca SU problema y nada más: para
+       eso se afinó. Antes, quien decía "la computadora no sirve" recibía las
+       guías de los ocho problemas de la familia y tenía que dar con la suya. */
+    const cuales = o
+      ? [String(o.detalle || '').trim().toUpperCase()].filter(Boolean)
+      : (a && a.familia && a.familia.length)
+        ? a.familia.map(d => d.trim().toUpperCase())
+        : [(detalle.value || '').trim().toUpperCase()].filter(Boolean);
     if(!cuales.length) return [];
     return guiasPublicas.filter(g =>
       cuales.includes(String(g.categoria || '').trim().toUpperCase()));
@@ -319,6 +394,11 @@
   $('botonAfinar').addEventListener('click', () => {
     $('clasificado').hidden = true;
     $('clasificacionManual').hidden = false;
+    /* Y el segundo escalón se retira: a partir de aquí manda el desplegable, y
+       dejar una tarjeta marcada que ya no dice lo que se va a guardar sería
+       mentirle a quien la mira. */
+    subatajoElegido = null;
+    if($('subatajos')){ $('subatajos').hidden = true; $('subatajosLista').innerHTML = ''; }
     tipo.focus();
   });
 
@@ -802,6 +882,10 @@
        un dato que nadie había puesto. */
     $('atajo').value = '';
     $('atajos').querySelectorAll('.atajo').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    /* y el segundo escalón se retira con él: sus opciones eran las del atajo
+       que se acaba de soltar */
+    subatajoElegido = null;
+    if($('subatajos')){ $('subatajos').hidden = true; $('subatajosLista').innerHTML = ''; }
     /* si quedó abierta la ventana de "quizá lo resuelvas ahora mismo", se
        cierra: era la ayuda de un problema que ya se mandó */
     cerrarAyuda();
