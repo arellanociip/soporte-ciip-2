@@ -16,12 +16,14 @@
       <div class="tit">Solicitud de soporte</div>
       <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
     </div>
-    <!-- La cuenta es OPCIONAL y por eso vive aquí arriba, pequeña y al margen:
-         no puede parecer un paso previo para pedir soporte. Lo enciende
-         js/cuenta.js, y solo contra Supabase. -->
+    <!-- Aquí arriba solo se dice quién eres, cuando ya entraste. El "Entrar"
+         estaba aquí y se quitó: un botón suelto en una barra no dice a qué
+         lleva, y en una página donde la cuenta no hace falta, invitaba a
+         pensar que sí. Ahora la ventana sale sola al abrir (js/cuenta.js) y
+         la forma de volver a ella está donde tiene sentido: junto al panel de
+         seguimiento, que es lo único que la cuenta mejora. -->
     <div class="der" id="cabSesion" hidden>
       <span id="quienSoy" hidden></span>
-      <a href="#" id="botonEntrarCuenta">Entrar</a>
       <a href="#" id="botonSalirCuenta" hidden>Salir</a>
     </div>
   </div>
@@ -93,7 +95,12 @@
            vería lo que pediste y podría bajar tu Hoja de Servicio. En tu propia
            máquina da igual; en una prestada, esto lo borra. -->
       <div class="mis-pie">
-        <span>Esto se guarda en este navegador.</span>
+        <span id="dondeSeGuarda">Esto se guarda en este navegador.</span>
+        <!-- La vuelta a la ventana de entrar, para quien la cerró y luego se
+             lo pensó. Va aquí y no en la barra de arriba porque aquí se
+             entiende para qué sirve: es este panel el que deja de depender
+             del navegador al entrar. -->
+        <button type="button" class="enlace" id="botonEntrarCuenta" hidden>Entrar para verlo desde cualquier equipo</button>
         <button type="button" class="enlace" id="botonOlvidar">No es mi computadora · borrar mi rastro</button>
       </div>
       <!-- La caja envuelve a la lista para poder ponerle el velo del final:

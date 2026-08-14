@@ -24,6 +24,7 @@
   /* La sesión vive aquí y no en una variable: recargar la página no puede
      ser lo mismo que salirse. */
   const LLAVE = 'soporte_cuenta';
+  const YA_PREGUNTE = 'soporte_cuenta_preguntada';
 
   function leerSesion(){
     try{ return JSON.parse(localStorage.getItem(LLAVE)); }catch(e){ return null; }
@@ -137,17 +138,23 @@
     }catch(e){ return 0; }
   }
 
-  /* ---------- la barra de arriba ---------- */
+  /* ---------- la barra de arriba, y la vuelta a la ventana ---------- */
   function pintarCabecera(){
     const caja = $('cabSesion');
     if(!caja) return;
-    caja.hidden = !HAY;
-    if(!HAY) return;
     const s = leerSesion();
+    caja.hidden = !HAY || !s;          /* sin sesión no hay nada que decir ahí */
+    const entrar = $('botonEntrarCuenta');
+    if(entrar) entrar.hidden = !HAY || !!s;
+    if(!HAY) return;
     $('quienSoy').textContent = s ? (s.nombre || s.correo) : '';
     $('quienSoy').hidden = !s;
-    $('botonEntrarCuenta').hidden = !!s;
     $('botonSalirCuenta').hidden = !s;
+    /* Entrar es justo lo que deja de ser verdad esa frase. */
+    const donde = $('dondeSeGuarda');
+    if(donde) donde.textContent = s
+      ? 'Esto va con tu cuenta: lo ves desde cualquier equipo.'
+      : 'Esto se guarda en este navegador.';
   }
 
   /* ---------- la ventana ---------- */
@@ -168,6 +175,11 @@
   function cerrar(){
     $('veloCuentaUsuario').hidden = true;
     document.body.style.overflow = '';
+    /* Quien dijo "seguir sin cuenta" no tiene por qué volver a verla cada vez
+       que recarga. Se apunta en la sesión del navegador, no para siempre: al
+       día siguiente vuelve a ofrecerse una vez, por si ya se decidió. Para
+       quien no la quiera nunca, el enlace del panel es la puerta de vuelta. */
+    try{ sessionStorage.setItem(YA_PREGUNTE, '1'); }catch(e){ /* da igual */ }
   }
 
   function pintarModo(){
@@ -178,6 +190,10 @@
       : 'Para ver lo que has pedido desde cualquier equipo. Si no tienes cuenta, no hace falta: puedes mandar tu solicitud igual.';
     $('campoNombreCuenta').hidden = !nuevo;
     $('botonAceptarCuenta').textContent = nuevo ? 'Crear la cuenta' : 'Entrar';
+    /* "Cancelar" no decía lo que hace. Cerrar esta ventana no cancela nada:
+       deja pedir soporte igual, que es lo normal aquí. Decirlo con todas las
+       letras es lo que mantiene la cuenta en lo opcional. */
+    $('cancelarCuentaUsuario').textContent = 'Seguir sin cuenta';
     $('cambiarModoCuenta').textContent = nuevo
       ? 'Ya tengo cuenta · entrar'
       : 'No tengo cuenta · crear una';
@@ -265,5 +281,17 @@
        buscar el ratón para entrar. */
     const caja = $('cuClave');
     if(caja) caja.addEventListener('keydown', e => { if(e.key === 'Enter') aceptar(); });
+
+    /* Sale sola al abrir la página. El botón "Entrar" que había en la barra
+       de arriba no decía a qué llevaba, y en una página donde la cuenta no
+       hace falta, un botón suelto invita a pensar que sí.
+
+       No sale si ya hay sesión —no habría nada que pedir— ni si en esta misma
+       visita ya se dijo que no. Y el botón grande de al lado dice "Seguir sin
+       cuenta" con todas las letras: quien no la quiera, cierra y pide su
+       soporte igual, que es como tiene que ser. */
+    let yaPregunte = false;
+    try{ yaPregunte = sessionStorage.getItem(YA_PREGUNTE) === '1'; }catch(e){}
+    if(!leerSesion() && !yaPregunte) abrir('entrar');
   });
 })();
