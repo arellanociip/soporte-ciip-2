@@ -95,6 +95,24 @@ porque las claves no se guardan, solo su huella, y no hay de donde recuperarlas.
 
 No se puede borrar al ultimo usuario: dejaria la bandeja cerrada para siempre.
 
+**Despues de la primera cuenta, la linea de comandos ya no hace falta.** Quien
+esta dentro da de alta a los demas desde el enlace *Cuentas* de la barra azul:
+crear, corregir el nombre o el cargo, poner una clave nueva a quien la olvido, y
+dar de baja. No hay jefes — cualquier cuenta de GTIC puede hacerlo, igual que
+cualquiera ve y atiende todas las solicitudes.
+
+La clave se puede dejar en blanco: en una cuenta nueva se inventa una que se
+pueda dictar por telefono y **se enseña una sola vez**, porque no se guarda en
+ningun sitio; en una cuenta que ya existe, en blanco significa "no me la toques",
+que es lo que hace falta al corregirle el cargo a alguien.
+
+Dos cosas que la bandeja no deja hacer, las mismas que la linea de comandos:
+darse de baja a uno mismo, y borrar la ultima cuenta.
+
+> En la nube esto necesita un paso mas: crear cuentas en Supabase exige su llave
+> de administrador, que no puede vivir en una pagina web. La atiende una Edge
+> Function que hay que desplegar una vez — ver `supabase/functions/cuentas/`.
+
 **Cada quien completa sus propios datos desde la bandeja.** En el enlace
 *Mis datos* de la barra azul se ponen nombre, cargo, cédula y teléfono — los
 cuatro que salen impresos junto a la firma del técnico. Se llenan una vez y

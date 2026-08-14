@@ -16,6 +16,16 @@
       <div class="tit">Solicitud de soporte</div>
       <div class="sub">Gerencia de Tecnología de la Información y Comunicación</div>
     </div>
+    <!-- Aquí arriba solo se dice quién eres, cuando ya entraste. El "Entrar"
+         estaba aquí y se quitó: un botón suelto en una barra no dice a qué
+         lleva, y en una página donde la cuenta no hace falta, invitaba a
+         pensar que sí. Ahora la ventana sale sola al abrir (js/cuenta.js) y
+         la forma de volver a ella está donde tiene sentido: junto al panel de
+         seguimiento, que es lo único que la cuenta mejora. -->
+    <div class="der" id="cabSesion" hidden>
+      <span id="quienSoy" hidden></span>
+      <a href="#" id="botonSalirCuenta" hidden>Salir</a>
+    </div>
   </div>
 </header>
 
@@ -85,7 +95,12 @@
            vería lo que pediste y podría bajar tu Hoja de Servicio. En tu propia
            máquina da igual; en una prestada, esto lo borra. -->
       <div class="mis-pie">
-        <span>Esto se guarda en este navegador.</span>
+        <span id="dondeSeGuarda">Esto se guarda en este navegador.</span>
+        <!-- La vuelta a la ventana de entrar, para quien la cerró y luego se
+             lo pensó. Va aquí y no en la barra de arriba porque aquí se
+             entiende para qué sirve: es este panel el que deja de depender
+             del navegador al entrar. -->
+        <button type="button" class="enlace" id="botonEntrarCuenta" hidden>Entrar para verlo desde cualquier equipo</button>
         <button type="button" class="enlace" id="botonOlvidar">No es mi computadora · borrar mi rastro</button>
       </div>
       <!-- La caja envuelve a la lista para poder ponerle el velo del final:
@@ -328,7 +343,54 @@
   </div>
 </div>
 
+<!-- ===================== ENTRAR, SI SE QUIERE =====================
+     Una cuenta no hace falta para pedir soporte: sirve para seguir lo pedido
+     desde cualquier equipo, en vez de solo desde este navegador. La misma
+     ventana entra y registra, porque quien llega aquí no tiene por qué saber
+     de antemano cuál de las dos cosas le toca. -->
+<div class="velo" id="veloCuentaUsuario" hidden>
+  <div class="hoja" style="max-width:460px">
+    <button type="button" class="cerrar" id="cerrarCuentaUsuario" aria-label="Cerrar">✕</button>
+    <h2 id="tituloCuentaUsuario">Entrar</h2>
+    <div class="bajada" id="bajadaCuentaUsuario"></div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo" id="campoNombreCuenta" hidden>
+        <label for="cuNombre">Nombre y apellido</label>
+        <input type="text" id="cuNombre" autocomplete="name" placeholder="Ej. María Rodríguez">
+      </div>
+      <div class="campo">
+        <label for="cuCorreo">Correo de la casa</label>
+        <input type="text" id="cuCorreo" autocomplete="username" placeholder="nombre.apellido@ciip.com.ve">
+      </div>
+      <div class="campo">
+        <label for="cuClave">Contraseña</label>
+        <div class="clave-caja">
+          <input type="password" id="cuClave" autocomplete="current-password">
+          <button type="button" id="verClaveUsuario" aria-pressed="false"
+                  aria-label="Mostrar la contraseña" title="Mostrar la contraseña">
+            <svg viewBox="0 0 24 24"><path d="M1.8 12S5.9 5.5 12 5.5 22.2 12 22.2 12 18.1 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="aviso malo" id="avisoCuentaUsuario" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="botonAceptarCuenta">Entrar</button>
+      <button type="button" class="boton plano" id="cancelarCuentaUsuario">Cancelar</button>
+    </div>
+    <div class="cuenta-pie">
+      <button type="button" class="enlace" id="cambiarModoCuenta">No tengo cuenta · crear una</button>
+      <span>Pedir soporte no necesita cuenta. Esto es solo para seguir lo tuyo
+        desde cualquier equipo.</span>
+    </div>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
+<script src="js/cuenta.js"></script>
 <script src="js/catalogo.js"></script>
 <script src="js/directorio.js"></script>
 <script src="js/inventario.js"></script>
