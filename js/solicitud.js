@@ -1481,8 +1481,16 @@
 
   function vigilar(){
     clearInterval(reloj);
-    /* sin nada que seguir, no hay a qué estar pendiente */
-    if(!soporteMias.leer().length) return;
+    /* ¿Hay algo que seguir? Antes esto se preguntaba solo a la lista de este
+       navegador, y desde que hay cuentas eso se quedó corto: con sesión, lo
+       que se sigue lo dice el servidor —mis_solicitudes, ver traerMias()— y
+       no lo que este equipo tenga anotado.
+       Quien entraba con su cuenta desde una máquina donde nunca había pedido
+       nada veía sus solicitudes en pantalla —las trae la cuenta— pero el
+       reloj no llegaba a arrancar: nada se refrescaba nunca, así que un
+       mensaje del técnico no aparecía hasta pulsar F5. Por eso se mira
+       también lo último que se trajo de verdad. */
+    if(!soporteMias.leer().length && !ultimasFilas.length) return;
     escuchar();
     reloj = setInterval(() => {
       if(!document.hidden) pintarMias();
@@ -1490,7 +1498,10 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if(!document.hidden && soporteMias.leer().length) pintarMias();
+    /* Misma razón que en vigilar(): con cuenta hay algo que seguir aunque
+       este navegador no tenga nada anotado. Volver a la pestaña es justo
+       cuando a uno le interesa lo que llegó mientras no miraba. */
+    if(!document.hidden && (soporteMias.leer().length || ultimasFilas.length)) pintarMias();
   });
 
   /* Entrar o salir cambia de dónde sale la lista, así que hay que rehacerla.
