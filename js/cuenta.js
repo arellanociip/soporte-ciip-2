@@ -265,6 +265,13 @@
       await salir();
       pintarCabecera();
       window.dispatchEvent(new CustomEvent('soporte:sesion', {detail: {entro: false}}));
+      /* Y de vuelta a la puerta. pintarCabecera() esconde la planilla —eso lo
+         hace pintarPuerta()—, pero la ventana solo se abría sola al cargar la
+         página. Así que salir dejaba la pantalla en blanco: la barra azul
+         arriba y nada debajo, sin nada que pulsar y sin decir por qué.
+         Desde que la cuenta es obligatoria no hay un "fuera" que se pueda
+         usar: quien sale solo puede volver a entrar, así que se le pide. */
+      abrir('entrar');
     },
   };
 
