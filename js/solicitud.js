@@ -725,15 +725,32 @@
       p_cargo: datos.cargo, p_descripcion: datos.descripcion, p_tipo: datos.tipo,
       p_detalle: datos.detalle, p_renglones: datos.renglones,
     } : datos;
-    const r = await fetch(B.url + ruta, {
+    /* La fila vuelve en la respuesta: es la única forma de conocer el número,
+       porque quien envía no tiene permiso para releerla después. */
+    const prefiere = {'Prefer': 'return=representation'};
+
+    /* Desde la migración 04, crear_solicitud solo se le concede a
+       `authenticated`: a `anon` se le retiró. Así que la petición tiene que ir
+       firmada con el testigo de QUIEN PIDE, no con la anon key. Mandando la
+       anon key el servidor nos toma por `anon` y rechaza el envío entero, y
+       aquí abajo eso se ve como un fallo cualquiera —"puede ser la conexión"—
+       que no dice nada de lo que pasa de verdad.
+       pedir() pone el testigo y lo renueva si le quedaba poco; devuelve null
+       si no hay sesión, y entonces se sigue por el camino de siempre, que es
+       el que entiende servidor.js. */
+    let r = null;
+    if(viaRpc && window.soporteCuenta && window.soporteCuenta.dentro()){
+      r = await window.soporteCuenta.pedir(ruta, {
+        method: 'POST',
+        headers: prefiere,
+        body: JSON.stringify(payload),
+      });
+    }
+    if(!r) r = await fetch(B.url + ruta, {
       method: 'POST',
-      headers: Object.assign({
-        'Content-Type': 'application/json',
-        /* La fila vuelve en la respuesta: es la única forma de conocer el
-           número, porque quien envía no tiene permiso para releerla después. */
-        'Prefer': 'return=representation',
-      }, soporteCabeceras(),
-         viaRpc ? {'Authorization': 'Bearer ' + B.anonKey} : {}),
+      headers: Object.assign({'Content-Type': 'application/json'}, prefiere,
+        soporteCabeceras(),
+        viaRpc ? {'Authorization': 'Bearer ' + B.anonKey} : {}),
       body: JSON.stringify(payload),
     });
     if(!r.ok){
@@ -750,6 +767,17 @@
         e.yaAbierta = cuerpo.abierta || (function(){
           try{ return JSON.parse(cuerpo.details); }catch(_){ return null; }
         })();
+        throw e;
+      }
+      /* 401/403: el servidor no reconoce a quien envía. Con la cuenta
+         obligatoria eso solo puede ser una cosa —la sesión se venció o se
+         perdió— y tiene un arreglo que la persona puede hacer sola. Decirle
+         "puede ser la conexión" la manda a reintentar contra una puerta que
+         no se va a abrir sola, y de paso esconde el motivo a quien venga a
+         mirar por qué no salió. */
+      if(r.status === 401 || r.status === 403){
+        const e = new Error('Tu sesión se venció. Vuelve a entrar y envíala de nuevo: lo que escribiste sigue aquí.');
+        e.sesionVencida = true;
         throw e;
       }
       throw new Error('HTTP ' + r.status + (cuerpo.message ? ' · ' + cuerpo.message : ''));
@@ -849,6 +877,15 @@
         return;
       }
       console.error('No se pudo enviar la solicitud:', err);
+      /* La sesión vencida tiene su propio aviso y su propia salida: reintentar
+         no sirve, hay que volver a entrar. Se abre la ventana en el sitio, que
+         es más corto que explicar dónde está. */
+      if(err.sesionVencida){
+        avisoError('<span>⚠</span><div><b>Tu sesión se venció.</b> '
+          + 'Vuelve a entrar y envíala otra vez; lo que escribiste sigue aquí.</div>');
+        if(window.soporteCuenta && window.soporteCuenta.abrir) window.soporteCuenta.abrir('entrar');
+        return;
+      }
       avisoError('<span>⚠</span><div><b>No se pudo enviar la solicitud.</b> '
         + 'Puede ser la conexión o el servidor. Vuelve a intentar en un momento; '
         + 'lo que escribiste sigue aquí.' + comoContactar() + '</div>');
