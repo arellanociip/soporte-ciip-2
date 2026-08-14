@@ -87,6 +87,65 @@ function bandera(nombre){
    cada solicitud, y que la hoja salga completa en vez de con rayas en blanco. */
 const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'];
 
+/* ---------- dar de alta una cuenta ----------
+   Lo comparten la línea de comandos y la bandeja. Las reglas que importan
+   —que la clave nunca se guarde en claro, que seis caracteres sea el mínimo,
+   que lo que no se vuelva a indicar se conserve— viven aquí escritas una sola
+   vez: dos copias de esto acabarían separándose, y la que se quedara atrás
+   sería un agujero.
+
+   Devuelve la clave SOLO cuando hubo que inventarla. Si la escribió una
+   persona, esa persona ya la sabe y repetirla por la red no ayuda a nadie. */
+function altaUsuario(datos){
+  const correo = String(datos.correo || '').toLowerCase().trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)){
+    const e = new Error('Ese correo no tiene forma de correo.'); e.codigo = 400; throw e;
+  }
+
+  const usuarios = leerUsuarios();
+  const previo = usuarios.find(u => u.correo === correo);
+
+  /* Corregirle el cargo a alguien no puede dejarlo fuera de su propia cuenta:
+     sin clave, si ya existía se conserva la suya. */
+  let clave = datos.clave == null ? '' : String(datos.clave);
+  const conservaClave = !clave && !!previo;
+  const inventada = !clave && !previo;
+  if(inventada) clave = claveLegible();
+  if(clave && clave.length < 6){
+    const e = new Error('La clave es muy corta: pon al menos 6 caracteres.');
+    e.codigo = 400; throw e;
+  }
+
+  const sal  = conservaClave ? previo.sal  : crypto.randomBytes(16).toString('hex');
+  const hash = conservaClave ? previo.hash : huella(clave, sal);
+
+  const fila = {correo, sal, hash,
+                creado_en: (previo && previo.creado_en) || new Date().toISOString()};
+  /* lo que no se vuelva a indicar se conserva; indicarlo vacío sí lo borra */
+  DATOS_TECNICO.forEach(k => {
+    const v = datos[k];
+    fila[k] = (v === undefined) ? ((previo && previo[k]) || null)
+                                : (String(v == null ? '' : v).trim().slice(0, 120) || null);
+  });
+  /* sin nombre, el de la Hoja de Servicio sería un correo electrónico */
+  if(!fila.nombre) fila.nombre = correo.split('@')[0].replace(/[._]/g, ' ');
+
+  const i = usuarios.findIndex(u => u.correo === correo);
+  if(i >= 0) usuarios[i] = fila; else usuarios.push(fila);
+  escribirJson(F_USERS, usuarios);
+
+  return {fila, nueva: !previo, inventada, conservaClave,
+          clave: inventada ? clave : null};
+}
+
+/* Una cuenta como se la puede enseñar a alguien: sin la sal ni la huella de la
+   clave, que no salen de este archivo ni para GTIC. */
+function usuarioPublico(u){
+  const o = {correo: u.correo, creado_en: u.creado_en || null};
+  DATOS_TECNICO.forEach(k => { o[k] = u[k] || null; });
+  return o;
+}
+
 function crearUsuario(correo, clave){
   if(!correo){
     console.error('Uso: node servidor.js --crear-usuario correo@ciip.gob.ve [clave] \\');
@@ -103,40 +162,22 @@ function crearUsuario(correo, clave){
   /* si la "clave" empieza por -- es en realidad la primera bandera */
   if(clave && clave.startsWith('--')) clave = null;
 
-  const usuarios = leerUsuarios();
-  const buscado = correo.toLowerCase().trim();
-  const previo = usuarios.find(u => u.correo === buscado);
-
-  /* Corregirle el cargo a alguien no puede dejarlo fuera de su propia cuenta.
-     Sin clave: si ya existía, se conserva la suya; si es nuevo, se inventa una
-     y se muestra. (Este mismo comando le cambió la clave a alguien por
-     corregirle un dato; de ahí la distinción.) */
-  const conservaClave = !clave && !!previo;
-  const inventada = !clave && !previo;
-  if(inventada) clave = claveLegible();
-  if(clave && clave.length < 6){
-    console.error('La clave es muy corta: pon al menos 6 caracteres.');
-    process.exit(1);
-  }
-
-  const sal = conservaClave ? previo.sal : crypto.randomBytes(16).toString('hex');
-  const hash = conservaClave ? previo.hash : huella(clave, sal);
-
-  const fila = {correo: buscado, sal, hash,
-                creado_en: (previo && previo.creado_en) || new Date().toISOString()};
-  /* lo que no se vuelva a indicar se conserva: cambiar la clave no debe borrar
-     el cargo de nadie. Indicarlo vacío sí borra. */
+  /* Las reglas del alta están en altaUsuario, que es la misma que usa la
+     bandeja. Aquí solo se recogen las banderas y se cuenta lo que pasó. */
+  const datos = {correo, clave};
   DATOS_TECNICO.forEach(k => {
     const b = bandera(k);
-    fila[k] = (b === undefined) ? ((previo && previo[k]) || null) : (b || null);
+    if(b !== undefined) datos[k] = b;
   });
-  /* sin nombre, el de la Hoja de Servicio sería un correo electrónico */
-  if(!fila.nombre) fila.nombre = buscado.split('@')[0].replace(/[._]/g, ' ');
 
-  const i = usuarios.findIndex(u => u.correo === buscado);
-  if(i >= 0){ usuarios[i] = fila; console.log('\n  Cuenta actualizada: ' + fila.correo); }
-  else      { usuarios.push(fila); console.log('\n  Usuario creado: ' + fila.correo); }
-  escribirJson(F_USERS, usuarios);
+  let alta;
+  try{ alta = altaUsuario(datos); }
+  catch(e){ console.error(e.message); process.exit(1); }
+
+  const {fila, nueva, inventada, conservaClave} = alta;
+  clave = alta.clave || clave;
+  if(nueva) console.log('\n  Usuario creado: ' + fila.correo);
+  else      console.log('\n  Cuenta actualizada: ' + fila.correo);
 
   console.log('  Nombre:   ' + fila.nombre);
   if(fila.cargo)    console.log('  Cargo:    ' + fila.cargo);
@@ -690,6 +731,67 @@ async function atenderApi(req, res, url){
     const quien = {email: s.correo};
     DATOS_TECNICO.forEach(k => { if(usuarios[i][k]) quien[k] = usuarios[i][k]; });
     return responder(res, 200, quien);
+  }
+
+  /* ---- las cuentas de la bandeja ----
+     Hasta ahora dar de alta a alguien exigía la línea de comandos en esta
+     misma máquina. Eso deja fuera a quien tenga que hacerlo desde su puesto y
+     obliga a que siempre haya alguien que sepa arrancar un servidor.
+
+     Quien ya está dentro puede dar de alta a otro. No hay jefes: todas las
+     cuentas de GTIC ven y atienden todas las solicitudes, así que inventar un
+     escalón solo para esto sería una ceremonia que no protege de nada.
+
+     La sal y la huella de la clave no salen de aquí ni para GTIC: lo que se
+     entrega pasa por usuarioPublico. */
+  if(url.pathname === '/auth/v1/admin/users'){
+    const s = sesionDe(req);
+    if(!s) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
+
+    if(req.method === 'GET'){
+      const lista = leerUsuarios()
+        .map(usuarioPublico)
+        .sort((a, b) => String(a.nombre || a.correo).localeCompare(String(b.nombre || b.correo), 'es'));
+      return responder(res, 200, lista);
+    }
+
+    if(req.method === 'POST'){
+      const d = await cuerpoDe(req);
+      let alta;
+      try{ alta = altaUsuario(d); }
+      catch(e){ return responder(res, e.codigo || 400, {message: e.message}); }
+
+      console.log('  » cuenta ' + (alta.nueva ? 'creada' : 'actualizada') + ': ' +
+                  alta.fila.correo + ' (por ' + s.correo + ')');
+      /* La clave inventada viaja UNA vez, aquí, para que quien la creó pueda
+         dictarla. No se guarda en claro en ningún sitio, así que si se pierde
+         esta respuesta hay que ponerle otra. */
+      return responder(res, alta.nueva ? 201 : 200,
+        [Object.assign(usuarioPublico(alta.fila), {clave_nueva: alta.clave})]);
+    }
+
+    if(req.method === 'DELETE'){
+      const filtro = url.searchParams.get('correo') || '';
+      const correo = (filtro.startsWith('eq.') ? filtro.slice(3) : filtro).toLowerCase().trim();
+      const usuarios = leerUsuarios();
+      if(!usuarios.some(u => u.correo === correo)){
+        return responder(res, 404, {message: 'No existe ninguna cuenta con ese correo.'});
+      }
+      /* Borrarse a uno mismo deja a alguien fuera de la pantalla en la que
+         está trabajando, y es casi siempre un dedazo. */
+      if(correo === s.correo){
+        return responder(res, 409, {message: 'Esa es tu propia cuenta. Que te dé de baja otro compañero.'});
+      }
+      /* Quedarse sin nadie cierra la bandeja para siempre, y la única salida
+         sería volver a la línea de comandos de esta máquina. */
+      const quedan = usuarios.filter(u => u.correo !== correo);
+      if(!quedan.length){
+        return responder(res, 409, {message: 'Es la última cuenta. Crea antes la que la sustituye.'});
+      }
+      escribirJson(F_USERS, quedan);
+      console.log('  » cuenta dada de baja: ' + correo + ' (por ' + s.correo + ')');
+      return responder(res, 200, [{correo}]);
+    }
   }
 
   /* ---- escribirle al técnico, o al usuario ----

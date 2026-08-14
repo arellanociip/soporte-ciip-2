@@ -159,9 +159,8 @@
     $('pantallaAcceso').hidden = true;
     $('pantallaBandeja').hidden = false;
     $('cabDerecha').hidden = false;
-    /* volver a la cola cierra las estadísticas: nunca las dos a la vez */
-    const st = $('panelStats');
-    if(st){ st.hidden = true; $('botonStats').textContent = 'Estadísticas'; }
+    /* volver a la cola cierra lo que hubiera delante: nunca dos a la vez */
+    verPanel(null);
   }
 
   /* ================= enterarse en el momento =================
@@ -374,7 +373,7 @@
 
   /* Colocar la pantalla en una solicitud: lo que haga falta para que se vea. */
   function irA(id){
-    if($('panelStats') && !$('panelStats').hidden) verStats(false);
+    if(abierto('panelStats') || abierto('panelSaber') || abierto('panelCuentas')) verPanel(null);
     if(!solicitudes.some(s => s.id === id)) return;
     /* si el filtro o la búsqueda la esconden, se sueltan: más vale perder el
        filtro que perder la solicitud */
@@ -711,18 +710,50 @@
     pintarStats();
   });
 
-  function verStats(si){
-    $('panelStats').hidden = !si;
-    if(si) verSaber(false);
-    $('pantallaBandeja').hidden = si || !$('panelSaber').hidden;
-    /* el enlace dice a dónde lleva, no dónde estás */
-    $('botonStats').textContent = si ? 'Ver la cola' : 'Estadísticas';
-    if(si) pintarStats();
+  /* ================= los paneles que sustituyen a la cola =================
+     Eran dos y se apagaban el uno al otro a mano. Con tres, esa cuenta cruzada
+     se vuelve un enredo en el que es fácil dejar dos abiertos a la vez o la
+     cola escondida sin que haya nada delante. Aquí se nombra el que se quiere
+     ver —o ninguno, que es volver a la cola— y los demás se cierran solos. */
+  const PANELES = [
+    {panel: 'panelStats',   boton: 'botonStats',   texto: 'Estadísticas',
+     pinta: () => pintarStats()},
+    {panel: 'panelSaber',   boton: 'botonSaber',   texto: 'Base del conocimiento',
+     pinta: () => pintarGuias()},
+    {panel: 'panelCuentas', boton: 'botonCuentas', texto: 'Cuentas',
+     pinta: () => pintarCuentas()},
+  ];
+
+  function verPanel(cual){
+    PANELES.forEach(p => {
+      const caja = $(p.panel);
+      if(!caja) return;
+      const abierto = p.panel === cual;
+      caja.hidden = !abierto;
+      /* el enlace dice a dónde lleva, no dónde estás */
+      $(p.boton).textContent = abierto ? 'Ver la cola' : p.texto;
+      if(abierto) p.pinta();
+    });
+    $('pantallaBandeja').hidden = !!cual;
   }
+
+  const abierto = cual => { const c = $(cual); return c && !c.hidden; };
+
+  const verStats   = si => verPanel(si ? 'panelStats'   : null);
+  const verSaber   = si => verPanel(si ? 'panelSaber'   : null);
+  const verCuentas = si => verPanel(si ? 'panelCuentas' : null);
 
   $('botonStats').addEventListener('click', e => {
     e.preventDefault();
-    verStats($('panelStats').hidden);
+    verPanel(abierto('panelStats') ? null : 'panelStats');
+  });
+  $('botonSaber').addEventListener('click', e => {
+    e.preventDefault();
+    verPanel(abierto('panelSaber') ? null : 'panelSaber');
+  });
+  $('botonCuentas').addEventListener('click', e => {
+    e.preventDefault();
+    verPanel(abierto('panelCuentas') ? null : 'panelCuentas');
   });
 
   /* ================= qué sabemos =================
@@ -788,18 +819,6 @@
             'solicitud ya resuelta: ábrela y pulsa "Guardar esto como guía".'}</div>`;
   }
 
-  function verSaber(si){
-    $('panelSaber').hidden = !si;
-    if(si) verStats(false);
-    $('pantallaBandeja').hidden = si || !$('panelStats').hidden;
-    $('botonSaber').textContent = si ? 'Ver la cola' : 'Base del conocimiento';
-    if(si) pintarGuias();
-  }
-
-  $('botonSaber').addEventListener('click', e => {
-    e.preventDefault();
-    verSaber($('panelSaber').hidden);
-  });
   $('buscarGuia').addEventListener('input', pintarGuias);
   $('listaGuias').addEventListener('click', e => {
     const b = e.target.closest('[data-editar]');
@@ -886,6 +905,225 @@
       $('avisoGuia').hidden = false;
     }
   }
+
+  /* Reclamar un campo que falta, y retirar el reclamo. La planilla del usuario
+     tiene lo suyo en js/solicitud.js; aquí hacía falta lo mismo en pequeño. */
+  function marcarError(id, texto){
+    const campo = $(id).closest('.campo');
+    if(!campo) return;
+    campo.classList.add('mal');
+    const hueco = campo.querySelector('.error');
+    if(hueco) hueco.textContent = texto;
+  }
+
+  function limpiarErrores(caja){
+    (caja || document).querySelectorAll('.campo.mal').forEach(c => {
+      c.classList.remove('mal');
+      const hueco = c.querySelector('.error');
+      if(hueco) hueco.textContent = '';
+    });
+  }
+
+  /* ================= quién puede entrar =================
+     Dar de alta a un compañero exigía hasta ahora la línea de comandos en la
+     máquina que sirve las páginas. Eso obligaba a que siempre hubiera alguien
+     capaz de arrancar un servidor, y dejaba fuera a quien tuviera que hacerlo
+     desde su puesto un lunes por la mañana.
+
+     No hay jefes: cualquiera que ya esté dentro puede dar de alta a otro. Es
+     lo coherente con cómo funciona el resto —todas las cuentas ven y atienden
+     todas las solicitudes—, y un escalón de permisos solo para esto sería una
+     ceremonia que no protege de nada.
+
+     Las claves no viajan nunca: el servidor guarda su huella y devuelve las
+     cuentas sin ella. La única que se ve es la recién inventada, una vez. */
+  /* Contra el servidor de casa esto va por /auth/v1/admin/users, que es el
+     dialecto que ya habla. Supabase no deja crear cuentas desde el navegador
+     —haría falta su llave de administrador, y esa bypasea los permisos de
+     todas las tablas, así que no puede vivir en una página—. Allá la misma
+     petición va a una Edge Function que la guarda del lado del servidor y
+     comprueba antes que quien llama sea de GTIC. Las dos hablan igual: mismos
+     verbos, mismos campos, misma respuesta.
+     Ver supabase/functions/cuentas/. */
+  const RUTA_CUENTAS = B.servidor === 'supabase'
+    ? '/functions/v1/cuentas'
+    : '/auth/v1/admin/users';
+
+  let cuentas = [];
+  let cuentaEnMano = null;
+
+  async function cargarCuentas(){
+    if(enPrueba){ cuentas = []; return; }
+    try{
+      const r = await pedir(RUTA_CUENTAS, {});
+      cuentas = await r.json();
+    }catch(e){ console.warn('No se pudieron traer las cuentas:', e); }
+    if(abierto('panelCuentas')) pintarCuentas();
+  }
+
+  function fichaCuentaHtml(u){
+    const yo = sesion() && sesion().correo === u.correo;
+    const desde = u.creado_en ? fechaCorta(u.creado_en) : '';
+    return `<article class="cuenta" data-cuenta="${esc(u.correo)}">
+      <div class="cuenta-q">
+        <b>${esc(u.nombre || u.correo)}${yo ? ' <span class="cuenta-yo">tú</span>' : ''}</b>
+        <span>${esc(u.correo)}</span>
+      </div>
+      <div class="cuenta-d">
+        ${u.cargo ? `<span>${esc(u.cargo)}</span>` : '<span class="falta">sin cargo</span>'}
+        ${u.telefono ? `<span>${esc(u.telefono)}</span>` : ''}
+        ${desde ? `<span>desde ${esc(desde)}</span>` : ''}
+      </div>
+      <button type="button" class="enlace" data-editar-cuenta="${esc(u.correo)}">Corregirla</button>
+    </article>`;
+  }
+
+  function pintarCuentas(){
+    const q = $('buscarCuenta').value.trim().toLowerCase();
+    const vistas = !q ? cuentas : cuentas.filter(u =>
+      [u.nombre, u.correo, u.cargo].some(v => String(v || '').toLowerCase().includes(q)));
+
+    $('listaCuentas').innerHTML = vistas.length
+      ? `<div class="cuentas">${vistas.map(fichaCuentaHtml).join('')}</div>`
+      : `<div class="vacio">${cuentas.length
+          ? 'Ninguna cuenta coincide con lo que buscas.'
+          : 'No hay ninguna cuenta.'}</div>`;
+  }
+
+  /* Con `u` corrige esa cuenta; sin nada, crea una. La diferencia que importa
+     es el correo: es la llave, así que en una cuenta que ya existe no se toca. */
+  function abrirCuenta(u){
+    cuentaEnMano = u || null;
+    $('tituloVentanaCuenta').textContent = u ? 'Corregir una cuenta' : 'Crear una cuenta';
+    $('bajadaCuenta').textContent = u
+      ? 'Lo que no vuelvas a escribir se conserva. La contraseña solo cambia si pones una nueva.'
+      : 'Con esto esa persona podrá entrar a la bandeja y atender solicitudes. ' +
+        'El nombre y el cargo salen impresos en la Hoja de Servicio.';
+
+    $('cCorreo').value   = u ? u.correo : '';
+    $('cCorreo').disabled = !!u;
+    $('ayudaCorreo').textContent = u
+      ? 'Es la llave de la cuenta; no se cambia.'
+      : 'Es la llave de la cuenta; después no se cambia.';
+    $('cNombre').value   = (u && u.nombre)   || '';
+    $('cCargo').value    = (u && u.cargo)    || '';
+    $('cCedula').value   = (u && u.cedula)   || '';
+    $('cTelefono').value = (u && u.telefono) || '';
+    $('cClave').value    = '';
+    $('cClave').type     = 'password';
+    $('verClaveCuenta').setAttribute('aria-pressed', 'false');
+    $('ayudaClave').textContent = u
+      ? 'Déjala vacía para no tocarla. Mínimo 6 caracteres si la cambias.'
+      : 'Mínimo 6 caracteres. En blanco, se inventa una fácil de dictar.';
+
+    /* darse de baja a uno mismo es casi siempre un dedazo, y el servidor lo
+       rechaza igual: mejor no ofrecer el botón */
+    const yo = u && sesion() && sesion().correo === u.correo;
+    $('borrarCuenta').hidden = !u || !!yo;
+
+    $('avisoCuenta').hidden = true;
+    $('claveNueva').hidden = true;
+    limpiarErrores($('veloCuenta'));
+    $('veloCuenta').hidden = false;
+    document.body.style.overflow = 'hidden';
+    (u ? $('cNombre') : $('cCorreo')).focus();
+  }
+
+  function cerrarCuenta(){
+    $('veloCuenta').hidden = true;
+    cuentaEnMano = null;
+    if($('velo').hidden && $('veloChat').hidden && $('veloPerfil').hidden){
+      document.body.style.overflow = '';
+    }
+  }
+
+  async function guardarLaCuenta(){
+    const correo = $('cCorreo').value.trim();
+    const nombre = $('cNombre').value.trim();
+    limpiarErrores($('veloCuenta'));
+    let falta = false;
+    if(!correo){ marcarError('cCorreo', 'Hace falta el correo.'); falta = true; }
+    if(!nombre){ marcarError('cNombre', 'Hace falta el nombre: sale impreso en la hoja.'); falta = true; }
+    if(falta){ $(!correo ? 'cCorreo' : 'cNombre').focus(); return; }
+
+    const boton = $('guardarCuenta');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    $('avisoCuenta').hidden = true;
+    try{
+      const cuerpo = {correo, nombre,
+        cargo:    $('cCargo').value.trim(),
+        cedula:   $('cCedula').value.trim(),
+        telefono: $('cTelefono').value.trim()};
+      /* la clave vacía significa "no me la toques" en una cuenta que existe, y
+         "invéntame una" en una nueva: en los dos casos, no mandarla */
+      const clave = $('cClave').value;
+      if(clave) cuerpo.clave = clave;
+
+      const r = await pedir(RUTA_CUENTAS, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cuerpo),
+      });
+      const guardada = (await r.json())[0];
+
+      const i = cuentas.findIndex(u => u.correo === guardada.correo);
+      if(i >= 0) cuentas[i] = guardada; else cuentas.push(guardada);
+      pintarCuentas();
+
+      if(guardada.clave_nueva){
+        /* Se enseña aquí y no se cierra la ventana: es la única vez que esta
+           clave existe escrita. Si se cierra sin apuntarla, hay que poner otra. */
+        $('claveNueva').innerHTML = '<span>✓</span><div><b>Cuenta creada.</b> ' +
+          'Su contraseña es <code class="clave-dictar">' + esc(guardada.clave_nueva) + '</code><br>' +
+          'Apúntala o dictala ahora: no se guarda en ningún sitio y no se puede volver a ver. ' +
+          'Si se pierde, se le pone una nueva desde aquí.</div>';
+        $('claveNueva').hidden = false;
+        $('tituloVentanaCuenta').textContent = 'Cuenta creada';
+        $('cCorreo').disabled = true;
+        cuentaEnMano = guardada;
+      }else{
+        cerrarCuenta();
+      }
+    }catch(err){
+      $('avisoCuenta').innerHTML = '<span>⚠</span><div>No se pudo guardar: ' + esc(err.message) + '</div>';
+      $('avisoCuenta').hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar';
+  }
+
+  async function borrarLaCuenta(){
+    if(!cuentaEnMano) return;
+    const quien = cuentaEnMano.nombre || cuentaEnMano.correo;
+    if(!confirm('Se da de baja a ' + quien + ' y dejará de poder entrar. ¿Seguimos?')) return;
+    try{
+      await pedir(RUTA_CUENTAS + '?correo=eq.' + encodeURIComponent(cuentaEnMano.correo),
+                  {method: 'DELETE'});
+      cuentas = cuentas.filter(u => u.correo !== cuentaEnMano.correo);
+      cerrarCuenta();
+      pintarCuentas();
+    }catch(err){
+      $('avisoCuenta').innerHTML = '<span>⚠</span><div>No se pudo dar de baja: ' + esc(err.message) + '</div>';
+      $('avisoCuenta').hidden = false;
+    }
+  }
+
+  $('buscarCuenta').addEventListener('input', pintarCuentas);
+  $('botonNuevaCuenta').addEventListener('click', () => abrirCuenta(null));
+  $('listaCuentas').addEventListener('click', e => {
+    const b = e.target.closest('[data-editar-cuenta]');
+    if(b) abrirCuenta(cuentas.find(u => u.correo === b.dataset.editarCuenta));
+  });
+  $('guardarCuenta').addEventListener('click', guardarLaCuenta);
+  $('cancelarCuenta').addEventListener('click', cerrarCuenta);
+  $('cerrarCuenta').addEventListener('click', cerrarCuenta);
+  $('borrarCuenta').addEventListener('click', borrarLaCuenta);
+  $('verClaveCuenta').addEventListener('click', () => {
+    const c = $('cClave'), b = $('verClaveCuenta');
+    const viendo = c.type === 'text';
+    c.type = viendo ? 'password' : 'text';
+    b.setAttribute('aria-pressed', String(!viendo));
+    c.focus();
+  });
 
   /* ---------- apuntar el equipo de alguien ----------
      Se abre desde la ficha, con lo que el técnico acabe de escribir en el
@@ -1576,6 +1814,7 @@
       await cargar();
       cargarGuias();
       inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
+      cargarCuentas();
       vigilar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
@@ -1867,7 +2106,7 @@
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    try{ await cargar(); cargarGuias(); inventarioTraer(); vigilar(); }
+    try{ await cargar(); cargarGuias(); inventarioTraer(); cargarCuentas(); vigilar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();

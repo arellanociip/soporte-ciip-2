@@ -19,6 +19,7 @@
     <div class="der" id="cabDerecha" hidden>
       <a href="#" id="botonSaber">Base del conocimiento</a>
       <a href="#" id="botonStats">Estadísticas</a>
+      <a href="#" id="botonCuentas">Cuentas</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
     </div>
@@ -131,6 +132,29 @@
     </div>
 
     <div id="listaGuias"></div>
+  </section>
+
+  <!-- ===================== QUIÉN PUEDE ENTRAR =====================
+       Hasta ahora dar de alta a un compañero exigía la línea de comandos en la
+       máquina que sirve. Eso obligaba a que siempre hubiera alguien que
+       supiera arrancar un servidor, y dejaba fuera a quien tuviera que hacerlo
+       desde su puesto. Aquí se hace desde la bandeja. -->
+  <section id="panelCuentas" hidden>
+    <div class="intro">
+      <h1>Cuentas de GTIC</h1>
+      <p>Quién puede entrar a esta bandeja. Quien pide un soporte no necesita cuenta:
+      esto es solo para la gerencia.</p>
+    </div>
+
+    <div class="barra">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="buscarCuenta" placeholder="Buscar por nombre, correo o cargo">
+      </div>
+      <button type="button" class="boton primario chico" id="botonNuevaCuenta">+ Crear una cuenta</button>
+    </div>
+
+    <div id="listaCuentas"></div>
   </section>
 
 </main>
@@ -291,6 +315,70 @@
      estaba abierto sigue igual, detrás. -->
 <div class="velo velo-nueva" id="veloNueva" role="alertdialog" aria-label="Llegó una solicitud" hidden>
   <div class="hoja hoja-nueva" id="hojaNueva"></div>
+</div>
+
+<!-- ===================== CREAR O CORREGIR UNA CUENTA =====================
+     La clave se puede dejar en blanco: para una cuenta nueva se inventa una
+     que se pueda dictar por teléfono, y para una que ya existe significa "no
+     me la toques", que es lo que hace falta al corregirle el cargo a alguien. -->
+<div class="velo" id="veloCuenta" hidden>
+  <div class="hoja" style="max-width:560px">
+    <button type="button" class="cerrar" id="cerrarCuenta" aria-label="Cerrar">✕</button>
+    <h2 id="tituloVentanaCuenta">Crear una cuenta</h2>
+    <div class="bajada" id="bajadaCuenta">Con esto esa persona podrá entrar a la bandeja
+      y atender solicitudes. El nombre y el cargo salen impresos en la Hoja de Servicio.</div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo c6">
+        <label for="cCorreo">Correo *</label>
+        <input type="text" id="cCorreo" autocomplete="off" placeholder="nombre.apellido@ciip.com.ve">
+        <div class="ayuda" id="ayudaCorreo">Es la llave de la cuenta; después no se cambia.</div>
+        <div class="error"></div>
+      </div>
+      <div class="campo c6">
+        <label for="cNombre">Nombre y apellido *</label>
+        <input type="text" id="cNombre" autocomplete="off" placeholder="Ej. Dan Moreno">
+        <div class="error"></div>
+      </div>
+
+      <div class="campo c6">
+        <label for="cCargo">Cargo</label>
+        <input type="text" id="cCargo" autocomplete="off" placeholder="Ej. Técnico de soporte">
+      </div>
+      <div class="campo c6">
+        <label for="cCedula">Cédula</label>
+        <input type="text" id="cCedula" autocomplete="off" placeholder="Ej. 12.345.678">
+      </div>
+      <div class="campo c6">
+        <label for="cTelefono">Teléfono</label>
+        <input type="text" id="cTelefono" autocomplete="off" placeholder="Ej. 0412-1234567">
+      </div>
+      <div class="campo c6">
+        <label for="cClave">Contraseña</label>
+        <div class="clave-caja">
+          <input type="password" id="cClave" autocomplete="new-password" placeholder="Se inventa una si lo dejas vacío">
+          <button type="button" id="verClaveCuenta" aria-pressed="false"
+                  aria-label="Mostrar la contraseña" title="Mostrar la contraseña">
+            <svg viewBox="0 0 24 24"><path d="M1.8 12S5.9 5.5 12 5.5 22.2 12 22.2 12 18.1 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.1"/></svg>
+          </button>
+        </div>
+        <div class="ayuda" id="ayudaClave">Mínimo 6 caracteres. En blanco, se inventa una fácil de dictar.</div>
+        <div class="error"></div>
+      </div>
+    </div>
+
+    <!-- La clave recién inventada, una sola vez. No se guarda en claro en
+         ninguna parte, así que si se cierra esta ventana sin apuntarla hay que
+         ponerle otra. -->
+    <div class="aviso bueno" id="claveNueva" hidden style="margin:16px 0 0"></div>
+    <div class="aviso malo" id="avisoCuenta" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="guardarCuenta">Guardar</button>
+      <button type="button" class="boton plano" id="cancelarCuenta">Cancelar</button>
+      <button type="button" class="boton plano peligro" id="borrarCuenta" hidden>Dar de baja</button>
+    </div>
+  </div>
 </div>
 
 <!-- Lo que sale por la impresora: la Hoja de Servicio del Excel, rehecha. -->
