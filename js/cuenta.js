@@ -179,7 +179,9 @@
     $('cuNombre').value = '';
     $('veloCuentaUsuario').hidden = false;
     document.body.style.overflow = 'hidden';
-    $('cuCorreo').focus();
+    /* El primer campo no es el mismo en los dos modos: creando cuenta, el
+       de arriba es el nombre. */
+    (modo === 'registrarse' ? $('cuNombre') : $('cuCorreo')).focus();
   }
 
   /* Solo se cierra cuando hay sesión. Sin ella no hay nada detrás que usar:
@@ -199,6 +201,16 @@
       ? 'Con tu correo de la casa, el mismo del trabajo. La contraseña la eliges tú y no la sabe nadie más.'
       : 'Para pedir soporte hay que entrar con tu correo de la casa. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
+    /* Los dos campos cambian de papel según el modo, y al navegador hay que
+       decírselo. La pareja username + current-password es la firma que
+       reconoce como "esto es entrar", y en cuanto la ve rellena las
+       credenciales que tenga guardadas —da igual que acabemos de vaciar los
+       campos: el relleno viene después—. En la PC compartida de una oficina
+       eso es salir a crear la cuenta con el correo del que se sentó antes.
+       Con new-password deja de rellenar y encima ofrece inventar la clave,
+       que es lo que hace falta aquí. */
+    $('cuCorreo').autocomplete = nuevo ? 'email' : 'username';
+    $('cuClave').autocomplete  = nuevo ? 'new-password' : 'current-password';
     $('botonAceptarCuenta').textContent = nuevo ? 'Crear la cuenta' : 'Entrar';
     /* Sin sesión no hay salida que ofrecer: la cuenta es obligatoria y un
        botón que no lleva a ninguna parte solo hace perder el tiempo. Con
@@ -281,7 +293,16 @@
       e.preventDefault();
       modo = modo === 'entrar' ? 'registrarse' : 'entrar';
       pintarModo();
+      /* Vaciar también aquí, y no solo al abrir la ventana: cambiarle el
+         papel a un campo no borra lo que ya tiene dentro. Quien llega a
+         "Entrar", ve el correo de otro puesto por el navegador y pasa a
+         crear cuenta, se llevaría ese correo consigo. Cuesta reescribir dos
+         palabras y evita registrarse con el correo de un compañero. */
+      $('cuCorreo').value = '';
+      $('cuClave').value = '';
+      $('cuNombre').value = '';
       $('avisoCuentaUsuario').hidden = true;
+      (modo === 'registrarse' ? $('cuNombre') : $('cuCorreo')).focus();
     });
     const ver = $('verClaveUsuario');
     if(ver) ver.addEventListener('click', () => {
