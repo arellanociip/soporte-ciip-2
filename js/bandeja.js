@@ -1086,6 +1086,11 @@
      bajarlo, sin que esta página tenga que hacer nada. */
   function hojaBotonHtml(s){
     if(s.estado !== 'atendida') return '';
+    /* No hay quien arme el PDF contra Supabase (eso lo hace el Edge de la
+       PC). Queda "Imprimir Hoja de Servicio" en la ficha, que no depende de
+       esto: arma el mismo papel en el navegador y lo manda a imprimir o a
+       guardar como PDF con Ctrl+P. */
+    if(B.servidor === 'supabase') return '';
     return `<a class="chat-boton hoja" href="${esc(B.url)}/rest/v1/hoja?id=eq.${esc(s.id)}"
       download title="Descargar la Hoja de Servicio N° ${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))} en PDF"
       >${PAPEL}PDF</a>`;
@@ -1354,7 +1359,7 @@
       <div class="botones">
         <button type="button" class="boton primario" id="botonGuardar">Guardar</button>
         <button type="button" class="boton plano" id="botonImprimir">Imprimir Hoja de Servicio</button>
-        ${s.estado === "atendida" ? `<a class="boton plano" download
+        ${s.estado === "atendida" && B.servidor !== 'supabase' ? `<a class="boton plano" download
            href="${esc(B.url)}/rest/v1/hoja?id=eq.${esc(s.id)}">Descargar en PDF</a>` : ""}
       </div>`;
   }

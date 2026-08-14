@@ -917,6 +917,18 @@
      La hoja queda guardada en GTIC: pídesela a la gerencia.</span></div>`;
 
   function hojaHtml(s){
+    /* Contra Supabase no hay quien arme el PDF: eso lo hace el Edge de la PC
+       de la oficina, y en la nube no hay PC. Lo que sí puede: abrir
+       hoja.html, que también sabe pedir su propia solicitud sin cuenta (ver
+       hoja.html), y de ahí imprimir o guardar como PDF con lo que ya trae el
+       navegador. Sin descarga en un clic, y sin el plazo de cinco minutos:
+       no hace falta apagar un enlace que no descarga nada por su cuenta. */
+    if(SOPORTE_BACKEND.servidor === 'supabase'){
+      return `<a class="mis-pdf" target="_blank" rel="noopener"
+            href="hoja.html?id=eq.${escapar(s.id)}"
+            title="Ver la Hoja de Servicio. Se abre en una pestaña nueva: desde ahí se imprime o se guarda como PDF con Ctrl+P."
+            >${PAPEL}<span>Ver Hoja de Servicio</span></a>`;
+    }
     /* El plazo arranca la primera vez que esta pantalla enseña el botón, y
        solo si está a la vista: un repintado en una pestaña de atrás no le
        gasta a nadie sus cinco minutos. */

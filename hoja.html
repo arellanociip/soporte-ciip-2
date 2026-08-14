@@ -47,8 +47,22 @@
 
   if(!/^[0-9a-f-]{36}$/i.test(id)) return fallar('Esta dirección no lleva a ninguna Hoja de Servicio.');
 
-  fetch(SOPORTE_BACKEND.url + '/rest/v1/solicitudes?id=eq.' + encodeURIComponent(id),
-        {headers: soporteCabeceras()})
+  /* Contra Supabase, leer la tabla cruda sin cuenta está vedado a propósito
+     —para que nadie liste las de los demás—. Aquí se pide por la misma
+     función seca que ya usa el seguimiento: entrega solo esta fila, dando su
+     id, sin abrir la lectura de las demás. */
+  const porRpc = SOPORTE_BACKEND.servidor === 'supabase';
+  const pedido = porRpc
+    ? fetch(SOPORTE_BACKEND.url + '/rest/v1/rpc/consultar_solicitud', {
+        method: 'POST',
+        headers: Object.assign({'Content-Type': 'application/json'},
+          soporteCabeceras(), {'Authorization': 'Bearer ' + SOPORTE_BACKEND.anonKey}),
+        body: JSON.stringify({p_id: id}),
+      })
+    : fetch(SOPORTE_BACKEND.url + '/rest/v1/solicitudes?id=eq.' + encodeURIComponent(id),
+        {headers: soporteCabeceras()});
+
+  pedido
     .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
     .then(filas => {
       const s = filas[0];
