@@ -1,17 +1,27 @@
 /* ---------- La cuenta de quien pide soporte ----------
-   OPCIONAL, y eso es lo que la define. Sin cuenta se manda una solicitud
-   igual que siempre y se sigue por el id que queda en este navegador. Una
-   clave olvidada no puede dejar a nadie sin poder pedir ayuda: entonces
-   llamaría por teléfono, que es justo lo que este sistema vino a sustituir.
+   OBLIGATORIA: para pedir soporte hay que entrar con el correo de la casa.
+   La ventana sale sola al abrir, no se cierra, y la planilla de atrás está
+   escondida hasta que se entra.
 
-   Lo que da entrar: el seguimiento deja de ser del navegador y pasa a ser de
-   la persona. Quien cambia de equipo —o le limpian el suyo— sigue viendo lo
-   que pidió. Eso es todo; no habilita nada más.
+   Lo de aquí es la cortesía, no la regla. La regla vive en el servidor:
+   crear_solicitud rechaza a quien no se identifique y `anon` ya no tiene
+   permiso para llamarla (ver sql/migracion_04). Esconder un formulario en el
+   navegador no impide nada —una petición se arma a mano—, así que esto solo
+   evita que alguien lo llene en balde.
+
+   Lo que gana quien entra: el seguimiento deja de ser del navegador y pasa a
+   ser de la persona. Quien cambia de equipo —o le limpian el suyo— sigue
+   viendo lo que pidió.
+
+   Y lo que hay que asumir: quien olvide su clave, o tenga el correo mal
+   escrito en gtic.correos_permitidos, no puede pedir soporte por aquí y
+   acabará llamando por teléfono. Es el precio de exigir identidad. Si un día
+   estorba más de lo que ayuda, la migración 04 explica cómo volver atrás.
 
    Solo existe contra Supabase. El servidor de la oficina no tiene sesiones
-   para las 224 personas de la casa, y montárselas sería un sistema entero
-   para el modo que es el respaldo: ahí el seguimiento por navegador funciona
-   igual que siempre y este archivo se queda quieto.
+   para las 177 personas de la casa, y montárselas sería un sistema entero
+   para el modo que es el respaldo: ahí se sigue pidiendo soporte sin cuenta,
+   como siempre, y este archivo se queda quieto.
 
    Prefijo: soporteCuenta. */
 (function(){
@@ -24,7 +34,6 @@
   /* La sesión vive aquí y no en una variable: recargar la página no puede
      ser lo mismo que salirse. */
   const LLAVE = 'soporte_cuenta';
-  const YA_PREGUNTE = 'soporte_cuenta_preguntada';
 
   function leerSesion(){
     try{ return JSON.parse(localStorage.getItem(LLAVE)); }catch(e){ return null; }
@@ -140,6 +149,7 @@
 
   /* ---------- la barra de arriba, y la vuelta a la ventana ---------- */
   function pintarCabecera(){
+    pintarPuerta();
     const caja = $('cabSesion');
     if(!caja) return;
     const s = leerSesion();
@@ -172,28 +182,32 @@
     $('cuCorreo').focus();
   }
 
+  /* Solo se cierra cuando hay sesión. Sin ella no hay nada detrás que usar:
+     la planilla está escondida y el servidor rechazaría el envío igual (ver
+     sql/migracion_04). Una ventana que se puede cerrar para quedarse mirando
+     una página vacía es peor que una que no se cierra. */
   function cerrar(){
+    if(!leerSesion()) return;
     $('veloCuentaUsuario').hidden = true;
     document.body.style.overflow = '';
-    /* Quien dijo "seguir sin cuenta" no tiene por qué volver a verla cada vez
-       que recarga. Se apunta en la sesión del navegador, no para siempre: al
-       día siguiente vuelve a ofrecerse una vez, por si ya se decidió. Para
-       quien no la quiera nunca, el enlace del panel es la puerta de vuelta. */
-    try{ sessionStorage.setItem(YA_PREGUNTE, '1'); }catch(e){ /* da igual */ }
   }
 
   function pintarModo(){
     const nuevo = modo === 'registrarse';
     $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Entrar';
     $('bajadaCuentaUsuario').textContent = nuevo
-      ? 'Con tu correo de la casa. Sirve para seguir lo que pidas desde cualquier equipo.'
-      : 'Para ver lo que has pedido desde cualquier equipo. Si no tienes cuenta, no hace falta: puedes mandar tu solicitud igual.';
+      ? 'Con tu correo de la casa, el mismo del trabajo. La contraseña la eliges tú y no la sabe nadie más.'
+      : 'Para pedir soporte hay que entrar con tu correo de la casa. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
     $('botonAceptarCuenta').textContent = nuevo ? 'Crear la cuenta' : 'Entrar';
-    /* "Cancelar" no decía lo que hace. Cerrar esta ventana no cancela nada:
-       deja pedir soporte igual, que es lo normal aquí. Decirlo con todas las
-       letras es lo que mantiene la cuenta en lo opcional. */
-    $('cancelarCuentaUsuario').textContent = 'Seguir sin cuenta';
+    /* Sin sesión no hay salida que ofrecer: la cuenta es obligatoria y un
+       botón que no lleva a ninguna parte solo hace perder el tiempo. Con
+       sesión —cambiando de cuenta, por ejemplo— sí se puede volver. */
+    const cancelar = $('cancelarCuentaUsuario');
+    const cerrarX  = $('cerrarCuentaUsuario');
+    const dentro = !!leerSesion();
+    if(cancelar){ cancelar.hidden = !dentro; cancelar.textContent = 'Volver'; }
+    if(cerrarX)   cerrarX.hidden = !dentro;
     $('cambiarModoCuenta').textContent = nuevo
       ? 'Ya tengo cuenta · entrar'
       : 'No tengo cuenta · crear una';
@@ -282,16 +296,23 @@
     const caja = $('cuClave');
     if(caja) caja.addEventListener('keydown', e => { if(e.key === 'Enter') aceptar(); });
 
-    /* Sale sola al abrir la página. El botón "Entrar" que había en la barra
-       de arriba no decía a qué llevaba, y en una página donde la cuenta no
-       hace falta, un botón suelto invita a pensar que sí.
-
-       No sale si ya hay sesión —no habría nada que pedir— ni si en esta misma
-       visita ya se dijo que no. Y el botón grande de al lado dice "Seguir sin
-       cuenta" con todas las letras: quien no la quiera, cierra y pide su
-       soporte igual, que es como tiene que ser. */
-    let yaPregunte = false;
-    try{ yaPregunte = sessionStorage.getItem(YA_PREGUNTE) === '1'; }catch(e){}
-    if(!leerSesion() && !yaPregunte) abrir('entrar');
+    /* Sin sesión, esto es lo primero y lo único que hay. No se cierra, y la
+       planilla de atrás está escondida hasta que se entre: dejarla a la vista
+       detrás de un velo invita a rellenarla para descubrir al final que no se
+       podía enviar. */
+    pintarPuerta();
+    if(!leerSesion()) abrir('entrar');
   });
+
+  /* La planilla solo existe para quien entró. La regla de verdad está en el
+     servidor —crear_solicitud rechaza a quien no se identifique, ver
+     sql/migracion_04— y esto es lo que evita que alguien la llene en balde. */
+  function pintarPuerta(){
+    if(!HAY) return;
+    const dentro = !!leerSesion();
+    ['tarjetaAvance', 'pantallaFormulario', 'misSolicitudes', 'intro'].forEach(id => {
+      const c = $(id);
+      if(c) c.classList.toggle('tras-la-puerta', !dentro);
+    });
+  }
 })();

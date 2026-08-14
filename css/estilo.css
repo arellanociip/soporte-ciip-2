@@ -1324,7 +1324,12 @@ select.despierta{animation:destello .7s ease;}
 .guias{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; align-items:start;}
 @media (max-width:820px){ .guias{grid-template-columns:1fr;} }
 
-/* ===================== ENTRAR, SI SE QUIERE =====================
+/* Lo que hay detrás de la puerta. Se esconde entero en vez de atenuarse:
+   una planilla medio visible detrás de un velo invita a intentar rellenarla,
+   y descubrir al final que no se podía enviar es peor que no verla. */
+.tras-la-puerta{display:none !important;}
+
+/* ===================== ENTRAR =====================
    La cuenta de quien pide soporte es opcional, y el tamaño lo dice: va
    arriba, pequeña y al margen. Si pesara como un botón principal parecería
    un paso previo para pedir ayuda, que es justo lo que no es. */
