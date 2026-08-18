@@ -39,6 +39,21 @@ const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')!;
    la firma en la Hoja de Servicio. En Supabase viven en el user_metadata. */
 const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'] as const;
 
+/* Quién es de GTIC, que ya no es lo mismo que tener cuenta: desde la
+   migración 03 el papel vive en gtic.personal, y desde que la bandeja
+   pregunta por él —ver js/bandeja.js— una cuenta que no esté en esa tabla
+   no puede entrar. Por eso este panel tiene que escribirla: si solo creara
+   la cuenta, crearía cuentas que su propia bandeja rechaza.
+
+   Lleva la llave de administrador, así que ve la tabla aunque RLS se la
+   niegue a todo el mundo desde el navegador. */
+// deno-lint-ignore no-explicit-any
+async function uidsDeGtic(admin: any): Promise<Set<string>> {
+  const { data, error } = await admin.schema('gtic').from('personal').select('uid');
+  if (error) throw error;
+  return new Set((data ?? []).map((f: { uid: string }) => f.uid));
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
@@ -112,7 +127,12 @@ Deno.serve(async (req) => {
     if (req.method === 'GET') {
       const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
       if (error) throw error;
+      /* Solo los de GTIC. Antes daba igual —toda cuenta lo era— pero hoy
+         listar auth.users entero sería enseñar a las 177 personas de la casa
+         como si todas pudieran entrar aquí. */
+      const deGtic = await uidsDeGtic(admin);
       const lista = (data?.users ?? [])
+        .filter((u: { id: string }) => deGtic.has(u.id))
         .map(usuarioPublico)
         .sort((a, b) =>
           String(a.nombre ?? a.correo).localeCompare(String(b.nombre ?? b.correo), 'es'));
@@ -170,6 +190,13 @@ Deno.serve(async (req) => {
         fila = data.user;
       }
 
+      /* El papel, que es lo que de verdad abre la bandeja. Va aquí porque
+         hace falta el uid, y se hace también cuando la cuenta ya existía:
+         dar de alta a alguien por este panel es decir que es de GTIC. */
+      const { error: malPapel } = await admin.schema('gtic').from('personal')
+        .upsert({ uid: fila.id, correo }, { onConflict: 'uid' });
+      if (malPapel) throw malPapel;
+
       return responder(previo ? 200 : 201, [
         { ...usuarioPublico(fila), clave_nueva: inventada ? clave : null },
       ]);
@@ -186,6 +213,14 @@ Deno.serve(async (req) => {
       const victima = usuarios.find((u) => u.email?.toLowerCase() === correo);
       if (!victima) return responder(404, { message: 'No existe ninguna cuenta con ese correo.' });
 
+      /* Dar de baja aquí es dar de baja de GTIC, así que quien no lo sea no
+         es asunto de este panel: una cuenta de quien pide soporte no se toca
+         desde la bandeja. */
+      const deGtic = await uidsDeGtic(admin);
+      if (!deGtic.has(victima.id)) {
+        return responder(404, { message: 'Esa cuenta no es de GTIC.' });
+      }
+
       /* Borrarse a uno mismo deja a alguien fuera de la pantalla en la que está
          trabajando, y es casi siempre un dedazo. */
       if (correo === yo.email?.toLowerCase()) {
@@ -193,9 +228,16 @@ Deno.serve(async (req) => {
       }
       /* Quedarse sin nadie cierra la bandeja para siempre, y la única salida
          sería el panel de Supabase. */
-      if (usuarios.length <= 1) {
-        return responder(409, { message: 'Es la última cuenta. Crea antes la que la sustituye.' });
+      if (deGtic.size <= 1) {
+        return responder(409, { message: 'Es la última cuenta de GTIC. Crea antes la que la sustituye.' });
       }
+
+      /* Primero el papel y luego la cuenta: si se cae en medio, lo que queda
+         es alguien sin entrada a la bandeja, que es el lado seguro. Al revés
+         quedaría una fila huérfana en gtic.personal. */
+      const { error: malPapel } = await admin.schema('gtic').from('personal')
+        .delete().eq('uid', victima.id);
+      if (malPapel) throw malPapel;
 
       const { error } = await admin.auth.admin.deleteUser(victima.id);
       if (error) throw error;

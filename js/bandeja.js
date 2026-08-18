@@ -95,6 +95,14 @@
     }
     const s = desdeRespuesta(await r.json());
     guardarSesion(s);
+    /* Se comprueba aquí, pegado al guardado: si esta cuenta no es de GTIC,
+       la sesión que acabamos de guardar no debe durar ni un instante. */
+    if(!(await esDeSoporte())){
+      borrarSesion();
+      const e = new Error('Esta cuenta no es de GTIC.');
+      e.noEsDeSoporte = true;
+      throw e;
+    }
     return s;
   }
 
@@ -144,6 +152,42 @@
       throw new Error('HTTP ' + r.status + (cuerpo ? ' · ' + cuerpo.slice(0, 300) : ''));
     }
     return r;
+  }
+
+  /* ---------- quién puede estar aquí ----------
+     La bandeja es de quien atiende, no de cualquiera que tenga cuenta. Y ser
+     de GTIC no es una marca en el perfil —esa la cambia la propia persona con
+     una llamada a /auth/v1/user, y se ascendería sola en un minuto—: es estar
+     en gtic.personal, una tabla que solo escribe el administrador. Por eso la
+     pregunta va al servidor, que es el único que puede responderla sin que le
+     mientan. Ver la migración 03.
+
+     Esto no añade seguridad: las políticas de la base ya impedían que quien
+     pide soporte viera la cola o las guías. Añade claridad. Hasta ahora esa
+     persona entraba, se encontraba una bandeja vacía y unos botones de
+     atender que le iban a fallar. Ahora se le dice en la puerta, y se le
+     manda a la suya.
+
+     En modo oficina no aplica: servidor.js no sabe de gtic.personal, y allí
+     quien llega a la bandeja es de GTIC por definición. */
+  async function esDeSoporte(){
+    if(enPrueba || B.servidor !== 'supabase') return true;
+    const r = await pedir('/rest/v1/rpc/es_gtic', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: '{}',
+    });
+    return (await r.json()) === true;
+  }
+
+  /* El mismo aviso en los dos sitios donde se puede rebotar a alguien: al
+     entrar, y al llegar con una sesión ya guardada. */
+  function avisarQueNoEsDeSoporte(){
+    const aviso = $('avisoAcceso');
+    aviso.innerHTML = '<span>⚠</span><div>Esta bandeja es de GTIC, y esta cuenta '
+      + 'no lo es. Para pedir soporte, entra por <a href="index.html">la '
+      + 'puerta</a>.</div>';
+    aviso.hidden = false;
   }
 
   /* ================= pantallas ================= */
@@ -1854,8 +1898,13 @@
       cargarCuentas();
       vigilar();
     }catch(err){
-      aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
-      aviso.hidden = false;
+      /* A esta persona no le falta la clave, le falta el papel. Decirle 'no se
+         pudo entrar' la dejaría probando contraseñas que sí son correctas. */
+      if(err.noEsDeSoporte){ avisarQueNoEsDeSoporte(); }
+      else{
+        aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
+        aviso.hidden = false;
+      }
     }
     boton.disabled = false; boton.textContent = 'Entrar';
   });
@@ -2142,6 +2191,19 @@
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
+    /* La sesión guardada puede ser de quien ya no es de GTIC —o de quien nunca
+       lo fue—, así que se pregunta antes de pintar nada. Si la pregunta no se
+       puede hacer, se sigue adelante: las políticas de la base mandan igual, y
+       dejar fuera a un técnico por un tropiezo de red es peor que enseñarle una
+       bandeja que no va a cargar. */
+    try{
+      if(!(await esDeSoporte())){
+        borrarSesion();
+        mostrarAcceso();
+        avisarQueNoEsDeSoporte();
+        return;
+      }
+    }catch(err){ console.warn('No se pudo comprobar si la cuenta es de GTIC:', err); }
     mostrarBandeja();
     try{ await cargar(); cargarGuias(); inventarioTraer(); cargarCuentas(); vigilar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }

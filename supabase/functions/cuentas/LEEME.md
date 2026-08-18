@@ -6,32 +6,35 @@ tocar nada: lo atiende `servidor.js` en `/auth/v1/admin/users`.
 
 ---
 
-## Antes de nada: cierra el registro público
+## Antes de nada: NO cierres el registro público
 
-**Esto es lo más importante de este archivo, y no depende de desplegar nada.**
+**Una versión anterior de este archivo pedía justo lo contrario, y hacerle
+caso rompería el sitio.** Se deja escrito porque el consejo llegó a estar aquí.
 
-Comprobamos que tu proyecto acepta registros desde fuera. Como `esquema.sql` le
-da a `authenticated` permiso de leer **todas** las solicitudes:
+El motivo de aquel aviso era que `esquema.sql` le daba a `authenticated`
+permiso de leer **todas** las solicitudes, así que cualquiera que se
+registrara vería la cola entera de la casa. Eso dejó de ser cierto: la
+migración 03 sustituyó esa política por `ver: gtic todo, cada quien lo suyo`.
+Hoy una cuenta recién hecha solo ve lo suyo, no lee las guías, no toca el
+inventario y —desde el cambio de la bandeja— ni siquiera entra a ella.
+
+Y quién puede registrarse ya lo limita el portero de la migración 03: solo
+los correos de `gtic.correos_permitidos`, que llena GTIC.
+
+Así que **Authentication → Sign In → "Allow new users to sign up" va
+ENCENDIDO**. Si se apaga, ninguna de las ~177 personas de la casa puede
+hacerse su cuenta y GTIC tendría que crearlas todas a mano.
+
+Lo que sí hay que comprobar es que el portero esté puesto de verdad, porque
+se instaló envuelto en un manejador que solo avisa si falla:
 
 ```sql
-grant select, insert, update on gtic.solicitudes to authenticated;
+select tgname from pg_trigger
+ where tgrelid = 'auth.users'::regclass and not tgisinternal;
 ```
 
-…cualquiera que se registre entra a la bandeja y ve la cola completa de la casa.
-La llave `anon` está publicada en el repositorio, así que registrarse no exige
-nada más que saber la dirección.
-
-**Panel → Authentication → Sign In / Providers → desactivar
-"Allow new users to sign up".**
-
-Mientras eso siga abierto, poner el botón de crear cuentas no sirve de mucho:
-la puerta de al lado no tiene cerradura.
-
-> Cómo lo comprobamos: al pedir un alta con la llave `anon`, Supabase respondió
-> `email_address_invalid` (el correo de prueba era inventado) en vez de
-> `signup_disabled`. No completamos la prueba con un correo válido a propósito,
-> porque eso habría creado una cuenta de verdad. Así que es **muy probable**,
-> no seguro. Compruébalo tú al entrar al panel.
+Si `solo_correos_de_la_casa` no sale ahí, entonces sí hay que limitar el
+registro: Authentication → Providers → Email → "Restrict sign ups to…".
 
 ---
 
@@ -82,7 +85,7 @@ todas las solicitudes.
 Dos cosas que sí se impiden, las mismas que en `servidor.js`:
 
 - **darse de baja a uno mismo** — casi siempre es un dedazo
-- **borrar la última cuenta** — dejaría la bandeja cerrada para siempre
+- **borrar la última cuenta de GTIC** — dejaría la bandeja cerrada para siempre
 
 ---
 
@@ -93,9 +96,19 @@ responde el servidor de la oficina:
 
 | Verbo | Qué hace | Devuelve |
 |---|---|---|
-| `GET` | Lista las cuentas | `[{correo, nombre, cargo, cedula, telefono, creado_en}]` |
-| `POST` | Crea o corrige | `[{…, clave_nueva}]` |
+| `GET` | Lista las cuentas **de GTIC** | `[{correo, nombre, cargo, cedula, telefono, creado_en}]` |
+| `POST` | Crea o corrige, y da el papel de GTIC | `[{…, clave_nueva}]` |
 | `DELETE ?correo=eq.X` | Da de baja | `[{correo}]` |
+
+Desde que la bandeja pregunta quién eres —`js/bandeja.js` llama a
+`gtic.es_gtic()` antes de dejar pasar—, este panel no solo crea cuentas:
+**asigna el papel**. `POST` mete a la persona en `gtic.personal` y `DELETE`
+la saca antes de borrar la cuenta. Sin eso, el panel crearía cuentas que su
+propia bandeja rechaza.
+
+Por lo mismo, `GET` lista solo a quien está en `gtic.personal`, y `DELETE`
+se niega a tocar una cuenta que no lo esté: la de quien pide soporte no es
+asunto de este panel.
 
 La clave se puede dejar vacía: en una cuenta nueva **se inventa una que se
 puede dictar por teléfono** (`ruvi-medi-20`) y viaja **una sola vez** en
@@ -117,6 +130,9 @@ Esta función **no se ha ejecutado nunca**. Se escribió leyendo el
 comportamiento de `servidor.js` para que responda igual, pero no hubo forma de
 desplegarla ni de probarla desde aquí: hace falta acceso al panel de Supabase.
 
+Y lo que se le añadió después —que asigne el papel en `gtic.personal`—
+tampoco se ha ejecutado. Es lo primero que hay que mirar al desplegarla.
+
 Lo que sí está probado es el lado de la oficina: 16 comprobaciones manejando
 Edge contra `servidor.js`, incluida la que importa —que una cuenta creada desde
 la bandeja sirva de verdad para entrar—.
@@ -128,3 +144,8 @@ Al desplegarla, vale la pena comprobar en este orden:
 3. **Salir y entrar con esa cuenta nueva** → es la prueba de que sirve
 4. Corregirle el cargo sin tocar la clave → y volver a entrar con la de antes
 5. Intentar darse de baja a uno mismo → el botón ni debería salir
+6. **Que la cuenta nueva entre a la bandeja** → si la rechaza con "esta
+   cuenta no es de GTIC", el papel no se asignó: míralo con
+   `select correo from gtic.personal;`
+7. Dar de baja a alguien → debe desaparecer de `gtic.personal` y de
+   Authentication → Users
