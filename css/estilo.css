@@ -486,10 +486,36 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 }
 .clasificado button:hover{color:var(--navy-deep);}
 
-/* ===================== DATOS RECORDADOS ===================== */
-/* Quien ya pidió soporte no vuelve a escribir sus seis datos: quedan en este
-   navegador y aquí solo se confirman. Verde porque es una buena noticia, no
-   un aviso. */
+/* ===================== EL RECUADRO DEL TÉCNICO ===================== */
+/* Quién atiende, con su cargo y su cédula ya puestos: aquí solo se confirman.
+   Verde porque es una buena noticia, no un aviso.
+
+   Nació en la puerta, para los seis datos de quien pide soporte. Ahí ya no
+   está —esos campos ahora salen rellenos—, pero la bandeja lo sigue usando
+   para el técnico de la ficha, en tecnicoHtml(). Al retirar el de la puerta
+   estas reglas se fueron con él, y el recuadro de la bandeja se quedó sin
+   ellas: el visto bueno, sin su fill:none, se pintaba como un triángulo
+   negro del ancho de la ficha. Si algún día se retira también el de la
+   bandeja, esto se puede borrar; mientras tanto, no. */
+.recordado{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--good-bg); border:1px solid #C9E7D8; border-radius:var(--r-sm);
+  padding:12px 15px; margin-bottom:16px;
+}
+.recordado .ic{width:20px; height:20px; flex:0 0 20px; color:var(--good);}
+.recordado .ic svg{width:100%; height:100%; fill:none; stroke:currentColor;
+  stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
+.recordado .q{flex:1; min-width:160px;}
+.recordado .q b{font-size:13px; font-weight:700; display:block;}
+.recordado .q span{display:block; font-size:12px; color:var(--gray);}
+.recordado .acciones{display:flex; gap:14px; margin-left:auto;}
+.recordado .acciones button{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:12px; font-weight:700; color:var(--navy); text-decoration:underline; padding:2px;
+}
+.recordado .acciones button:hover{color:var(--navy-deep);}
+
+/* El "No soy yo" de la puerta, que ese sí sigue en su sitio. */
 #botonNoSoyYo{color:var(--rust) !important;}
 
 /* ===================== BOTONES ===================== */
