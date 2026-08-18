@@ -75,8 +75,8 @@ a{color:var(--navy);}
 .intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
 
 .seccion{
-  font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
-  color:var(--gray-soft); padding-bottom:8px; margin:26px 0 14px;
+  font-size:15px; font-weight:700; letter-spacing:-.005em;
+  color:var(--ink); padding-bottom:8px; margin:26px 0 14px;
   border-bottom:1px solid var(--line-soft);
 }
 .seccion:first-of-type{margin-top:0;}
