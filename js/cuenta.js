@@ -177,6 +177,15 @@
     $('cuCorreo').value = '';
     $('cuClave').value = '';
     $('cuNombre').value = '';
+    /* Vaciar el valor no basta: el navegador rellena las credenciales
+       guardadas después, aunque el campo esté vacío en ese instante (ver la
+       nota en pintarModo). readonly sí lo frena —Chrome y Firefox no
+       autorrellenan un campo de solo lectura—, y se quita en cuanto alguien
+       lo toca, para no perder la comodidad de que el navegador la ofrezca al
+       hacer clic. Se rearma aquí porque quitarSoloLectura() la retira para
+       siempre una vez usada. */
+    $('cuCorreo').setAttribute('readonly', '');
+    $('cuClave').setAttribute('readonly', '');
     $('veloCuentaUsuario').hidden = false;
     document.body.style.overflow = 'hidden';
     /* El primer campo no es el mismo en los dos modos: creando cuenta, el
@@ -296,6 +305,9 @@
     engancha('cerrarCuentaUsuario', cerrar);
     engancha('cancelarCuentaUsuario', cerrar);
     engancha('botonAceptarCuenta', aceptar);
+    const quitarSoloLectura = e => e.target.removeAttribute('readonly');
+    $('cuCorreo').addEventListener('focus', quitarSoloLectura);
+    $('cuClave').addEventListener('focus', quitarSoloLectura);
     engancha('cambiarModoCuenta', e => {
       e.preventDefault();
       modo = modo === 'entrar' ? 'registrarse' : 'entrar';
