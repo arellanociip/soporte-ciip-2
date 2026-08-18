@@ -818,10 +818,13 @@
         ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
       </div>
       <div class="guia-cuerpo${compacta ? '' : ' recortada'}">${esc(g.cuerpo)}</div>
-      ${compacta ? '' : '<button type="button" class="enlace" data-vermas>Ver completa</button>'}
-      <div class="guia-pie">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}
-        ${g.origen ? ' · de la N° ' + esc(g.origen) : ''}
-        <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button></div>
+      <div class="guia-pie">
+        <span class="guia-meta">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}${g.origen ? ' · de la N° ' + esc(g.origen) : ''}</span>
+        <div class="guia-acciones">
+          ${compacta ? '' : '<button type="button" class="enlace" data-vermas>Ver completa</button>'}
+          <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button>
+        </div>
+      </div>
     </article>`;
   }
 
@@ -843,7 +846,7 @@
   $('listaGuias').addEventListener('click', e => {
     const v = e.target.closest('[data-vermas]');
     if(v){
-      const cuerpo = v.previousElementSibling;
+      const cuerpo = v.closest('.guia').querySelector('.guia-cuerpo');
       const recortada = cuerpo.classList.toggle('recortada');
       v.textContent = recortada ? 'Ver completa' : 'Ver menos';
       return;
