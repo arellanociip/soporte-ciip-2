@@ -437,6 +437,20 @@
   const LLAVE_YO = 'soporte_yo';
   const CAMPOS_YO = ['gerencia', 'usuario', 'cedula', 'telefono', 'piso', 'oficina', 'cargo'];
 
+  /* Los cuatro obligatorios que el sistema puede poner solo: los trae la
+     cuenta, el directorio o lo recordado en este navegador. atajo y
+     descripción nunca salen de ahí —son lo que la persona viene a decir—
+     así que el anillo siempre tiene al menos esos dos que contar. */
+  const IDENTIDAD = ['gerencia', 'usuario', 'piso', 'oficina'];
+
+  /* Cuáles vinieron puestos. Se apunta campo a campo y no en bloque: la
+     cuenta puede traer la gerencia y no el piso, y entonces el piso sigue
+     siendo trabajo de quien pide y tiene que contar. */
+  let puestosSolos = new Set();
+  function anotarLoPuestoSolo(){
+    puestosSolos = new Set(IDENTIDAD.filter(id => $(id).value.trim()));
+  }
+
   function leerYo(){
     try{ return JSON.parse(localStorage.getItem(LLAVE_YO)); }catch(e){ return null; }
   }
@@ -476,6 +490,10 @@
   function mostrarCampos(identificado){
     mostrarIdentidad('campos');
     $('avisoIdentificado').hidden = !identificado;
+    /* Llegar identificado significa que esos campos los puso el sistema.
+       Por "No aparezco en la lista" no: ahí los escribe la persona y
+       cuentan como suyos. */
+    if(identificado) anotarLoPuestoSolo(); else puestosSolos.clear();
   }
 
   function olvidarYo(){
@@ -484,6 +502,7 @@
     $('quienEres').value = '';
     marcar('quienEres', '');
     mostrarIdentidad('buscador');
+    puestosSolos.clear();
     pintarAvance();
     $('quienEres').focus();
   }
@@ -599,6 +618,7 @@
     if(!$('cargo').value)    $('cargo').value    = p.cargo || '';
     /* La cédula tampoco aquí, por la misma razón que en intentarIdentificar. */
     $('avisoIdentificado').hidden = false;
+    anotarLoPuestoSolo();
     pintarEquipo();
     pintarAvance();
     return true;
@@ -627,8 +647,17 @@
     /* Aquí porque se llama con cada cambio de los campos obligatorios: cubre
        tanto elegirse de la lista como escribir los seis a mano. */
     guardarYoSiProcede();
-    const listos = OBLIGATORIOS.filter(id => $(id).value.trim()).length;
-    const total = OBLIGATORIOS.length;
+    /* El anillo mide lo que le queda por hacer a quien pide, no lo que hay
+       relleno. Con cuenta, la identidad viene puesta: contarla arrancaba la
+       barra en 67% sin que nadie hubiera hecho nada, y "faltan 2" al lado de
+       un anillo casi entero se lee como que ya casi está. Fuera lo que puso
+       el sistema, el 0% vuelve a significar que no has empezado. */
+    const cuentan = OBLIGATORIOS.filter(
+      /* "Y siga puesto": si alguien borra un campo que vino relleno, vuelve a
+         contar. Si no, el anillo diría "listo para enviar" con un hueco. */
+      id => !(puestosSolos.has(id) && $(id).value.trim()));
+    const listos = cuentan.filter(id => $(id).value.trim()).length;
+    const total = cuentan.length;
     const faltan = total - listos;
     const pct = Math.round(listos / total * 100);
 
