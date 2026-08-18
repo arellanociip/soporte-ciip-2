@@ -1377,13 +1377,22 @@ select.despierta{animation:destello .7s ease;}
   margin-top:9px; font-size:13px; line-height:1.6; color:var(--gray);
   white-space:pre-wrap; word-break:break-word;
 }
+/* Recortada por defecto: con los pasos técnicos completos (varias líneas
+   numeradas), una tarjeta sin tope se alarga y descuadra la cuadrícula de
+   dos columnas. El botón "Ver completa"/"Ver menos" la destapa sin salir
+   de la lista — ver fichaGuiaHtml en js/bandeja.js. */
+.guia-cuerpo.recortada{
+  display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden;
+}
+.guia > [data-vermas]{margin-top:6px; font-size:12px;}
 .guia-pie{
   margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft);
   font-size:11.5px; color:var(--gray-soft); display:flex; gap:8px; align-items:baseline;
 }
 .guia-pie .enlace{margin-left:auto;}
 
-/* dentro de la ficha */
+/* dentro de la ficha: recorte fijo, sin botón — es una referencia al
+   margen, no la lectura principal. */
 .guia.chica{box-shadow:none; padding:13px 15px;}
 .guia.chica .guia-cuerpo{
   display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden;
