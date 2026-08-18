@@ -801,12 +801,18 @@
 
   function fichaGuiaHtml(g, compacta){
     const cuando = g.actualizada_en ? fechaCorta(g.actualizada_en) : '';
+    /* En la ficha de una solicitud (compacta) el recorte es fijo: es una
+       referencia al margen, no la lectura principal. Aquí, en cambio, es lo
+       que se vino a leer —los pasos técnicos completos, que con contenido
+       real son varias líneas— así que arranca recortada, pero con un botón
+       para desplegarla entera sin salir de la cuadrícula. */
     return `<article class="guia${compacta ? ' chica' : ''}" data-guia="${esc(g.id)}">
       <div class="guia-h">
         <h3>${esc(g.titulo)}</h3>
         ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
       </div>
-      <div class="guia-cuerpo">${esc(g.cuerpo)}</div>
+      <div class="guia-cuerpo${compacta ? '' : ' recortada'}">${esc(g.cuerpo)}</div>
+      ${compacta ? '' : '<button type="button" class="enlace" data-vermas>Ver completa</button>'}
       <div class="guia-pie">${esc(g.autor || '')}${cuando ? ' · ' + esc(cuando) : ''}
         ${g.origen ? ' · de la N° ' + esc(g.origen) : ''}
         <button type="button" class="enlace" data-editar="${esc(g.id)}">Corregirla</button></div>
@@ -829,6 +835,13 @@
 
   $('buscarGuia').addEventListener('input', pintarGuias);
   $('listaGuias').addEventListener('click', e => {
+    const v = e.target.closest('[data-vermas]');
+    if(v){
+      const cuerpo = v.previousElementSibling;
+      const recortada = cuerpo.classList.toggle('recortada');
+      v.textContent = recortada ? 'Ver completa' : 'Ver menos';
+      return;
+    }
     const b = e.target.closest('[data-editar]');
     if(b) abrirGuia(guias.find(g => g.id === b.dataset.editar));
   });
