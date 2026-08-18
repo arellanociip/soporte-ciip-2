@@ -545,7 +545,12 @@
   DIRECTORIO.forEach(p => {
     const o = document.createElement('option');
     o.value = p.nombre;
-    o.label = p.gerencia + ' · Piso ' + p.piso + ', of. ' + p.oficina;
+    /* Piso y oficina pueden faltar —el corte de correos que alimenta hoy el
+       directorio no los trae— y una etiqueta con "Piso , of. " colgando se ve
+       rota. Se omiten los que no estén. */
+    const ubicacion = [p.piso && ('Piso ' + p.piso), p.oficina && ('of. ' + p.oficina)]
+      .filter(Boolean).join(', ');
+    o.label = [p.gerencia, ubicacion].filter(Boolean).join(' · ');
     $('listaPersonas').append(o);
   });
 
