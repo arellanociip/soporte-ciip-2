@@ -520,6 +520,24 @@
     return true;
   }
 
+  /* ---------- identificarse con la cuenta ----------
+     Quien entró con su correo de la casa ya dijo su nombre una vez, al
+     crear la cuenta (ver js/cuenta.js). Pedírselo de nuevo aquí sería
+     hacerle escribir dos veces lo mismo. Se prueba igual que si lo hubiera
+     tecleado él mismo: si el nombre calza con el directorio, queda
+     identificado del todo (recuadro verde); si no calza, al menos el campo
+     no llega vacío y puede elegirse o corregirse desde ahí.
+     No pisa lo que este navegador ya tuviera recordado — leerYo() manda. */
+  function identificarPorCuenta(){
+    if(leerYo()) return false;
+    if(!(window.soporteCuenta && soporteCuenta.dentro())) return false;
+    const quien = soporteCuenta.quien();
+    const nombre = quien && quien.nombre && quien.nombre.trim();
+    if(!nombre || $('quienEres').value.trim()) return false;
+    $('quienEres').value = nombre;
+    return intentarIdentificar();
+  }
+
   /* ---------- elegirse del directorio ----------
      El nombre escrito solo cuenta cuando coincide con alguien de la lista.
      Si no aparece, no se adivina: se abren los seis campos con el nombre ya
@@ -1507,7 +1525,18 @@
   /* Entrar o salir cambia de dónde sale la lista, así que hay que rehacerla.
      Al entrar, además, se adoptó lo que este navegador tuviera anotado (ver
      js/cuenta.js), y eso también hay que reflejarlo. */
-  window.addEventListener('soporte:sesion', () => { pintarMias(); vigilar(); });
+  window.addEventListener('soporte:sesion', e => {
+    /* Si el que sale no tenía nada "recordado" en este navegador, lo suyo
+       era la cuenta y nada más: se limpia, para que en el mismo equipo el
+       que entre después no se encuentre el nombre de otro ya puesto (ver
+       identificarPorCuenta más abajo). Quien sí marcó "recordarme" no se
+       toca: leerYo() sigue mandando. */
+    if(e.detail && e.detail.entro) identificarPorCuenta();
+    else if(!leerYo()) olvidarYo();
+    pintarAvance();
+    pintarMias();
+    vigilar();
+  });
 
   /* Pulsar el anillo despliega el historial completo, y volver a pulsarlo
      regresa a lo que sigue en curso. */
@@ -1747,7 +1776,7 @@
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
-  aplicarYo();
+  if(!aplicarYo()) identificarPorCuenta();
   pintarAvance();
   pintarMias();
 })();
