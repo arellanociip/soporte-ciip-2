@@ -808,8 +808,8 @@
        para desplegarla entera sin salir de la cuadrícula. */
     return `<article class="guia${compacta ? ' chica' : ''}" data-guia="${esc(g.id)}">
       <div class="guia-h">
+        ${g.categoria ? `<span class="guia-cat" title="${esc(g.categoria)}">${esc(g.categoria)}</span>` : ''}
         <h3>${esc(g.titulo)}</h3>
-        ${g.categoria ? `<span class="guia-cat">${esc(g.categoria)}</span>` : ''}
       </div>
       <div class="guia-cuerpo${compacta ? '' : ' recortada'}">${esc(g.cuerpo)}</div>
       <div class="guia-pie">
