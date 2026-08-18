@@ -50,6 +50,11 @@
 
   function desdeRespuesta(datos){
     const u = datos.user || {};
+    /* Supabase no manda estos cuatro sueltos en el usuario: los guarda en
+       user_metadata, que es también de donde los lee la Edge Function de las
+       cuentas. Pedirlos sueltos devolvía undefined, así que la bandeja daba
+       por hecho que la cuenta no tenía nombre ni cargo. */
+    const d = u.user_metadata || {};
     return {
       token: datos.access_token,
       refresco: datos.refresh_token,
@@ -57,16 +62,17 @@
       expira: Date.now() + ((datos.expires_in || 3600) - 60) * 1000,
       correo: u.email || '',
       /* quién es, para no volver a escribirlo en cada solicitud que atienda */
-      nombre: u.nombre || '',
-      cargo: u.cargo || '',
-      cedula: u.cedula || '',
-      telefono: u.telefono || '',
+      nombre: d.nombre || '',
+      cargo: d.cargo || '',
+      cedula: d.cedula || '',
+      telefono: d.telefono || '',
     };
   }
 
-  /* El técnico que atiende, tomado de la sesión. Contra Supabase no vienen
-     estos datos —allí las cuentas solo tienen correo—, así que se cae al
-     correo y el resto queda para escribir a mano. */
+  /* El técnico que atiende, tomado de la sesión. Contra Supabase estos datos
+     viven en el user_metadata de la cuenta —lo desarma desdeRespuesta—; si
+     salen en blanco es que nadie los ha llenado todavía en «Mis datos», y
+     entonces se cae al correo y el resto queda para escribir a mano. */
   function yoTecnico(){
     const s = sesion() || {};
     return {
@@ -1771,8 +1777,11 @@
     const boton = $('guardarPerfil');
     boton.disabled = true; boton.textContent = 'Guardando…';
     try{
+      /* PUT y no PATCH: Supabase Auth solo atiende GET y PUT en /user, y a
+         PATCH le contesta 405. Con eso, «Mis datos» no llegó a guardar nunca,
+         y el aviso mandaba a revisar la conexión, que estaba bien. */
       const r = await pedir('/auth/v1/user', {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({data: {
           nombre:   $('pNombre').value.trim(),
@@ -1782,12 +1791,16 @@
         }}),
       });
       const u = await r.json();
+      /* Vuelven dentro de user_metadata, que es donde los acaba de dejar el
+         PUT de arriba. Leerlos sueltos guardaba la sesión en blanco aunque el
+         guardado hubiera ido bien. */
+      const d = u.user_metadata || {};
       /* la sesión guardada tiene que reflejarlo ya, o el recuadro del técnico
          seguiría diciendo lo viejo hasta el próximo inicio de sesión */
       const s = sesion();
       guardarSesion(Object.assign({}, s, {
-        nombre: u.nombre || '', cargo: u.cargo || '',
-        cedula: u.cedula || '', telefono: u.telefono || '',
+        nombre: d.nombre || '', cargo: d.cargo || '',
+        cedula: d.cedula || '', telefono: d.telefono || '',
       }));
       cerrarPerfil();
       /* si hay una ficha abierta y el técnico era yo, se repinta con lo nuevo */
