@@ -579,9 +579,30 @@
   $('botonNoEstoy').addEventListener('click', () => {
     $('usuario').value = $('quienEres').value.trim();
     mostrarIdentidad('campos');
+    intentarCompletarDesdeUsuario();
     ($('usuario').value ? $('gerencia') : $('usuario')).focus();
     pintarAvance();
   });
+
+  /* Estar en los seis campos no significa que el directorio no lo tenga:
+     puede haber llegado con el apellido incompleto, o desde la cuenta con
+     un nombre corto (ver identificarPorCuenta). Coincidencia exacta, igual
+     que arriba —no se adivina por parecido, que con 245 personas un
+     homónimo pondría la cédula o el piso de otro en la hoja—, y solo se
+     llena lo que esté vacío: lo que la persona ya escribió o eligió manda. */
+  function intentarCompletarDesdeUsuario(){
+    const p = directorioBuscar($('usuario').value);
+    if(!p) return false;
+    if(!$('gerencia').value) $('gerencia').value = p.gerencia;
+    if(!$('piso').value)     $('piso').value     = p.piso;
+    if(!$('oficina').value)  $('oficina').value  = p.oficina;
+    if(!$('cargo').value)    $('cargo').value    = p.cargo || '';
+    if(p.cedula && !$('cedula').value.trim()) $('cedula').value = p.cedula;
+    pintarEquipo();
+    pintarAvance();
+    return true;
+  }
+  $('usuario').addEventListener('blur', intentarCompletarDesdeUsuario);
 
   /* Desmarcar la casilla surte efecto ya: borra lo guardado en vez de esperar
      al próximo envío. Volver a marcarla guarda lo que haya en pantalla. */
