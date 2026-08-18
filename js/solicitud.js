@@ -550,7 +550,24 @@
     const nombre = quien && quien.nombre && quien.nombre.trim();
     if(!nombre || $('quienEres').value.trim()) return false;
     $('quienEres').value = nombre;
-    return intentarIdentificar();
+    if(intentarIdentificar()) return true;
+
+    /* El directorio no la confirmó, pero la cuenta ya dijo quién es: el
+       nombre puede venir más corto que el del corte de correos —'Franklin
+       Reyes' contra 'Franklin David Reyes Delgado'— o esa persona puede no
+       estar en la lista todavía. Antes se quedaba en el buscador con su
+       propio nombre escrito, teniendo que pulsar 'No aparezco en la lista'
+       para poder seguir: un paso de más justo después de haber entrado con
+       su correo, que es cuando más identificada está.
+
+       Se abren los seis campos con el nombre puesto. identificado=false
+       porque quien lo dice es la cuenta y no la lista: no sale el aviso de
+       'ya sabemos quién eres', y el anillo cuenta esos campos como suyos,
+       que es lo que son —los va a escribir la persona—. */
+    $('usuario').value = nombre;
+    mostrarCampos(false);
+    pintarAvance();
+    return true;
   }
 
   /* ---------- elegirse del directorio ----------
