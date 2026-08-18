@@ -157,20 +157,14 @@
         </div>
       </div>
 
-      <!-- Ya sabemos quién eres: aquí solo se confirma. Lo enciende js/solicitud.js. -->
-      <div class="recordado" id="recordado" hidden>
-        <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg></div>
-        <div class="q">
-          <b id="recordadoNombre"></b>
-          <span id="recordadoDonde"></span>
-        </div>
-        <div class="acciones">
-          <button type="button" id="botonCorregir">Corregir</button>
-          <button type="button" id="botonNoSoyYo">No soy yo</button>
-        </div>
-      </div>
-
       <div class="rejilla" id="camposIdentidad" hidden>
+        <!-- Sale solo cuando los seis campos de abajo se llenaron solos —por
+             la cuenta o por elegirse de la lista—, no cuando se llegó aquí por
+             "No aparezco en la lista". Lo enciende js/solicitud.js. -->
+        <div class="campo" id="avisoIdentificado" hidden>
+          <div class="ayuda">Ya sabemos quién eres ·
+            <button type="button" class="enlace" id="botonNoSoyYo">No soy yo</button></div>
+        </div>
         <div class="campo c8">
           <label for="gerencia">Gerencia solicitante *</label>
           <select id="gerencia" name="gerencia" required>

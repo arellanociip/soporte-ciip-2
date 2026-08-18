@@ -459,15 +459,23 @@
     if(completo) guardarYo(recogerDatos());
   }
 
-  /* ---------- los tres estados de "quién solicita" ----------
-     1. buscador  → un solo campo: escribe tu nombre y elígete de la lista
-     2. recordado → el recuadro verde: ya sabemos quién eres, solo confirma
-     3. campos    → los seis, para quien no está en la lista o quiere corregir
+  /* ---------- los dos estados de "quién solicita" ----------
+     1. buscador → un solo campo: escribe tu nombre y elígete de la lista
+     2. campos   → los seis, rellenos si el sistema te reconoció, en blanco si
+                   hizo falta "No aparezco en la lista"
      Solo uno está a la vista a la vez. */
   function mostrarIdentidad(cual){
     $('buscadorPersona').hidden  = cual !== 'buscador';
-    $('recordado').hidden        = cual !== 'recordado';
     $('camposIdentidad').hidden  = cual !== 'campos';
+  }
+
+  /* Muestra los seis campos. `identificado` dice si se llegó porque el
+     sistema reconoció a la persona (cuenta, directorio o lo recordado en este
+     navegador) —ahí sale el aviso con "No soy yo"— o porque hizo falta "No
+     aparezco en la lista", donde ese aviso no pinta nada. */
+  function mostrarCampos(identificado){
+    mostrarIdentidad('campos');
+    $('avisoIdentificado').hidden = !identificado;
   }
 
   function olvidarYo(){
@@ -480,29 +488,14 @@
     $('quienEres').focus();
   }
 
-  /* Pinta el recuadro verde con quien esté identificado. */
-  function mostrarRecuadro(yo){
-    $('recordadoNombre').textContent = yo.usuario;
-    /* La cédula no se pinta, aunque vaya en la solicitud y salga impresa en la
-       Hoja de Servicio. Este recuadro aparece solo, sin que nadie lo pida, en
-       una pantalla que en la mayoría de las oficinas ve más gente que su dueño;
-       y para confirmar que la página te reconoció bastan el nombre y dónde
-       estás. Quien quiera verla o corregirla, la tiene en "Corregir". */
-    $('recordadoDonde').textContent = [
-      yo.gerencia,
-      (yo.piso ? 'Piso ' + yo.piso : '') + (yo.oficina ? ', of. ' + yo.oficina : ''),
-    ].filter(Boolean).join(' · ');
-    mostrarIdentidad('recordado');
-  }
-
   function aplicarYo(){
     const yo = leerYo();
     if(!yo || !yo.usuario) return false;
 
-    /* Lo que este navegador recordó de antes puede venir corto: el cargo y la
-       cédula se agregaron después, y a quien ya estaba recordado nadie se los
-       iba a llenar nunca —la página no vuelve a mirar el directorio una vez
-       que te reconoce—. Se completan aquí, solo los huecos: lo que la persona
+    /* Lo que este navegador recordó de antes puede venir corto: el cargo se
+       agregó después, y a quien ya estaba recordado nadie se lo iba a llenar
+       nunca —la página no vuelve a mirar el directorio una vez que te
+       reconoce—. Se completa aquí, solo los huecos: lo que la persona
        escribió alguna vez manda sobre la lista. */
     const p = directorioBuscar(yo.usuario);
     if(p){
@@ -513,10 +506,13 @@
       if(creció && $('recordarme').checked) guardarYo(yo);
     }
 
-    CAMPOS_YO.forEach(k => { if(yo[k]) $(k).value = yo[k]; });
+    /* La cédula no se pinta aunque esté guardada, igual que abajo en
+       intentarIdentificar: esta pantalla la ve más gente que su dueño en la
+       mayoría de las oficinas. Quien la quiera puesta, la escribe otra vez. */
+    CAMPOS_YO.forEach(k => { if(k !== 'cedula' && yo[k]) $(k).value = yo[k]; });
     $('quienEres').value = yo.usuario;
     pintarEquipo();
-    mostrarRecuadro(yo);
+    mostrarCampos(true);
     return true;
   }
 
@@ -524,9 +520,9 @@
      Quien entró con su correo de la casa ya dijo su nombre una vez, al
      crear la cuenta (ver js/cuenta.js). Pedírselo de nuevo aquí sería
      hacerle escribir dos veces lo mismo. Se prueba igual que si lo hubiera
-     tecleado él mismo: si el nombre calza con el directorio, queda
-     identificado del todo (recuadro verde); si no calza, al menos el campo
-     no llega vacío y puede elegirse o corregirse desde ahí.
+     tecleado él mismo: si el nombre calza con el directorio, los seis campos
+     salen ya llenos (ver intentarIdentificar); si no calza, al menos el
+     campo no llega vacío y puede elegirse o corregirse desde ahí.
      No pisa lo que este navegador ya tuviera recordado — leerYo() manda. */
   function identificarPorCuenta(){
     if(leerYo()) return false;
@@ -562,14 +558,13 @@
     $('piso').value     = p.piso;
     $('oficina').value  = p.oficina;
     $('cargo').value    = p.cargo || '';
-    /* La cédula del listado solo si la persona no escribió otra: quien la
-       corrigió a mano tendrá sus razones —una cédula mal copiada en el listado,
-       un homónimo— y la lista no es una autoridad, es un punto de partida. */
-    if(p.cedula && !$('cedula').value.trim()) $('cedula').value = p.cedula;
+    /* La cédula nunca se auto-completa aquí, aunque el directorio la tuviera:
+       esta pantalla puede estar identificando a alguien delante de más gente
+       que su dueño en la mayoría de las oficinas, y ese dato solo lo escribe
+       la persona, si quiere. */
     marcar('quienEres', '');
     pintarEquipo();
-    mostrarRecuadro({usuario: p.nombre, gerencia: p.gerencia, piso: p.piso,
-                     oficina: p.oficina, cedula: $('cedula').value});
+    mostrarCampos(true);
     pintarAvance();
     return true;
   }
@@ -583,7 +578,7 @@
   /* "No aparezco en la lista": los seis campos, con el nombre ya escrito. */
   $('botonNoEstoy').addEventListener('click', () => {
     $('usuario').value = $('quienEres').value.trim();
-    mostrarIdentidad('campos');
+    mostrarCampos(false);
     intentarCompletarDesdeUsuario();
     ($('usuario').value ? $('gerencia') : $('usuario')).focus();
     pintarAvance();
@@ -592,8 +587,8 @@
   /* Estar en los seis campos no significa que el directorio no lo tenga:
      puede haber llegado con el apellido incompleto, o desde la cuenta con
      un nombre corto (ver identificarPorCuenta). Coincidencia exacta, igual
-     que arriba —no se adivina por parecido, que con 245 personas un
-     homónimo pondría la cédula o el piso de otro en la hoja—, y solo se
+     que arriba —no se adivina por parecido, que con 176 personas un
+     homónimo pondría la gerencia o el piso de otro en la hoja—, y solo se
      llena lo que esté vacío: lo que la persona ya escribió o eligió manda. */
   function intentarCompletarDesdeUsuario(){
     const p = directorioBuscar($('usuario').value);
@@ -602,7 +597,8 @@
     if(!$('piso').value)     $('piso').value     = p.piso;
     if(!$('oficina').value)  $('oficina').value  = p.oficina;
     if(!$('cargo').value)    $('cargo').value    = p.cargo || '';
-    if(p.cedula && !$('cedula').value.trim()) $('cedula').value = p.cedula;
+    /* La cédula tampoco aquí, por la misma razón que en intentarIdentificar. */
+    $('avisoIdentificado').hidden = false;
     pintarEquipo();
     pintarAvance();
     return true;
@@ -617,13 +613,6 @@
   });
 
   $('botonNoSoyYo').addEventListener('click', olvidarYo);
-  $('botonCorregir').addEventListener('click', () => {
-    /* deja los datos puestos y descubre los campos para retocar uno */
-    mostrarIdentidad('campos');
-    /* si estaba recordado, la casilla debe reflejarlo al descubrirse */
-    $('recordarme').checked = true;
-    $('usuario').focus();
-  });
 
   /* ---------- cuánto falta ----------
      Solo lo obligatorio: si contara lo opcional, la barra nunca llegaría al
@@ -883,8 +872,6 @@
              los cuatro reclamos invisibles en un solo mensaje, ahí. */
           CAMPOS_YO.forEach(k => marcar(k, ''));
           marcar('quienEres', 'Elígete de la lista, o pulsa «No aparezco en la lista».');
-        }else if($('camposIdentidad').hidden){
-          mostrarIdentidad('campos');
         }
       }
       /* El atajo se guarda en un campo oculto, que no se puede enfocar: si es
