@@ -1387,12 +1387,20 @@ select.despierta{animation:destello .7s ease;}
   border-color:#D7DCE6;
   box-shadow:0 2px 4px rgba(14,20,36,.05), 0 10px 24px rgba(14,20,36,.08);
 }
-.guia-h{display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;}
-.guia-h h3{font-size:16px; font-weight:700; line-height:1.35; letter-spacing:-.005em; flex:1; min-width:0; color:var(--ink);}
+/* La categoría va arriba, en su propia línea, y no al lado del título:
+   son las mismas 17 categorías que ya existen en el catálogo, tal cual,
+   y algunas son una frase larga —necesitan calzar exacto con el detalle
+   del formulario, así que no se acortan—. Al lado del título, una así
+   le deja sin espacio y lo rompe letra por letra; arriba y recortada a
+   una línea (con el texto completo al pasar el mouse), todas las
+   tarjetas siguen la misma forma sin importar qué tan larga sea. */
+.guia-h{display:flex; flex-direction:column; align-items:flex-start; gap:7px;}
+.guia-h h3{font-size:16px; font-weight:700; line-height:1.35; letter-spacing:-.005em; color:var(--ink);}
 .guia-cat{
+  display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   background:var(--navy-soft); color:var(--navy); border:1px solid rgba(0,64,144,.14);
   border-radius:20px; padding:4px 11px; font-size:10.5px; font-weight:700;
-  letter-spacing:.03em; white-space:nowrap;
+  letter-spacing:.03em; cursor:default;
 }
 .guia-cuerpo{
   margin-top:10px; font-size:13.5px; line-height:1.65; color:var(--gray);
