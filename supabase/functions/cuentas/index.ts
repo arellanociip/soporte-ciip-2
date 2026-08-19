@@ -74,6 +74,17 @@ const responder = (codigo: number, cuerpo: unknown) =>
     headers: { ...CORS, 'Content-Type': 'application/json' },
   });
 
+/* Lo que Supabase lanza no siempre es una instancia de Error de verdad —los
+   errores de auth.admin y de postgrest son objetos comunes con un `message`
+   adentro—, así que `e instanceof Error` les daba falso y String(e) los
+   convertía en el inútil "[object Object]". Se saca el `message` si lo
+   tiene, sea `Error` o no; solo si ni eso hay, se cae a String(e). */
+// deno-lint-ignore no-explicit-any
+function mensajeDe(e: any): string {
+  if (e && typeof e === 'object' && typeof e.message === 'string') return e.message;
+  return String(e);
+}
+
 /* Una clave que se pueda dictar por teléfono sin deletrear: sílabas y un
    número. Es la misma idea —y las mismas sílabas— que claveLegible() de
    servidor.js, para que una cuenta creada aquí y otra creada allá se dicten
@@ -144,9 +155,8 @@ Deno.serve(async (req) => {
     }
     usuario = r.data.user;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
     return responder(502, {
-      message: 'No se pudo comprobar la sesión contra Supabase: ' + msg,
+      message: 'No se pudo comprobar la sesión contra Supabase: ' + mensajeDe(e),
     });
   }
   /* Que el testigo sea de una cuenta de verdad y no la llave anónima: con la
@@ -285,7 +295,6 @@ Deno.serve(async (req) => {
   } catch (e) {
     /* El mensaje de Supabase se pasa tal cual: la bandeja lo enseña, y "ese
        correo ya existe" es más útil que "algo falló". */
-    const msg = e instanceof Error ? e.message : String(e);
-    return responder(400, { message: msg });
+    return responder(400, { message: mensajeDe(e) });
   }
 });
