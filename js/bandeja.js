@@ -151,6 +151,14 @@
       delete cabeceras['Accept-Profile'];
       delete cabeceras['Content-Profile'];
     }
+    /* Y a las Edge Functions, la llave nueva. La anon de siempre vale para
+       REST y Auth, pero esa pasarela la rechaza con 401 INVALID_CREDENTIALS
+       —ver el comentario en js/config.js—. El testigo de la persona sigue
+       yendo en Authorization: la llave dice de qué proyecto es la petición,
+       el testigo dice quién la hace, y la función necesita las dos. */
+    if(ruta.startsWith('/functions/v1/') && B.llaveFunciones){
+      cabeceras['apikey'] = B.llaveFunciones;
+    }
 
     const r = await fetch(B.url + ruta, Object.assign({}, opts, {headers: cabeceras}));
 

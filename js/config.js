@@ -32,6 +32,24 @@ window.SOPORTE_BACKEND = {
   anonKey: enLaNube
     ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmRxdXhzYWx6aGpxeHdsbnB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjM5NDQsImV4cCI6MjEwMjIzOTk0NH0.b7dqeNA6CKvz4c9Dx10AVWoq9QdqXIUxMejFeEZZQUc'
     : '',
+
+  /* La llave nueva, solo para las Edge Functions.
+
+     El proyecto tiene encendido el sistema nuevo de llaves de Supabase
+     (sb_publishable_ / sb_secret_) y la pasarela de /functions/v1 ya no
+     acepta la anon de arriba: responde 401 INVALID_CREDENTIALS aunque la
+     llave sea buena. REST y Auth sí la siguen aceptando, por eso el resto
+     del sitio nunca se enteró.
+
+     Se añade en vez de sustituir a propósito. La anon es un JWT y el sitio
+     la manda como Bearer en tres sitios —js/adjuntos.js, y dos veces en
+     js/solicitud.js, para hablar por RPC sin cuenta—. La nueva no es un
+     JWT, así que cambiarla a secas rompería los adjuntos y el envío de
+     solicitudes. Cada una donde sirve.
+
+     Es pública, como la anon: el propio panel dice que se puede compartir.
+     Panel → Project Settings → API Keys → Publishable key. */
+  llaveFunciones: enLaNube ? 'sb_publishable_VMHiXTimWhcFz6fQAyR4Ow_jZEiaGwF' : '',
 };
 
 /* A dónde escribirle si el servidor no responde y la solicitud no pudo salir.
