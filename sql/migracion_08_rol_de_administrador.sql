@@ -69,10 +69,13 @@ create policy "gtic: quitar correos permitidos"
 
 
 -- ---------------------------------------------------------------------
--- 3. El primer administrador
+-- 3. Los primeros administradores
 -- ---------------------------------------------------------------------
--- Cubre el correo que tenga hoy en gtic.personal, sea el institucional
--- viejo o el Gmail nuevo: el que no exista, esta línea lo ignora sin
--- quejarse.
+-- Cubre el correo que tenga hoy cada quien en gtic.personal, sea el
+-- institucional viejo o el Gmail nuevo: el que no exista, esta línea lo
+-- ignora sin quejarse.
 update gtic.personal set es_admin = true
-  where correo in ('f.reyes@ciip.com.ve', 'franklinreyes346@gmail.com');
+  where correo in (
+    'f.reyes@ciip.com.ve', 'franklinreyes346@gmail.com',
+    'je.arellano@ciip.com.ve', 'ing.jearellano@gmail.com'
+  );
