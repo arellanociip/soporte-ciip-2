@@ -31,9 +31,17 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const URL_PROYECTO = Deno.env.get('SUPABASE_URL')!;
-const LLAVE_ADMIN  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')!;
+/* Las inyecta Supabase sola. Los nombres cambiaron con el sistema nuevo de
+   llaves (sb_publishable_ / sb_secret_), así que se prueban los dos: el de
+   siempre primero y el nuevo después. Sin esto, con el sistema nuevo la
+   llave llegaba vacía, la respuesta de Supabase volvía sin cuerpo, y el
+   .json() de dentro de supabase-js reventaba con 'Unexpected end of JSON
+   input': un 500 pelado, sin una palabra de por qué. */
+const URL_PROYECTO = Deno.env.get('SUPABASE_URL') ?? '';
+const LLAVE_ADMIN  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+                  ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? '';
+const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')
+                  ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '';
 
 /* Los mismos cuatro datos que guarda servidor.js, y que salen impresos junto a
    la firma en la Hoja de Servicio. En Supabase viven en el user_metadata. */
@@ -99,6 +107,20 @@ function usuarioPublico(u: any) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
+  /* Si falta alguna llave, decirlo. Morir con un 500 pelado obliga a ir a
+     buscar el registro de la función, y eso solo lo puede hacer quien tenga
+     el panel. No se enseña ningún valor: solo cuál falta. */
+  const faltan = [
+    !URL_PROYECTO && 'SUPABASE_URL',
+    !LLAVE_ANON   && 'SUPABASE_ANON_KEY (o SUPABASE_PUBLISHABLE_KEY)',
+    !LLAVE_ADMIN  && 'SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)',
+  ].filter(Boolean);
+  if (faltan.length) {
+    return responder(500, {
+      message: 'A esta función le faltan variables de entorno: ' + faltan.join(', '),
+    });
+  }
+
   /* ---- ¿quién llama? ----
      El testigo del navegador se comprueba contra Supabase, no se cree. */
   const cabecera = req.headers.get('Authorization') ?? '';
@@ -108,14 +130,29 @@ Deno.serve(async (req) => {
   const comoQuienLlama = createClient(URL_PROYECTO, LLAVE_ANON, {
     global: { headers: { Authorization: `Bearer ${testigo}` } },
   });
-  const { data: quien, error: malTestigo } = await comoQuienLlama.auth.getUser();
-  if (malTestigo || !quien?.user) {
-    return responder(401, { message: 'Hace falta iniciar sesión.' });
+  /* getUser() no siempre devuelve el error: cuando la respuesta de Supabase
+     no es JSON —porque la llave iba vacía, por ejemplo— supabase-js lanza
+     por dentro. Esta línea estaba fuera del try de abajo, así que ese lanzo
+     salía como un 500 sin explicación. Ahora se recoge y se dice qué pasó:
+     502, porque el fallo es de la conversación con Supabase, no de quien
+     llama. */
+  let usuario;
+  try {
+    const r = await comoQuienLlama.auth.getUser();
+    if (r.error || !r.data?.user) {
+      return responder(401, { message: 'Hace falta iniciar sesión.' });
+    }
+    usuario = r.data.user;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return responder(502, {
+      message: 'No se pudo comprobar la sesión contra Supabase: ' + msg,
+    });
   }
   /* Que el testigo sea de una cuenta de verdad y no la llave anónima: con la
      anon, getUser() no devuelve usuario, pero se comprueba explícitamente
      porque de esto depende que no entre cualquiera. */
-  const yo = quien.user;
+  const yo = usuario;
   if (!yo.email) return responder(401, { message: 'Esa sesión no es de una cuenta.' });
 
   const admin = createClient(URL_PROYECTO, LLAVE_ADMIN, {
