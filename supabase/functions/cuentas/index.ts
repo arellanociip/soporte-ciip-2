@@ -255,6 +255,18 @@ Deno.serve(async (req) => {
         if (error) throw error;
         fila = data.user;
       } else {
+        /* El disparador de la migración 03 —solo_correos_de_la_casa— corre
+           en CUALQUIER inserción a auth.users, también en esta, hecha con
+           la llave de administrador: no distingue "se registró solo" de
+           "GTIC le dio de alta". Sin el correo ya en la lista, Supabase
+           responde el genérico "Database error creating new user" y aquí
+           no había forma de saber por qué. Se agrega antes de crear la
+           cuenta: quien tiene acceso a la bandeja, con más razón puede
+           pedir soporte con ese mismo correo. */
+        const { error: malPermiso } = await admin.schema('gtic').from('correos_permitidos')
+          .upsert({ correo, nombre: meta.nombre }, { onConflict: 'correo' });
+        if (malPermiso) throw malPermiso;
+
         const { data, error } = await admin.auth.admin.createUser({
           email: correo,
           password: clave,
