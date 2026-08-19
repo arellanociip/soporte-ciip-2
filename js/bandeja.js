@@ -137,10 +137,22 @@
     if(!s){ mostrarAcceso(); throw new Error('Sin sesión'); }
 
     opts = opts || {};
-    const r = await fetch(B.url + ruta, Object.assign({}, opts, {
-      headers: Object.assign({'Authorization': 'Bearer ' + s.token},
-                             soporteCabeceras(), opts.headers || {}),
-    }));
+    /* Accept-Profile y Content-Profile son de PostgREST: le dicen en qué
+       esquema mirar, y sin ellas contesta sobre 'public' en vez de 'gtic'.
+       Fuera de /rest/v1 no significan nada, y en las Edge Functions estorban
+       de verdad: su preflight no las autoriza —la lista de cabeceras
+       permitidas la pone la plataforma y no las incluye—, así que el
+       navegador bloquea la petición entera antes de mandarla. Se veía como
+       'Failed to fetch' al crear una cuenta, que parece un problema de red
+       y no lo es. */
+    const cabeceras = Object.assign({'Authorization': 'Bearer ' + s.token},
+                                    soporteCabeceras(), opts.headers || {});
+    if(!ruta.startsWith('/rest/v1/')){
+      delete cabeceras['Accept-Profile'];
+      delete cabeceras['Content-Profile'];
+    }
+
+    const r = await fetch(B.url + ruta, Object.assign({}, opts, {headers: cabeceras}));
 
     if((r.status === 401 || r.status === 403) && !reintento){
       if(await renovarSesion()) return pedir(ruta, opts, true);
