@@ -249,6 +249,18 @@
        Va primero porque verPanel(null) vuelve a enseñar la bandeja, y lo de
        abajo tiene que ser lo último en hablar. */
     verPanel(null);
+
+    /* Y las ventanas de encima. Son siete —la ficha, el chat, Mis datos, la
+       guía, el equipo, la cuenta, el correo— y ninguna se entera de que la
+       sesión se cerró. La de la ficha es la que más importa: lleva dentro la
+       solicitud entera y la conversación con quien la pidió.
+
+       Se cierran por la clase y no una a una, para que añadir una octava no
+       vuelva a abrir el agujero sin que nadie se acuerde de esta línea. */
+    document.querySelectorAll('.velo').forEach(v => { v.hidden = true; });
+    /* Al abrir una ventana se le quita el scroll a la página de detrás; si
+       se cierra por aquí, nadie se lo devuelve. */
+    document.body.style.overflow = '';
     $('pantallaAcceso').hidden = false;
     $('pantallaBandeja').hidden = true;
     $('cabDerecha').hidden = true;
