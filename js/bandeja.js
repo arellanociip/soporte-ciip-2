@@ -240,6 +240,27 @@
 
   /* ================= pantallas ================= */
   function mostrarAcceso(){
+    /* Cerrar antes lo que hubiera abierto. Los paneles —Cuentas,
+       Estadísticas, la base del conocimiento— son hermanos de la bandeja y
+       no hijos suyos: esconder pantallaBandeja no los toca. Salir con el de
+       Cuentas delante dejaba a la vista los nombres, correos y papeles de
+       toda la casa, con la sesión ya cerrada y la pantalla de acceso debajo.
+
+       Va primero porque verPanel(null) vuelve a enseñar la bandeja, y lo de
+       abajo tiene que ser lo último en hablar. */
+    verPanel(null);
+
+    /* Y las ventanas de encima. Son siete —la ficha, el chat, Mis datos, la
+       guía, el equipo, la cuenta, el correo— y ninguna se entera de que la
+       sesión se cerró. La de la ficha es la que más importa: lleva dentro la
+       solicitud entera y la conversación con quien la pidió.
+
+       Se cierran por la clase y no una a una, para que añadir una octava no
+       vuelva a abrir el agujero sin que nadie se acuerde de esta línea. */
+    document.querySelectorAll('.velo').forEach(v => { v.hidden = true; });
+    /* Al abrir una ventana se le quita el scroll a la página de detrás; si
+       se cierra por aquí, nadie se lo devuelve. */
+    document.body.style.overflow = '';
     $('pantallaAcceso').hidden = false;
     $('pantallaBandeja').hidden = true;
     $('cabDerecha').hidden = true;
@@ -2110,6 +2131,9 @@
        que el servidor rebota con un 401 */
     dejarDeVigilar();
     solicitudes = [];
+    /* Y lo que se trajo, que no se queda esperando al siguiente: la lista de
+       cuentas es de quien acaba de salir, no del que venga. */
+    cuentas = [];
     /* quien entre después empieza de cero: si no, la primera carga del
        siguiente turno anunciaría como "recién llegado" todo lo del anterior */
     conocidas = null; recien.clear(); leido();
