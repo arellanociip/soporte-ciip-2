@@ -1,0 +1,23 @@
+-- =====================================================================
+-- Solicitudes de soporte · GTIC · CIIP
+-- Migración 09: service_role puede escribir en correos_permitidos
+-- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
+-- de esquema.sql y de las migraciones 01 a 08 (necesita 07, donde
+-- service_role obtiene uso del esquema gtic).
+--
+-- De dónde sale esto:
+--
+-- El disparador solo_correos_de_la_casa (migración 03) corre en CUALQUIER
+-- inserción a auth.users, también cuando GTIC da de alta una cuenta desde
+-- "Cuentas" con la llave de administrador: no distingue "se registró solo"
+-- de "GTIC le dio de alta". Sin el correo ya en gtic.correos_permitidos, el
+-- alta moría con el genérico "Database error creating new user".
+--
+-- La Edge Function ahora agrega el correo a la lista antes de crear la
+-- cuenta —quien tiene acceso a la bandeja, con más razón puede pedir
+-- soporte con ese mismo correo—, pero para eso necesita permiso sobre la
+-- tabla: usage en el esquema ya lo tiene (migración 07), esto es lo que le
+-- faltaba de gtic.correos_permitidos en concreto.
+-- =====================================================================
+
+grant select, insert, update on gtic.correos_permitidos to service_role;
