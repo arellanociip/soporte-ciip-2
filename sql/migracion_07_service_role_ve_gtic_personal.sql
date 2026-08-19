@@ -1,0 +1,31 @@
+-- =====================================================================
+-- Solicitudes de soporte · GTIC · CIIP
+-- Migración 07: service_role puede tocar gtic.personal
+-- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
+-- de esquema.sql y de las migraciones 01 a 06.
+--
+-- De dónde sale esto:
+--
+-- esquema.sql le dio uso del esquema gtic a `anon` y `authenticated`, nunca
+-- a `service_role`. No hacía falta: hasta ahora todo lo de la nube hablaba
+-- con el testigo de la propia persona, nunca con la llave de administrador.
+--
+-- La Edge Function de Cuentas (supabase/functions/cuentas/) es la primera
+-- excepción: crea la cuenta en auth.users con la llave de administrador, y
+-- después necesita anotar el papel de esa persona en gtic.personal —el que
+-- de verdad abre la puerta de la bandeja—. Sin este permiso, ese segundo
+-- paso moría con "permission denied for schema gtic": la cuenta se creaba
+-- en Supabase Auth, pero quedaba sin papel, así que la bandeja la rechazaba
+-- igual.
+--
+-- service_role salta las políticas de RLS, pero eso es aparte de los
+-- permisos normales de PostgreSQL: sin el grant, ni el service_role puede
+-- tocar un esquema que no es `public`.
+--
+-- Solo gtic.personal, no el esquema entero: es la única tabla que esta
+-- función toca hoy. Si mañana hace falta otra, se agrega su grant aparte,
+-- no de más por si acaso.
+-- =====================================================================
+
+grant usage on schema gtic to service_role;
+grant select, insert, update, delete on gtic.personal to service_role;
