@@ -240,6 +240,15 @@
 
   /* ================= pantallas ================= */
   function mostrarAcceso(){
+    /* Cerrar antes lo que hubiera abierto. Los paneles —Cuentas,
+       Estadísticas, la base del conocimiento— son hermanos de la bandeja y
+       no hijos suyos: esconder pantallaBandeja no los toca. Salir con el de
+       Cuentas delante dejaba a la vista los nombres, correos y papeles de
+       toda la casa, con la sesión ya cerrada y la pantalla de acceso debajo.
+
+       Va primero porque verPanel(null) vuelve a enseñar la bandeja, y lo de
+       abajo tiene que ser lo último en hablar. */
+    verPanel(null);
     $('pantallaAcceso').hidden = false;
     $('pantallaBandeja').hidden = true;
     $('cabDerecha').hidden = true;
@@ -2110,6 +2119,9 @@
        que el servidor rebota con un 401 */
     dejarDeVigilar();
     solicitudes = [];
+    /* Y lo que se trajo, que no se queda esperando al siguiente: la lista de
+       cuentas es de quien acaba de salir, no del que venga. */
+    cuentas = [];
     /* quien entre después empieza de cero: si no, la primera carga del
        siguiente turno anunciaría como "recién llegado" todo lo del anterior */
     conocidas = null; recien.clear(); leido();
