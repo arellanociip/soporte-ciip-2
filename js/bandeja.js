@@ -103,6 +103,7 @@
       e.noEsDeSoporte = true;
       throw e;
     }
+    soyAdmin = await esAdministrador();
     return s;
   }
 
@@ -198,6 +199,33 @@
       body: '{}',
     });
     return (await r.json()) === true;
+  }
+
+  /* Administrador es un papel dentro de GTIC, no un tipo de cuenta aparte
+     (migración 08): gestiona accesos —Cuentas, Correos permitidos—; el
+     resto es igual para cualquiera. Se guarda en una variable del módulo
+     porque se pregunta una vez al entrar y de ahí se lee en todos lados
+     —esconder los dos enlaces, no cargar sus paneles de balde—, no en cada
+     clic. */
+  let soyAdmin = false;
+
+  async function esAdministrador(){
+    if(enPrueba || B.servidor !== 'supabase') return true;
+    const r = await pedir('/rest/v1/rpc/es_admin', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: '{}',
+    });
+    return (await r.json()) === true;
+  }
+
+  /* Mostrar u ocultar lo que es solo de administrador. Se llama cada vez que
+     se sabe soyAdmin —al entrar, y al llegar con sesión guardada—, para que
+     alguien que dejó de serlo no siga viendo los enlaces tras recargar. */
+  function pintarAdmin(){
+    const cuentas = $('botonCuentas'), correos = $('botonCorreos');
+    if(cuentas) cuentas.hidden = !soyAdmin;
+    if(correos) correos.hidden = !soyAdmin;
   }
 
   /* El mismo aviso en los dos sitios donde se puede rebotar a alguien: al
@@ -1068,7 +1096,7 @@
     return `<article class="cuenta" data-cuenta="${esc(u.correo)}">
       <div class="cuenta-q">
         <b>${esc(u.nombre || u.correo)}${yo ? ' <span class="cuenta-yo">tú</span>' : ''}</b>
-        <span>${esc(u.correo)}</span>
+        <span>${esc(u.correo)}${u.es_admin ? ' · <span class="cuenta-admin">Administrador</span>' : ''}</span>
       </div>
       <div class="cuenta-d">
         ${u.cargo ? `<span>${esc(u.cargo)}</span>` : '<span class="falta">sin cargo</span>'}
@@ -1116,6 +1144,7 @@
     $('ayudaClave').textContent = u
       ? 'Déjala vacía para no tocarla. Mínimo 6 caracteres si la cambias.'
       : 'Mínimo 6 caracteres. En blanco, se inventa una fácil de dictar.';
+    $('cAdmin').checked  = !!(u && u.es_admin);
 
     /* darse de baja a uno mismo es casi siempre un dedazo, y el servidor lo
        rechaza igual: mejor no ofrecer el botón */
@@ -1154,7 +1183,8 @@
       const cuerpo = {correo, nombre,
         cargo:    $('cCargo').value.trim(),
         cedula:   $('cCedula').value.trim(),
-        telefono: $('cTelefono').value.trim()};
+        telefono: $('cTelefono').value.trim(),
+        esAdmin:  $('cAdmin').checked};
       /* la clave vacía significa "no me la toques" en una cuenta que existe, y
          "invéntame una" en una nueva: en los dos casos, no mandarla */
       const clave = $('cClave').value;
@@ -2047,11 +2077,11 @@
     try{
       await entrar($('correo').value.trim(), $('clave').value);
       mostrarBandeja();
+      pintarAdmin();
       await cargar();
       cargarGuias();
       inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
-      cargarCuentas();
-      cargarCorreos();
+      if(soyAdmin){ cargarCuentas(); cargarCorreos(); }
       vigilar();
     }catch(err){
       /* A esta persona no le falta la clave, le falta el papel. Decirle 'no se
@@ -2359,9 +2389,15 @@
         avisarQueNoEsDeSoporte();
         return;
       }
+      soyAdmin = await esAdministrador();
     }catch(err){ console.warn('No se pudo comprobar si la cuenta es de GTIC:', err); }
     mostrarBandeja();
-    try{ await cargar(); cargarGuias(); inventarioTraer(); cargarCuentas(); cargarCorreos(); vigilar(); }
+    pintarAdmin();
+    try{
+      await cargar(); cargarGuias(); inventarioTraer();
+      if(soyAdmin){ cargarCuentas(); cargarCorreos(); }
+      vigilar();
+    }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();

@@ -47,19 +47,25 @@ const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')
    la firma en la Hoja de Servicio. En Supabase viven en el user_metadata. */
 const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'] as const;
 
-/* Quién es de GTIC, que ya no es lo mismo que tener cuenta: desde la
-   migración 03 el papel vive en gtic.personal, y desde que la bandeja
-   pregunta por él —ver js/bandeja.js— una cuenta que no esté en esa tabla
-   no puede entrar. Por eso este panel tiene que escribirla: si solo creara
-   la cuenta, crearía cuentas que su propia bandeja rechaza.
+/* Quién es de GTIC, y quién de ellos además es administrador: desde la
+   migración 03 el primer papel vive en gtic.personal, y desde que la
+   bandeja pregunta por él —ver js/bandeja.js— una cuenta que no esté en esa
+   tabla no puede entrar. Desde la migración 08, es_admin decide quién puede
+   gestionar accesos —esta función entera es de eso—. Por eso este panel
+   tiene que escribir las dos cosas: si solo creara la cuenta, crearía
+   cuentas que su propia bandeja rechaza o que nadie puede administrar.
+
+   Devuelve uid → es_admin para las tres cosas que hace falta saber: quién
+   es de GTIC (`.has(uid)`), cuántos hay (`.size`, para no dejar la bandeja
+   sin nadie) y quién de ellos es administrador (`.get(uid)`).
 
    Lleva la llave de administrador, así que ve la tabla aunque RLS se la
    niegue a todo el mundo desde el navegador. */
 // deno-lint-ignore no-explicit-any
-async function uidsDeGtic(admin: any): Promise<Set<string>> {
-  const { data, error } = await admin.schema('gtic').from('personal').select('uid');
+async function filasDeGtic(admin: any): Promise<Map<string, boolean>> {
+  const { data, error } = await admin.schema('gtic').from('personal').select('uid, es_admin');
   if (error) throw error;
-  return new Set((data ?? []).map((f: { uid: string }) => f.uid));
+  return new Map((data ?? []).map((f: { uid: string; es_admin: boolean }) => [f.uid, !!f.es_admin]));
 }
 
 const CORS = {
@@ -105,11 +111,12 @@ function claveLegible(): string {
    clave: Supabase tampoco la entrega, pero el filtro se escribe igual para que
    la respuesta sea idéntica a la del servidor de casa. */
 // deno-lint-ignore no-explicit-any
-function usuarioPublico(u: any) {
+function usuarioPublico(u: any, esAdmin: boolean) {
   const m = u?.user_metadata ?? {};
   const o: Record<string, unknown> = {
     correo: u?.email ?? null,
     creado_en: u?.created_at ?? null,
+    es_admin: esAdmin,
   };
   for (const k of DATOS_TECNICO) o[k] = m[k] ?? null;
   return o;
@@ -169,6 +176,20 @@ Deno.serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  /* Gestión de accesos —dar de alta o de baja a un técnico, decidir quién
+     puede entrar— es de administrador nada más (migración 08). Antes esta
+     función solo comprobaba que hubiera sesión, nunca que fuera de GTIC:
+     cualquiera con cuenta para pedir soporte podía llamarla directo, sin
+     pasar por la bandeja, que es lo único que ocultaba el botón. Se
+     pregunta con la llave de administrador porque gtic.personal no tiene
+     políticas para el navegador — ni siquiera para su propio dueño. */
+  const { data: miFila, error: malYo } = await admin.schema('gtic').from('personal')
+    .select('es_admin').eq('uid', yo.id).maybeSingle();
+  if (malYo) return responder(502, { message: 'No se pudo comprobar el papel: ' + mensajeDe(malYo) });
+  if (!miFila?.es_admin) {
+    return responder(403, { message: 'Esto es de administrador. Pídele a uno que lo haga.' });
+  }
+
   try {
     /* ---- listar quién puede entrar ---- */
     if (req.method === 'GET') {
@@ -177,10 +198,10 @@ Deno.serve(async (req) => {
       /* Solo los de GTIC. Antes daba igual —toda cuenta lo era— pero hoy
          listar auth.users entero sería enseñar a las 177 personas de la casa
          como si todas pudieran entrar aquí. */
-      const deGtic = await uidsDeGtic(admin);
+      const deGtic = await filasDeGtic(admin);
       const lista = (data?.users ?? [])
         .filter((u: { id: string }) => deGtic.has(u.id))
-        .map(usuarioPublico)
+        .map((u: { id: string }) => usuarioPublico(u, !!deGtic.get(u.id)))
         .sort((a, b) =>
           String(a.nombre ?? a.correo).localeCompare(String(b.nombre ?? b.correo), 'es'));
       return responder(200, lista);
@@ -203,6 +224,17 @@ Deno.serve(async (req) => {
       if (inventada) clave = claveLegible();
       if (clave && clave.length < 6) {
         return responder(400, { message: 'La clave es muy corta: pon al menos 6 caracteres.' });
+      }
+
+      /* Nadie se quita el rol a sí mismo: es la misma idea que "no te des de
+         baja a ti mismo" de más abajo, y evita el mismo dedazo —quedarse sin
+         poder gestionar accesos, con nadie más al lado en ese momento para
+         devolvértelo—. */
+      const esAdminNuevo = !!d.esAdmin;
+      if (previo && previo.email?.toLowerCase() === yo.email?.toLowerCase() && !esAdminNuevo) {
+        return responder(409, {
+          message: 'No puedes quitarte el rol de administrador a ti mismo. Que lo haga otro administrador.',
+        });
       }
 
       /* lo que no se vuelva a indicar se conserva; indicarlo vacío sí lo borra */
@@ -237,15 +269,17 @@ Deno.serve(async (req) => {
         fila = data.user;
       }
 
-      /* El papel, que es lo que de verdad abre la bandeja. Va aquí porque
-         hace falta el uid, y se hace también cuando la cuenta ya existía:
-         dar de alta a alguien por este panel es decir que es de GTIC. */
+      /* El papel, que es lo que de verdad abre la bandeja, y si además es
+         administrador. Va aquí porque hace falta el uid, y se hace también
+         cuando la cuenta ya existía: dar de alta a alguien por este panel es
+         decir que es de GTIC, y este formulario es la única forma de
+         cambiarle el rol de administrador después. */
       const { error: malPapel } = await admin.schema('gtic').from('personal')
-        .upsert({ uid: fila.id, correo }, { onConflict: 'uid' });
+        .upsert({ uid: fila.id, correo, es_admin: esAdminNuevo }, { onConflict: 'uid' });
       if (malPapel) throw malPapel;
 
       return responder(previo ? 200 : 201, [
-        { ...usuarioPublico(fila), clave_nueva: inventada ? clave : null },
+        { ...usuarioPublico(fila, esAdminNuevo), clave_nueva: inventada ? clave : null },
       ]);
     }
 
@@ -263,7 +297,7 @@ Deno.serve(async (req) => {
       /* Dar de baja aquí es dar de baja de GTIC, así que quien no lo sea no
          es asunto de este panel: una cuenta de quien pide soporte no se toca
          desde la bandeja. */
-      const deGtic = await uidsDeGtic(admin);
+      const deGtic = await filasDeGtic(admin);
       if (!deGtic.has(victima.id)) {
         return responder(404, { message: 'Esa cuenta no es de GTIC.' });
       }
@@ -277,6 +311,15 @@ Deno.serve(async (req) => {
          sería el panel de Supabase. */
       if (deGtic.size <= 1) {
         return responder(409, { message: 'Es la última cuenta de GTIC. Crea antes la que la sustituye.' });
+      }
+      /* Y quedarse sin ningún administrador cierra la gestión de accesos —esta
+         función entera— igual de para siempre: la única salida sería, otra
+         vez, el panel de Supabase. */
+      const admins = [...deGtic.values()].filter(Boolean).length;
+      if (deGtic.get(victima.id) && admins <= 1) {
+        return responder(409, {
+          message: 'Es el último administrador. Hazle administrador a otro antes de darlo de baja.',
+        });
       }
 
       /* Primero el papel y luego la cuenta: si se cae en medio, lo que queda
