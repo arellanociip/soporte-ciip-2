@@ -1641,6 +1641,20 @@
   }
 
   async function pintarMias(){
+    /* Sin sesión —donde la cuenta existe— la puerta no dice nada de las
+       solicitudes de nadie. El panel entero ya está detrás de la puerta, lo
+       esconde pintarPuerta(); pero el aviso de arriba no, y este repintado
+       lo devolvía a la pantalla justo después de haberlo limpiado.
+
+       Era una carrera: al salir, cuenta.js limpia el aviso, lanza el evento
+       soporte:sesion, y el que lo escucha llama aquí. Se limpiaba y se
+       volvía a escribir en el mismo gesto, así que la solicitud de quien
+       acababa de irse seguía anunciada detrás de la ventana de Entrar. */
+    if(window.soporteCuenta && soporteCuenta.hay() && !soporteCuenta.dentro()){
+      const aviso = $('avisoUnaALaVez');
+      if(aviso){ aviso.hidden = true; aviso.innerHTML = ''; }
+      return;
+    }
     const corrida = ++corridaMias;
     const conCuenta = !!(window.soporteCuenta && soporteCuenta.dentro());
     const mias = soporteMias.leer();
