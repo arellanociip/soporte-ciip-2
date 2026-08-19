@@ -354,5 +354,18 @@
       const c = $(id);
       if(c) c.classList.toggle('tras-la-puerta', !dentro);
     });
+
+    /* El aviso de 'tu solicitud quedó registrada' no está dentro de ninguna
+       de esas cuatro: en index.html es hermano suyo, no hijo. Así que
+       esconderlas no lo tocaba, y al cerrar sesión se quedaba en pantalla
+       —con el número de la solicitud de quien acababa de salir— detrás de
+       la ventana de Entrar.
+
+       Se vacía además de esconderse. Con la clase sola se taparía nada más,
+       y al entrar el siguiente se destaparía intacto: el número de otro,
+       dándole la bienvenida. Lo que haya que decirle a quien entra lo
+       vuelve a escribir pintarMias(). */
+    const aviso = $('avisoUnaALaVez');
+    if(aviso && !dentro){ aviso.hidden = true; aviso.innerHTML = ''; }
   }
 })();
