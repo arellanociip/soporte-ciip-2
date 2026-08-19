@@ -20,6 +20,7 @@
       <a href="#" id="botonSaber">Base del conocimiento</a>
       <a href="#" id="botonStats">Estadísticas</a>
       <a href="#" id="botonCuentas">Cuentas</a>
+      <a href="#" id="botonCorreos">Correos permitidos</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
     </div>
@@ -155,6 +156,30 @@
     </div>
 
     <div id="listaCuentas"></div>
+  </section>
+
+  <!-- ===================== CORREOS PERMITIDOS =====================
+       Quién puede registrarse para pedir soporte. gtic.correos_permitidos
+       nació cerrada al navegador a propósito (ver sql/migracion_03); esta
+       pantalla existe porque la migración 06 le abrió la puerta a GTIC,
+       autenticado, nada más. No hace falta que termine en @ciip.com.ve. -->
+  <section id="panelCorreos" hidden>
+    <div class="intro">
+      <h1>Correos permitidos</h1>
+      <p>Quién puede registrarse para pedir soporte. No tiene que ser
+      @ciip.com.ve: cualquier correo que agregues aquí sirve — uno solo o
+      varios de una vez.</p>
+    </div>
+
+    <div class="barra">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="buscarCorreo" placeholder="Buscar por correo o nombre">
+      </div>
+      <button type="button" class="boton primario chico" id="botonNuevoCorreo">+ Agregar correos</button>
+    </div>
+
+    <div id="listaCorreos"></div>
   </section>
 
 </main>
@@ -377,6 +402,35 @@
       <button type="button" class="boton primario" id="guardarCuenta">Guardar</button>
       <button type="button" class="boton plano" id="cancelarCuenta">Cancelar</button>
       <button type="button" class="boton plano peligro" id="borrarCuenta" hidden>Dar de baja</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== AGREGAR CORREOS PERMITIDOS =====================
+     Uno o varios de una vez: la misma caja sirve para las dos cosas, un
+     correo por línea (o separados por coma). El nombre es opcional y solo
+     decora la lista — no hace falta para que la persona pueda registrarse. -->
+<div class="velo" id="veloCorreo" hidden>
+  <div class="hoja" style="max-width:520px">
+    <button type="button" class="cerrar" id="cerrarCorreo" aria-label="Cerrar">✕</button>
+    <h2>Agregar correos permitidos</h2>
+    <div class="bajada">Uno solo, o varios de una vez: un correo por línea
+      (o separados por coma). Repetir uno que ya está no hace daño.</div>
+
+    <div class="rejilla" style="margin-top:20px">
+      <div class="campo">
+        <label for="pmCorreos">Correos *</label>
+        <textarea id="pmCorreos" rows="6"
+          placeholder="nombre.apellido@ciip.com.ve&#10;otro.correo@gmail.com"></textarea>
+        <div class="error"></div>
+      </div>
+    </div>
+
+    <div class="aviso malo" id="avisoCorreo" hidden style="margin:16px 0 0"></div>
+
+    <div class="botones">
+      <button type="button" class="boton primario" id="guardarCorreos">Agregar</button>
+      <button type="button" class="boton plano" id="cancelarCorreo">Cancelar</button>
     </div>
   </div>
 </div>

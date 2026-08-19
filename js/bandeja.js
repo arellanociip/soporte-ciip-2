@@ -381,7 +381,7 @@
 
   /* Colocar la pantalla en una solicitud: lo que haga falta para que se vea. */
   function irA(id){
-    if(abierto('panelStats') || abierto('panelSaber') || abierto('panelCuentas')) verPanel(null);
+    if(abierto('panelStats') || abierto('panelSaber') || abierto('panelCuentas') || abierto('panelCorreos')) verPanel(null);
     if(!solicitudes.some(s => s.id === id)) return;
     /* si el filtro o la búsqueda la esconden, se sueltan: más vale perder el
        filtro que perder la solicitud */
@@ -730,6 +730,8 @@
      pinta: () => pintarGuias()},
     {panel: 'panelCuentas', boton: 'botonCuentas', texto: 'Cuentas',
      pinta: () => pintarCuentas()},
+    {panel: 'panelCorreos', boton: 'botonCorreos', texto: 'Correos permitidos',
+     pinta: () => pintarCorreos()},
   ];
 
   function verPanel(cual){
@@ -750,6 +752,7 @@
   const verStats   = si => verPanel(si ? 'panelStats'   : null);
   const verSaber   = si => verPanel(si ? 'panelSaber'   : null);
   const verCuentas = si => verPanel(si ? 'panelCuentas' : null);
+  const verCorreos = si => verPanel(si ? 'panelCorreos' : null);
 
   $('botonStats').addEventListener('click', e => {
     e.preventDefault();
@@ -762,6 +765,10 @@
   $('botonCuentas').addEventListener('click', e => {
     e.preventDefault();
     verPanel(abierto('panelCuentas') ? null : 'panelCuentas');
+  });
+  $('botonCorreos').addEventListener('click', e => {
+    e.preventDefault();
+    verPanel(abierto('panelCorreos') ? null : 'panelCorreos');
   });
 
   /* ================= qué sabemos =================
@@ -1132,6 +1139,134 @@
     b.setAttribute('aria-pressed', String(!viendo));
     c.focus();
   });
+
+  /* ---------- correos permitidos: quién puede registrarse ----------
+     gtic.correos_permitidos decide quién puede crear una cuenta para pedir
+     soporte (ver js/cuenta.js). Nació cerrada al navegador a propósito; la
+     migración 06 le abrió la puerta a GTIC autenticado, nada más — sigue sin
+     verse desde `anon` ni desde quien pide soporte. No hace falta que el
+     correo termine en @ciip.com.ve: cualquiera sirve. */
+  let correosPermitidos = [];
+
+  async function cargarCorreos(){
+    if(enPrueba){ correosPermitidos = []; return; }
+    try{
+      const r = await pedir('/rest/v1/correos_permitidos?select=*&order=agregado_en.desc', {});
+      correosPermitidos = await r.json();
+    }catch(e){ console.warn('No se pudieron traer los correos permitidos:', e); }
+    if(abierto('panelCorreos')) pintarCorreos();
+  }
+
+  function fichaCorreoHtml(c){
+    const desde = c.agregado_en ? fechaCorta(c.agregado_en) : '';
+    return `<article class="cuenta" data-correo="${esc(c.correo)}">
+      <div class="cuenta-q">
+        <b>${esc(c.nombre || c.correo)}</b>
+        ${c.nombre ? `<span>${esc(c.correo)}</span>` : ''}
+      </div>
+      <div class="cuenta-d">
+        ${desde ? `<span>desde ${esc(desde)}</span>` : ''}
+      </div>
+      <button type="button" class="enlace" data-quitar-correo="${esc(c.correo)}">Quitar</button>
+    </article>`;
+  }
+
+  function pintarCorreos(){
+    const q = $('buscarCorreo').value.trim().toLowerCase();
+    const vistos = !q ? correosPermitidos : correosPermitidos.filter(c =>
+      [c.correo, c.nombre].some(v => String(v || '').toLowerCase().includes(q)));
+
+    $('listaCorreos').innerHTML = vistos.length
+      ? `<div class="cuentas">${vistos.map(fichaCorreoHtml).join('')}</div>`
+      : `<div class="vacio">${correosPermitidos.length
+          ? 'Ningún correo coincide con lo que buscas.'
+          : 'Todavía no hay ningún correo permitido.'}</div>`;
+  }
+
+  function abrirCorreos(){
+    $('pmCorreos').value = '';
+    $('avisoCorreo').hidden = true;
+    limpiarErrores($('veloCorreo'));
+    $('veloCorreo').hidden = false;
+    $('pmCorreos').focus();
+  }
+  function cerrarCorreos(){ $('veloCorreo').hidden = true; }
+
+  /* La misma caja sirve para uno o para muchos: se separa por línea o por
+     coma, se descartan los repetidos y los espacios de sobra, y se valida
+     todo antes de mandar nada — mejor decir "esto no es un correo" antes de
+     escribir, que a mitad de un lote. */
+  async function guardarCorreos(){
+    const crudo = $('pmCorreos').value;
+    limpiarErrores($('veloCorreo'));
+    const correos = [...new Set(
+      crudo.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean)
+    )];
+    const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalido = correos.find(c => !RE_CORREO.test(c));
+
+    if(!correos.length){
+      marcarError('pmCorreos', 'Escribe al menos un correo.');
+      $('pmCorreos').focus();
+      return;
+    }
+    if(invalido){
+      marcarError('pmCorreos', 'Esto no parece un correo: ' + invalido);
+      $('pmCorreos').focus();
+      return;
+    }
+
+    const boton = $('guardarCorreos');
+    boton.disabled = true; boton.textContent = 'Agregando…';
+    $('avisoCorreo').hidden = true;
+    try{
+      /* resolution=merge-duplicates: repetir uno que ya está no rompe el
+         lote entero, simplemente no hace nada con ese. */
+      const r = await pedir('/rest/v1/correos_permitidos?on_conflict=correo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify(correos.map(correo => ({correo}))),
+      });
+      const guardados = await r.json();
+      guardados.forEach(g => {
+        const i = correosPermitidos.findIndex(c => c.correo === g.correo);
+        if(i >= 0) correosPermitidos[i] = g; else correosPermitidos.push(g);
+      });
+      pintarCorreos();
+      cerrarCorreos();
+    }catch(err){
+      $('avisoCorreo').innerHTML = '<span>⚠</span><div>No se pudo agregar: ' + esc(err.message) + '</div>';
+      $('avisoCorreo').hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Agregar';
+  }
+
+  async function quitarCorreo(correo){
+    if(!confirm('Se quita ' + correo + ' de la lista: nadie podrá registrar ' +
+                'una cuenta nueva con ese correo. Las cuentas que ya existan ' +
+                'con él no se ven afectadas. ¿Seguimos?')) return;
+    try{
+      await pedir('/rest/v1/correos_permitidos?correo=eq.' + encodeURIComponent(correo),
+                  {method: 'DELETE'});
+      correosPermitidos = correosPermitidos.filter(c => c.correo !== correo);
+      pintarCorreos();
+    }catch(err){
+      alert('No se pudo quitar: ' + err.message);
+    }
+  }
+
+  $('buscarCorreo').addEventListener('input', pintarCorreos);
+  $('botonNuevoCorreo').addEventListener('click', abrirCorreos);
+  $('listaCorreos').addEventListener('click', e => {
+    const b = e.target.closest('[data-quitar-correo]');
+    if(b) quitarCorreo(b.dataset.quitarCorreo);
+  });
+  $('guardarCorreos').addEventListener('click', guardarCorreos);
+  $('cancelarCorreo').addEventListener('click', cerrarCorreos);
+  $('cerrarCorreo').addEventListener('click', cerrarCorreos);
 
   /* ---------- apuntar el equipo de alguien ----------
      Se abre desde la ficha, con lo que el técnico acabe de escribir en el
@@ -1823,6 +1958,7 @@
       cargarGuias();
       inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
       cargarCuentas();
+      cargarCorreos();
       vigilar();
     }catch(err){
       aviso.innerHTML = '<span>⚠</span><div>No se pudo entrar: ' + esc(err.message) + '</div>';
@@ -2114,7 +2250,7 @@
     }
     if(!sesion()){ mostrarAcceso(); return; }
     mostrarBandeja();
-    try{ await cargar(); cargarGuias(); inventarioTraer(); cargarCuentas(); vigilar(); }
+    try{ await cargar(); cargarGuias(); inventarioTraer(); cargarCuentas(); cargarCorreos(); vigilar(); }
     catch(err){ console.error('No se pudo cargar la bandeja:', err); }
   })();
 })();
