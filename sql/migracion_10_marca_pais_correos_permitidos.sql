@@ -12,10 +12,9 @@
 -- cuentas del CIIP.
 --
 -- Solo 48 de las 50 traían correo: Manuel Marcial y Miguel Angel Zapata
--- Torres quedan en js/directorio.js (para el autocompletado) pero no
--- pueden registrarse todavía — no hay a qué correo agregarlos. En cuanto
--- GTIC consiga el suyo, se agregan aquí o desde "Correos permitidos" en la
--- bandeja.
+-- Torres se quedaron fuera también de js/directorio.js, sin correo no hay
+-- forma de que se registren. En cuanto GTIC consiga el suyo, se agregan
+-- los dos: uno al directorio y otro a "Correos permitidos" en la bandeja.
 --
 -- on conflict do nothing: si alguno ya estuviera en la lista —por ejemplo,
 -- si ya se había agregado a mano por algún caso puntual—, esta migración no
