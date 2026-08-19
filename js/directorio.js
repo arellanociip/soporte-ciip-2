@@ -3,12 +3,13 @@
 
    · CIIP: "Listado General correos activos", 176 personas (177 filas del
      listado, menos una duplicada por error de captura).
-   · Marca País: "Listado de los correos" del Instituto (18/08/2026),
-     50 personas, cruzadas por cédula contra el corte de control de acceso
-     del 27/07/2026 para recuperar gerencia, piso, oficina y cargo — ese
-     Excel solo traía cédula, nombre y el Gmail de cada quien.
+   · Marca País: "Listado de los correos" del Instituto (18/08/2026), 48
+     de sus 50 personas —quedaron fuera dos sin correo en ese listado, sin
+     forma de registrar una cuenta—, cruzadas por cédula contra el corte de
+     control de acceso del 27/07/2026 para recuperar gerencia, piso,
+     oficina y cargo: ese Excel solo traía cédula, nombre y el Gmail.
 
-   226 personas en total. Sirve para que nadie escriba su gerencia ni su
+   224 personas en total. Sirve para que nadie escriba su gerencia ni su
    cargo: escribe su nombre, se elige de la lista y el resto se llena solo.
 
    NO LLEVA CÉDULA, a propósito. La versión anterior sí la llevaba, con esta
@@ -207,12 +208,14 @@ const DIRECTORIO = [
   {nombre:'Yuraima Karina Martinez Diaz', gerencia:'CONSULTORÍA JURÍDICA', piso:'', oficina:'', cargo:'Asesor Especialista'},
 
   /* Marca País, del "Listado de los correos" del Instituto Marca País
-     (18/08/2026): 50 personas, cruzadas por cédula contra el corte de
-     control de acceso del 27/07/2026 para recuperar gerencia, piso,
-     oficina y cargo. Ese Excel no traía esos datos, solo cédula, nombre y
-     el Gmail personal (ver gtic.correos_permitidos).
+     (18/08/2026): 48 personas —de 50, quedaron fuera Manuel Marcial y
+     Miguel Angel Zapata Torres, sin correo en ese listado y por lo tanto
+     sin forma de registrar una cuenta—, cruzadas por cédula contra el
+     corte de control de acceso del 27/07/2026 para recuperar gerencia,
+     piso, oficina y cargo. Ese Excel no traía esos datos, solo cédula,
+     nombre y el Gmail personal (ver gtic.correos_permitidos).
 
-     Cinco no cruzaron —dadas de alta después del corte de acceso, o con
+     Cuatro no cruzaron —dadas de alta después del corte de acceso, o con
      la cédula mal tecleada en alguno de los dos listados— y se agregan
      solo con el nombre, sin gerencia: el formulario ya sabe llenar ese
      hueco a mano, igual que con piso y oficina. */
@@ -247,10 +250,8 @@ const DIRECTORIO = [
   {nombre:'Judelys Daniela Romero Espinoza', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General'},
   {nombre:'Karen Luisana Monsalve Cedres', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Lisbeth Amparo Padilla Arnal', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
-  {nombre:'Manuel Marcial', gerencia:'', piso:'', oficina:'', cargo:''},
   {nombre:'Maritza Beatriz Nadales', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Institucional'},
   {nombre:'Michelangely Josefina Griffith Añazco', gerencia:'GERENCIA DE ATENCIÓN CIUDADANA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente'},
-  {nombre:'Miguel Angel Zapata Torres', gerencia:'CONSULTORÍA JURÍDICA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Consultor Jurídico'},
   {nombre:'Niki Benjamin Herrera Gómez', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
   {nombre:'Ninoska García Perez', gerencia:'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Apoyo Profesional'},
   {nombre:'Niurka Carolina Quintero Contreras', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Gerente'},
