@@ -38,6 +38,24 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
    .json() de dentro de supabase-js reventaba con 'Unexpected end of JSON
    input': un 500 pelado, sin una palabra de por qué. */
 const URL_PROYECTO = Deno.env.get('SUPABASE_URL') ?? '';
+
+/* Lo que se lanza aquí no siempre es un Error. supabase-js devuelve los
+   fallos de PostgREST como objetos planos —{message, code, details, hint}—
+   y este archivo los relanza tal cual. String() sobre uno de esos da
+   '[object Object]', que es lo que llegó a verse en la bandeja: un error
+   que no dice absolutamente nada y obliga a ir al registro del panel, que
+   no todo el mundo puede abrir. Se saca el message si lo hay, y si no, el
+   objeto entero en JSON: feo, pero legible. */
+function comoTexto(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === 'object') {
+    const o = e as Record<string, unknown>;
+    const partes = [o.message, o.details, o.hint].filter(Boolean).map(String);
+    if (partes.length) return partes.join(' · ');
+    try { return JSON.stringify(e); } catch { /* referencias circulares */ }
+  }
+  return String(e);
+}
 const LLAVE_ADMIN  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
                   ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? '';
 const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')
@@ -144,7 +162,7 @@ Deno.serve(async (req) => {
     }
     usuario = r.data.user;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = comoTexto(e);
     return responder(502, {
       message: 'No se pudo comprobar la sesión contra Supabase: ' + msg,
     });
@@ -285,7 +303,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     /* El mensaje de Supabase se pasa tal cual: la bandeja lo enseña, y "ese
        correo ya existe" es más útil que "algo falló". */
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = comoTexto(e);
     return responder(400, { message: msg });
   }
 });
