@@ -51,6 +51,10 @@ a{color:var(--navy);}
   max-width:940px; margin:0 auto; padding:0 20px;
   display:flex; align-items:center; gap:14px;
 }
+/* La bandeja usa el cuerpo ancho (.envoltura.ancha, 1200px); su encabezado
+   tiene que medir lo mismo, o los bordes de arriba y abajo no coinciden y
+   con seis enlaces ya no cabía ninguno de los dos cómodos. */
+.cab-in.ancha{max-width:1200px;}
 .cab img{height:38px; width:auto; flex:0 0 auto;}
 .cab .tit{font-size:17px; font-weight:700; line-height:1.2;}
 .cab .sub{font-size:12px; color:rgba(255,255,255,.68); margin-top:2px;}
