@@ -55,7 +55,7 @@ window.SOPORTE_BACKEND = {
 /* A dónde escribirle si el servidor no responde y la solicitud no pudo salir.
    Sale en el mensaje de error, para que la persona no quede sin salida. */
 window.SOPORTE_CONTACTO = {
-  gerencia: 'Gerencia de Tecnología de la Información y Comunicación',
+  gerencia: 'Gerencia General de Tecnología de la Información y Comunicación',
   extension: '',
   correo: '',
 };
