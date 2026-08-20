@@ -160,7 +160,7 @@ const CAT_ATAJOS = [
        en vez de las ocho de la familia. */
     opciones: [
       {id: 'cpu-enciende', icono: '<svg viewBox="0 0 24 24"><path d="M7.8 6.6a7 7 0 108.4 0"/><line x1="12" y1="2.8" x2="12" y2="11"/></svg>',
-       titulo: 'No enciende o se apaga', sub: 'Muerta, o se reinicia sola',
+       titulo: '¿No enciende?', sub: 'Muerta, o se reinicia sola',
        tipo: 'SOPORTE_TECNICO', detalle: 'OPERATIVIDAD DE CPU', equipos: ['CPU'],
        ejemplo: 'Ej. El CPU se apaga solo a cada rato desde el lunes, aunque el cable esté bien conectado.'},
       {id: 'cpu-pantalla', icono: '<svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="4" y1="19.5" x2="20" y2="1.5"/></svg>',
