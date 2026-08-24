@@ -798,7 +798,14 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .hoja-entrada{
   border-radius:20px; box-shadow:0 24px 70px rgba(0,20,60,.35);
 }
-.logo-entrada{height:34px; width:auto; display:block; margin-bottom:18px;}
+.logo-fila-entrada{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+.logo-entrada{height:34px; width:auto; display:block;}
+/* La etiqueta que dice "esto es el módulo de soporte", no el sitio general
+   del CIIP — mismo azul suave que ya usan otras etiquetas de la app. */
+.badge-soporte{
+  background:var(--navy-soft); color:var(--navy); font-size:10.5px; font-weight:700;
+  letter-spacing:.04em; text-transform:uppercase; padding:4px 10px; border-radius:20px;
+}
 /* El botón de entrar es la única acción que hace falta el 99% de las veces
    —Cancelar solo existe cuando ya había sesión (ver js/cuenta.js)—, así que
    ocupa la fila entera en vez de compartirla. */
