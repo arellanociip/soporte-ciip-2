@@ -792,7 +792,7 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
    de trabajo. */
 .velo-entrada{
   background:
-    linear-gradient(160deg, rgba(0,58,130,.82) 0%, rgba(0,51,109,.85) 55%, rgba(0,19,48,.92) 100%),
+    linear-gradient(160deg, rgba(0,58,130,.4) 0%, rgba(0,51,109,.45) 55%, rgba(0,19,48,.55) 100%),
     url('../assets/edificio-ciip.jpg') center/cover no-repeat;
 }
 .hoja-entrada{
