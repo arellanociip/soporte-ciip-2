@@ -207,8 +207,8 @@
     const nuevo = modo === 'registrarse';
     $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Entrar';
     $('bajadaCuentaUsuario').textContent = nuevo
-      ? 'Con tu correo de la casa, el mismo del trabajo. La contraseña la eliges tú y no la sabe nadie más.'
-      : 'Para pedir soporte hay que entrar con tu correo de la casa. Si es la primera vez, crea tu cuenta abajo.';
+      ? 'Con el correo que GTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
+      : 'Para pedir soporte hay que entrar con el correo que GTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
     /* Los dos campos cambian de papel según el modo, y al navegador hay que
        decírselo. La pareja username + current-password es la firma que
