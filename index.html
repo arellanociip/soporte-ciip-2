@@ -341,8 +341,8 @@
      desde cualquier equipo, en vez de solo desde este navegador. La misma
      ventana entra y registra, porque quien llega aquí no tiene por qué saber
      de antemano cuál de las dos cosas le toca. -->
-<div class="velo" id="veloCuentaUsuario" hidden>
-  <div class="hoja" style="max-width:460px">
+<div class="velo velo-entrada" id="veloCuentaUsuario" hidden>
+  <div class="hoja hoja-entrada" style="max-width:460px">
     <button type="button" class="cerrar" id="cerrarCuentaUsuario" aria-label="Cerrar">✕</button>
     <h2 id="tituloCuentaUsuario">Entrar</h2>
     <div class="bajada" id="bajadaCuentaUsuario"></div>
@@ -353,7 +353,7 @@
         <input type="text" id="cuNombre" autocomplete="name" placeholder="Ej. María Rodríguez">
       </div>
       <div class="campo">
-        <label for="cuCorreo">Correo de la casa</label>
+        <label for="cuCorreo">Correo de acceso</label>
         <input type="text" id="cuCorreo" autocomplete="username" readonly placeholder="nombre.apellido@ciip.com.ve">
       </div>
       <div class="campo">
@@ -370,15 +370,15 @@
 
     <div class="aviso malo" id="avisoCuentaUsuario" hidden style="margin:16px 0 0"></div>
 
-    <div class="botones">
+    <div class="botones botones-entrada">
       <button type="button" class="boton primario" id="botonAceptarCuenta">Entrar</button>
       <button type="button" class="boton plano" id="cancelarCuentaUsuario">Cancelar</button>
     </div>
     <div class="cuenta-pie">
       <button type="button" class="enlace" id="cambiarModoCuenta">No tengo cuenta · crear una</button>
-      <span>Tu correo es el mismo del trabajo. La contraseña la eliges tú y no
-        la sabe nadie más, tampoco GTIC. Si no puedes entrar, llama a la
-        gerencia por teléfono.</span>
+      <span>Es el correo que GTIC autorizó para tu cuenta. La contraseña la
+        eliges tú y no la sabe nadie más, tampoco GTIC. Si no puedes entrar,
+        llama a la gerencia por teléfono.</span>
     </div>
   </div>
 </div>
