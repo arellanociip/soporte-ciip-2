@@ -205,7 +205,7 @@
 
   function pintarModo(){
     const nuevo = modo === 'registrarse';
-    $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Entrar';
+    $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Autenticación Requerida';
     $('bajadaCuentaUsuario').textContent = nuevo
       ? 'Con el correo que GTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
       : 'Para pedir soporte hay que entrar con el correo que GTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
