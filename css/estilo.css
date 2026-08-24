@@ -798,6 +798,7 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .hoja-entrada{
   border-radius:20px; box-shadow:0 24px 70px rgba(0,20,60,.35);
 }
+.logo-entrada{height:34px; width:auto; display:block; margin-bottom:18px;}
 /* El botón de entrar es la única acción que hace falta el 99% de las veces
    —Cancelar solo existe cuando ya había sesión (ver js/cuenta.js)—, así que
    ocupa la fila entera en vez de compartirla. */
