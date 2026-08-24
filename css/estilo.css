@@ -786,10 +786,14 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 
 /* ---------- la puerta de entrar ----------
    Es lo primero que ve quien todavía no está adentro, así que es el único
-   velo con fondo propio: el mismo azul del encabezado, en degradado, en vez
-   del gris translúcido que llevan los demás modales de trabajo. */
+   velo con fondo propio: la foto del edificio, oscurecida con el mismo azul
+   del encabezado en degradado —para que la tarjeta blanca siga leyéndose
+   bien encima—, en vez del gris translúcido que llevan los demás modales
+   de trabajo. */
 .velo-entrada{
-  background:linear-gradient(160deg, #003a82 0%, var(--navy-deep) 55%, #001330 100%);
+  background:
+    linear-gradient(160deg, rgba(0,58,130,.82) 0%, rgba(0,51,109,.85) 55%, rgba(0,19,48,.92) 100%),
+    url('../assets/edificio-ciip.jpg') center/cover no-repeat;
 }
 .hoja-entrada{
   border-radius:20px; box-shadow:0 24px 70px rgba(0,20,60,.35);
