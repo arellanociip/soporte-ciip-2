@@ -39,15 +39,16 @@ html,body{
 }
 body{font-size:14px; line-height:1.5;}
 
-/* La foto del edificio, de fondo en toda la bandeja, pero apenas asomando:
-   una marca de agua se nota que está ahí, no compite con la lista de
-   solicitudes que va encima. El tinte es el mismo --bg de siempre, casi
-   opaco, sobre la foto; fixed para que no se mueva con el scroll de una
-   cola larga. Solo en bandeja.html —body lleva la clase a propósito—: en
-   index.html esta misma hoja de estilos sigue con el fondo liso. */
+/* La foto del edificio, de fondo en toda la bandeja, con el mismo tinte
+   azul en degradado que ya lleva la puerta de entrar de index.html
+   (.velo-entrada): así las dos puertas de la casa se ven de la misma
+   familia. Fixed, para que no se mueva con el scroll de una cola larga.
+   Solo en bandeja.html —body lleva la clase a propósito—: en index.html
+   esta misma hoja de estilos sigue con el fondo liso fuera de su propia
+   puerta. */
 body.pagina-bandeja{
   background-image:
-    linear-gradient(rgba(244,247,251,.8), rgba(244,247,251,.8)),
+    linear-gradient(160deg, rgba(0,58,130,.4) 0%, rgba(0,51,109,.45) 55%, rgba(0,19,48,.55) 100%),
     url('../assets/edificio-ciip-bandeja.jpg');
   background-repeat:no-repeat, no-repeat;
   background-position:center, center;
