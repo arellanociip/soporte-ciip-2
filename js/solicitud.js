@@ -27,7 +27,28 @@
     return o;
   };
 
-  CAT_GERENCIAS.forEach(g => gerencia.append(opcion(g)));
+  /* Las gerencias vienen en mayúscula sostenida en CAT_GERENCIAS —así hay
+     que dejarlas: es el mismo texto que trae js/directorio.js y el que sale
+     impreso en la Hoja de Servicio, y cambiar el valor rompería las dos
+     cosas—. Esto solo toca lo que se LEE en el desplegable, no lo que se
+     guarda: "GERENCIA GENERAL..." se ve como "Gerencia General...", más
+     fácil de leer que gritado en mayúsculas.
+     Si la gerencia ya no viene toda en mayúscula (como "OTRA (no aparece en
+     la lista)", que es una instrucción y no un nombre), se deja tal cual:
+     ya está en el formato que hace falta. */
+  const PARTICULAS_GERENCIA = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'en', 'el', 'para']);
+  function tituloGerencia(s){
+    if(s !== s.toUpperCase()) return s;
+    return s.toLowerCase().split(' ').map((palabra, i) => {
+      const m = palabra.match(/^(\(*)(.*?)(\)*)$/);
+      const abre = m[1], nucleo = m[2], cierra = m[3];
+      const esParticula = i > 0 && !abre && PARTICULAS_GERENCIA.has(nucleo);
+      const nucleoCap = esParticula ? nucleo : nucleo.charAt(0).toUpperCase() + nucleo.slice(1);
+      return abre + nucleoCap + cierra;
+    }).join(' ');
+  }
+
+  CAT_GERENCIAS.forEach(g => gerencia.append(opcion(g, tituloGerencia(g))));
   CAT_PISOS.forEach(p => piso.append(opcion(p, p === 'PB' ? 'PB · Planta baja' : 'Piso ' + p)));
   CAT_OFICINAS.forEach(o => oficinas.append(opcion(o)));
   CAT_SERVICIOS.forEach(s => tipo.append(opcion(s.valor, s.etiqueta)));
