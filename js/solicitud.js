@@ -620,7 +620,12 @@
        rota. Se omiten los que no estén. */
     const ubicacion = [p.piso && ('Piso ' + p.piso), p.oficina && ('of. ' + p.oficina)]
       .filter(Boolean).join(', ');
-    o.label = [p.gerencia, ubicacion].filter(Boolean).join(' · ');
+    /* El nombre va también en la etiqueta: Edge y Firefox, cuando una opción
+       tiene label, muestran solo el label y no el value. Con la gerencia sola
+       la lista salía llena de "CONSULTORÍA JURÍDICA" repetido, sin un nombre
+       a la vista. Chrome enseña los dos y el nombre sale doble, que estorba
+       menos que no verlo. */
+    o.label = [p.nombre, p.gerencia, ubicacion].filter(Boolean).join(' · ');
     $('listaPersonas').append(o);
   });
 
