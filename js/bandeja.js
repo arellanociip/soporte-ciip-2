@@ -39,6 +39,28 @@
      pedir, porque no hay nada de nadie más que proteger. */
   const enPrueba = !soporteHayBackend();
 
+  /* El correo de recuperación lo manda Supabase Auth; el servidor de la
+     oficina no sabe mandar correos, así que ahí este atajo no tiene
+     destino y se esconde en vez de prometer algo que no puede cumplir. */
+  if(B.servidor !== 'supabase' && $('botonOlvido')) $('botonOlvido').hidden = true;
+
+  /* ---------- volver del correo de recuperación ----------
+     Supabase manda el enlace con el testigo en el propio hash de la URL
+     (#access_token=...&type=recovery&...), nunca en la ruta ni en la
+     query: así no queda registrado en ningún historial de accesos. Se lee
+     una sola vez, al cargar la página, y se borra del hash enseguida —
+     dejarlo ahí sobrevive a un refresco y bastaría para poner la clave
+     dos veces con el mismo enlace ya usado. */
+  let testigoRecuperacion = null;
+  (function(){
+    const testigo = location.hash.match(/access_token=([^&]+)/);
+    const tipo = location.hash.match(/type=([^&]+)/);
+    if(testigo && tipo && tipo[1] === 'recovery'){
+      testigoRecuperacion = decodeURIComponent(testigo[1]);
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  })();
+
   /* ================= sesión ================= */
   const LLAVE_SESION = 'soporte_sesion';
 
@@ -2093,11 +2115,137 @@
   $('guardarPerfil').addEventListener('click', guardarPerfil);
   $('veloPerfil').addEventListener('click', e => { if(e.target === $('veloPerfil')) cerrarPerfil(); });
 
+  /* ================= recuperar la contraseña ================= */
+  function abrirOlvido(){
+    $('avisoOlvido').hidden = true;
+    $('avisoOlvidoOk').hidden = true;
+    /* si ya había escrito el correo abajo, se lo ahorra aquí */
+    $('oCorreo').value = $('correo').value.trim();
+    $('veloOlvido').hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => $('oCorreo').focus());
+  }
+  function cerrarOlvido(){
+    $('veloOlvido').hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  $('botonOlvido').addEventListener('click', e => { e.preventDefault(); abrirOlvido(); });
+  $('cerrarOlvido').addEventListener('click', cerrarOlvido);
+  $('cancelarOlvido').addEventListener('click', cerrarOlvido);
+  $('veloOlvido').addEventListener('click', e => { if(e.target === $('veloOlvido')) cerrarOlvido(); });
+
+  $('botonEnviarOlvido').addEventListener('click', async () => {
+    const avisoMal = $('avisoOlvido'), avisoOk = $('avisoOlvidoOk');
+    avisoMal.hidden = true; avisoOk.hidden = true;
+    const correo = $('oCorreo').value.trim();
+    if(!correo || !correo.includes('@')){
+      avisoMal.textContent = 'Escribe un correo válido.';
+      avisoMal.hidden = false;
+      return;
+    }
+    const boton = $('botonEnviarOlvido');
+    boton.disabled = true; boton.textContent = 'Enviando…';
+    try{
+      /* redirect_to y no el body: es GoTrue quien decide adónde manda de
+         vuelta el enlace del correo, y lo lee de la query, no del JSON. Se
+         manda a esta misma página —protocolo, dominio y ruta, sin el
+         hash— para que el testigo de arriba lo encuentre al volver. */
+      const destino = location.origin + location.pathname;
+      const r = await fetch(B.url + '/auth/v1/recover?redirect_to=' + encodeURIComponent(destino), {
+        method: 'POST',
+        headers: Object.assign({'Content-Type': 'application/json'}, soporteCabeceras()),
+        body: JSON.stringify({email: correo}),
+      });
+      if(!r.ok){
+        const cuerpo = await r.json().catch(() => ({}));
+        throw new Error(cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status));
+      }
+      /* Supabase contesta 200 exista o no esa cuenta —para no delatar quién
+         tiene cuenta y quién no—, así que el aviso es el mismo en los dos
+         casos a propósito: que no llegue nada no es un error de aquí. */
+      avisoOk.textContent = 'Si esa cuenta existe, le llega un correo con el enlace en un momento.';
+      avisoOk.hidden = false;
+    }catch(err){
+      avisoMal.textContent = 'No se pudo enviar: ' + err.message;
+      avisoMal.hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Enviar enlace';
+  });
+
+  /* ---------- la ventana que se abre sola al volver del correo ---------- */
+  function abrirNuevaClave(){
+    $('avisoNuevaClave').hidden = true;
+    $('ncClave').value = ''; $('ncClave2').value = '';
+    $('veloNuevaClave').hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => $('ncClave').focus());
+  }
+  function cerrarNuevaClave(){
+    $('veloNuevaClave').hidden = true;
+    document.body.style.overflow = '';
+    /* el testigo es de un solo uso; si esta persona cancela y vuelve a
+       necesitarlo, que pida un enlace nuevo en vez de reintentar este */
+    testigoRecuperacion = null;
+  }
+  $('cancelarNuevaClave').addEventListener('click', () => { cerrarNuevaClave(); mostrarAcceso(); });
+
+  $('guardarNuevaClave').addEventListener('click', async () => {
+    const aviso = $('avisoNuevaClave');
+    aviso.hidden = true;
+    const c1 = $('ncClave').value, c2 = $('ncClave2').value;
+    if(!c1 || c1.length < 6){
+      aviso.textContent = 'La contraseña necesita al menos 6 caracteres.';
+      aviso.hidden = false;
+      return;
+    }
+    if(c1 !== c2){
+      aviso.textContent = 'Las dos casillas no coinciden.';
+      aviso.hidden = false;
+      return;
+    }
+    const boton = $('guardarNuevaClave');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    try{
+      /* El testigo del enlace hace de Authorization aquí: no hay sesión
+         guardada todavía —esta visita empieza en el correo, no en el
+         formulario de entrar—, así que pedir() no sirve, y se llama a
+         /auth/v1/user directo, igual que hace pedir() por dentro. */
+      const r = await fetch(B.url + '/auth/v1/user', {
+        method: 'PUT',
+        headers: Object.assign({'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + testigoRecuperacion}, soporteCabeceras()),
+        body: JSON.stringify({password: c1}),
+      });
+      if(!r.ok){
+        const cuerpo = await r.json().catch(() => ({}));
+        throw new Error(cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status));
+      }
+      cerrarNuevaClave();
+      /* El enlace no deja una sesión abierta en la bandeja —a propósito:
+         iniciar sesión así se saltaría el candado de "¿esto es GTIC?"—,
+         así que se manda a la pantalla de entrar de siempre, con la clave
+         recién puesta lista para usar ahí. */
+      mostrarAcceso();
+      const avisoAcceso = $('avisoAcceso');
+      avisoAcceso.className = 'aviso bueno';
+      avisoAcceso.innerHTML = '<span>✓</span><div>Contraseña puesta. Entra con la nueva.</div>';
+      avisoAcceso.hidden = false;
+    }catch(err){
+      aviso.textContent = 'No se pudo guardar: ' + err.message;
+      aviso.hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar';
+  });
+
   /* ================= gestos ================= */
   $('formAcceso').addEventListener('submit', async e => {
     e.preventDefault();
     const boton = $('botonEntrar'), aviso = $('avisoAcceso');
     aviso.hidden = true;
+    /* por si quedó en verde: el aviso de "contraseña puesta" que deja la
+       recuperación usa esta misma caja */
+    aviso.className = 'aviso malo';
     boton.disabled = true; boton.textContent = 'Entrando…';
     try{
       await entrar($('correo').value.trim(), $('clave').value);
@@ -2389,6 +2537,14 @@
 
   /* ================= arranque ================= */
   (async function(){
+    /* Va antes que todo lo demás: si se vuelve del correo con el testigo de
+       recuperación puesto, eso manda sin importar si ya había una sesión
+       guardada en este navegador o si el modo es de ensayo. */
+    if(testigoRecuperacion){
+      mostrarAcceso();
+      abrirNuevaClave();
+      return;
+    }
     if(enPrueba){
       /* Sin servidor no hay a quién pedirle una clave: se entra directo, con el
          cartel bien visible de que esto es un ensayo. */
