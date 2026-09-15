@@ -65,6 +65,7 @@
             <svg viewBox="0 0 24 24"><path d="M1.8 12S5.9 5.5 12 5.5 22.2 12 22.2 12 18.1 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.1"/></svg>
           </button>
         </div>
+        <button type="button" class="enlace" id="botonOlvido">¿Olvidó su contraseña?</button>
       </div>
 
       <div class="aviso malo" id="avisoAcceso" hidden style="margin:4px 0 0"></div>
@@ -72,9 +73,64 @@
       <button type="submit" class="boton primario ancho" id="botonEntrar">Entrar</button>
 
       <div class="acceso-pie">Las cuentas las crea GTIC desde el servidor;
-        no hay registro por la web. Si olvidaste tu clave, se pone una nueva desde ahí.</div>
+        no hay registro por la web.</div>
     </form>
   </section>
+
+  <!-- ===================== RECUPERAR LA CONTRASEÑA =====================
+       Dos ventanas, no una, porque llegan en dos visitas distintas a la
+       página: esta se abre a mano, con solo el correo, para pedir el
+       enlace; la de abajo se abre sola cuando se vuelve desde ese correo,
+       con el testigo de un solo uso que manda Supabase en la propia URL. -->
+  <div class="velo" id="veloOlvido" hidden>
+    <div class="hoja" style="max-width:420px">
+      <button type="button" class="cerrar" id="cerrarOlvido" aria-label="Cerrar">✕</button>
+      <h2>Recuperar la contraseña</h2>
+      <div class="bajada">Te llega un enlace al correo para poner una nueva.
+        Vale por poco tiempo; si no llega en unos minutos, revisa spam antes
+        de pedir otro.</div>
+
+      <div class="campo" style="margin-top:16px">
+        <label for="oCorreo">Correo</label>
+        <input type="text" id="oCorreo" autocomplete="username" placeholder="tu.correo@ciip.com.ve">
+      </div>
+
+      <div class="aviso malo" id="avisoOlvido" hidden style="margin-top:14px"></div>
+      <div class="aviso bueno" id="avisoOlvidoOk" hidden style="margin-top:14px"></div>
+
+      <div class="botones" style="margin-top:18px">
+        <button type="button" class="boton primario" id="botonEnviarOlvido">Enviar enlace</button>
+        <button type="button" class="boton plano" id="cancelarOlvido">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PONER LA CONTRASEÑA NUEVA =====================
+       Se abre sola al volver del correo: el propio enlace, mientras no
+       venza, hace de contraseña vieja, así que aquí no se pide ninguna. -->
+  <div class="velo" id="veloNuevaClave" hidden>
+    <div class="hoja" style="max-width:420px">
+      <h2>Nueva contraseña</h2>
+      <div class="bajada">Este enlace confirma que eres tú. Escribe la
+        contraseña que vas a usar de ahora en adelante.</div>
+
+      <div class="campo" style="margin-top:16px">
+        <label for="ncClave">Contraseña nueva</label>
+        <input type="password" id="ncClave" autocomplete="new-password">
+      </div>
+      <div class="campo" style="margin-top:12px">
+        <label for="ncClave2">Repítela</label>
+        <input type="password" id="ncClave2" autocomplete="new-password">
+      </div>
+
+      <div class="aviso malo" id="avisoNuevaClave" hidden style="margin-top:14px"></div>
+
+      <div class="botones" style="margin-top:18px">
+        <button type="button" class="boton primario" id="guardarNuevaClave">Guardar</button>
+        <button type="button" class="boton plano" id="cancelarNuevaClave">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===================== LA BANDEJA ===================== -->
   <section id="pantallaBandeja" hidden>
