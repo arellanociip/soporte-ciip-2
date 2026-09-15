@@ -144,7 +144,7 @@ const INVENTARIO = {
     {equipo:'CPU', marca:'LENOVO', modelo:'TINKCENTRE M92P', serial:'MJVMTEK'},
     {equipo:'MONITOR', marca:'VIEWSONIC', modelo:'VS16216', serial:'VR4202922043'},
   ],
-  'Frenddy Enrique Santana Buitrago': [
+  'Frenddy Enrique Santana Buitriago': [
     {equipo:'CPU', marca:'LENOVO', modelo:'TINKCENTRE M92P', serial:'MJ91Y14'},
     {equipo:'MONITOR', marca:'ACER', modelo:'V206HQL AB', serial:'MMLYGAA00505107D91850E'},
   ],
@@ -165,7 +165,7 @@ const INVENTARIO = {
     {equipo:'OTRO', marca:'OTRA', modelo:'U-PTC1200', serial:'211105-0661779'},
     {equipo:'OTRO', marca:'OTRA', modelo:'U-PTC1200', serial:'211105-0561783'},
   ],
-  'Herrera Medina Herrera Medina': [
+  'Yarizmit Gheinsy Herrera Medina': [
     {equipo:'CPU', marca:'LENOVO', modelo:'TINKCENTRE M92P', serial:'MJ541P5'},
     {equipo:'MONITOR', marca:'ACER', modelo:'V206HQL AB', serial:'MMLXKAA022105041804258'},
     {equipo:'TECLADO', marca:'OTRA', modelo:'1576', serial:'65820236291'},
@@ -365,7 +365,7 @@ const INVENTARIO = {
     {equipo:'CPU', marca:'LENOVO', modelo:'TINKCENTRE M92P', serial:'MJ78W1G'},
     {equipo:'MONITOR', marca:'LG', modelo:'20MK400H', serial:'007NTS454798'},
   ],
-  'Rosbely del Carmen Godoy Briceño': [
+  'Rosbely del Carmen Bracho Indriago': [
     {equipo:'MONITOR', marca:'OTRA', modelo:'G2712', serial:'C04T0335003M'},
     {equipo:'CPU', marca:'OTRA', modelo:'CS515XTK02', serial:'INC2104310538'},
   ],
