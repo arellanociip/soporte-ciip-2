@@ -158,11 +158,11 @@
       </div>
 
       <div class="rejilla" id="camposIdentidad" hidden>
-        <!-- Sale solo cuando los seis campos de abajo se llenaron solos —por
-             la cuenta o por elegirse de la lista—, no cuando se llegó aquí por
-             "No aparezco en la lista". Lo enciende js/solicitud.js. -->
+        <!-- La salida de vuelta al buscador. Si los seis campos se llenaron
+             solos dice "Ya sabemos quién eres · No soy yo"; si no, "Buscarme
+             en la lista". Los textos los pone js/solicitud.js (pintarAviso). -->
         <div class="campo" id="avisoIdentificado" hidden>
-          <div class="ayuda">Ya sabemos quién eres ·
+          <div class="ayuda"><span id="avisoIdentificadoTexto">Ya sabemos quién eres</span> ·
             <button type="button" class="enlace" id="botonNoSoyYo">No soy yo</button></div>
         </div>
         <div class="campo c8">

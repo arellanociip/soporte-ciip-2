@@ -130,19 +130,22 @@
     if(typeof s.ficha === 'string') return s.ficha;
     if(fichaEnVuelo) return fichaEnVuelo;
     const vuelo = (async () => {
-      let nombre = '';
+      let nombre = '', contesto = false;
       try{
         const r = await pedir('/rest/v1/rpc/mi_ficha', {method: 'POST', body: '{}'});
         if(r && r.ok){
           const filas = await r.json();
           nombre = (Array.isArray(filas) ? (filas[0] && filas[0].nombre) : (filas && filas.nombre)) || '';
+          contesto = true;
         }
       }catch(e){ console.warn('No se pudo traer tu ficha:', e); }
       /* Se anota aunque venga vacía: '' también es una respuesta —"ese correo
          no tiene nombre en la lista"— y repetir la pregunta en cada pantalla
-         no la va a cambiar. Entrar de nuevo sí, y ahí la sesión se rehace. */
+         no la va a cambiar. Pero solo si el servidor contestó: un viaje que
+         falló —sin red, servidor caído— no es una respuesta, y anotarlo
+         dejaba la planilla sin llenar hasta volver a entrar. */
       const actual = leerSesion();
-      if(actual){ actual.ficha = nombre; guardarSesion(actual); }
+      if(contesto && actual){ actual.ficha = nombre; guardarSesion(actual); }
       fichaEnVuelo = null;
       return nombre;
     })();

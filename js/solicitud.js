@@ -483,13 +483,44 @@
     $('camposIdentidad').hidden  = cual !== 'campos';
   }
 
+  /* La salida de vuelta al buscador, siempre a la vista en los seis campos.
+     Antes solo salía cuando el sistema había reconocido a la persona, y quien
+     llegaba sin que lo reconociera —la cuenta traía un nombre corto que no
+     calza con el directorio, o este navegador recordaba uno así— se quedaba
+     en los seis campos sin forma de ir a elegirse de la lista. Y con
+     "Recordar mis datos" marcado, así se quedaba cada vez que abría la página.
+     Las dos llevan a olvidarYo(): borra lo recordado y abre el buscador. */
+  /* Con la sesión de alguien de la lista, el nombre es el de la cuenta y no
+     se cambia a mano. Antes lo recordado en este navegador mandaba sobre la
+     cuenta: en un equipo compartido, quien entraba con la suya se encontraba
+     la planilla a nombre del último que marcó "Recordar mis datos", y podía
+     pedir a nombre de otro sin darse cuenta —o dándose—. Guarda el nombre
+     fijado, o '' si no hay cuenta que mande. Piso y oficina siguen libres:
+     la gente se muda de oficina y el directorio tarda en enterarse. */
+  let fijadoALaCuenta = '';
+  function fijarALaCuenta(nombre){
+    fijadoALaCuenta = nombre || '';
+    $('usuario').readOnly = !!fijadoALaCuenta;
+    $('usuario').title = fijadoALaCuenta ? 'Es el nombre de la cuenta con la que entraste' : '';
+  }
+
+  function pintarAviso(identificado){
+    let texto, boton;
+    if(fijadoALaCuenta){ texto = 'Entraste como ' + fijadoALaCuenta; boton = '¿No eres tú? Salir'; }
+    else if(identificado){ texto = 'Ya sabemos quién eres'; boton = 'No soy yo'; }
+    else{ texto = '¿Estás en la lista de la casa?'; boton = 'Buscarme en la lista'; }
+    $('avisoIdentificadoTexto').textContent = texto;
+    $('botonNoSoyYo').textContent = boton;
+  }
+
   /* Muestra los seis campos. `identificado` dice si se llegó porque el
      sistema reconoció a la persona (cuenta, directorio o lo recordado en este
-     navegador) —ahí sale el aviso con "No soy yo"— o porque hizo falta "No
-     aparezco en la lista", donde ese aviso no pinta nada. */
+     navegador) o porque hizo falta "No aparezco en la lista"; cambia lo que
+     dice el aviso de arriba, no si sale. */
   function mostrarCampos(identificado){
     mostrarIdentidad('campos');
-    $('avisoIdentificado').hidden = !identificado;
+    $('avisoIdentificado').hidden = false;
+    pintarAviso(identificado);
     /* Llegar identificado significa que esos campos los puso el sistema.
        Por "No aparezco en la lista" no: ahí los escribe la persona y
        cuentan como suyos. */
@@ -542,7 +573,8 @@
      directorio, los seis campos salen ya llenos (ver intentarIdentificar);
      si no calza, al menos el campo no llega vacío y puede elegirse o
      corregirse desde ahí.
-     No pisa lo que este navegador ya tuviera recordado — leerYo() manda.
+     Si la cuenta es de alguien de la lista, manda sobre lo que este
+     navegador tuviera recordado; si no, leerYo() manda, como antes.
 
      HAY DOS NOMBRES, y el orden importa:
 
@@ -564,21 +596,41 @@
      entre dos personas por un error de captura, ver la migración 11— y esa
      nota no puede acabar escrita en el nombre de una Hoja de Servicio. */
   async function identificarPorCuenta(){
-    if(leerYo()) return false;
     if(!(window.soporteCuenta && soporteCuenta.dentro())) return false;
-    if($('quienEres').value.trim()) return false;
 
     const deLaFicha = (soporteCuenta.ficha
       ? ((await soporteCuenta.ficha()) || '') : '').trim();
+    const suya = deLaFicha && directorioBuscar(deLaFicha);
 
-    /* Esperar por la ficha le da tiempo a la persona a adelantarse y empezar
-       a escribir su nombre. Si lo hizo, manda ella: pisárselo a media
-       palabra sería peor que no haber rellenado nada. */
+    /* La ficha calza con el directorio: la cuenta es de esa persona y manda,
+       sobre lo que este navegador recuerde y sobre lo que se haya escrito.
+       Si lo recordado es de ella misma se conserva —su teléfono, su oficina
+       corregida—; si es de otra, se borra, para que no vuelva a salir. */
+    if(suya){
+      const yo = leerYo();
+      const mismo = !!yo && (directorioBuscar(yo.usuario) || {}).nombre === suya.nombre;
+      fijarALaCuenta(suya.nombre);
+      if(mismo){
+        $('usuario').value = suya.nombre;
+        mostrarCampos(true);
+        pintarAvance();
+      }else{
+        if(yo) localStorage.removeItem(LLAVE_YO);
+        CAMPOS_YO.forEach(k => { $(k).value = ''; });
+        $('quienEres').value = suya.nombre;
+        intentarIdentificar();
+      }
+      return true;
+    }
+
+    /* La cuenta no dice quién es —su correo no cruza con la lista—. Entonces
+       se hace lo de antes: lo recordado manda, y lo que la persona empezó a
+       escribir mientras se esperaba la ficha también. */
+    if(leerYo()) return false;
     if($('quienEres').value.trim()) return false;
 
     const quien = soporteCuenta.quien();
-    const deLaCuenta = ((quien && quien.nombre) || '').trim();
-    const nombre = (deLaFicha && directorioBuscar(deLaFicha)) ? deLaFicha : deLaCuenta;
+    const nombre = ((quien && quien.nombre) || '').trim();
     if(!nombre) return false;
 
     $('quienEres').value = nombre;
@@ -590,8 +642,8 @@
        vació: quedan los tres a los que ese cruce no les sirve. Quien tiene
        cuenta pero no correo propio en la lista (c.forgione@ciip.com.ve está
        compartido entre dos personas, ver la migración 11), quien entró
-       mientras el servidor no respondía —la ficha devuelve '' y no se
-       reintenta en esa sesión— y quien se dio de alta desde la bandeja con
+       mientras el servidor no respondía —la ficha devuelve '' y se
+       reintenta en la próxima pantalla— y quien se dio de alta desde la bandeja con
        un correo que todavía no está en el directorio. Antes se quedaban en
        el buscador con su propio nombre escrito, teniendo que pulsar 'No
        aparezco en la lista' para poder seguir: un paso de más justo después
@@ -678,6 +730,7 @@
     if(!$('cargo').value)    $('cargo').value    = p.cargo || '';
     /* La cédula tampoco aquí, por la misma razón que en intentarIdentificar. */
     $('avisoIdentificado').hidden = false;
+    pintarAviso(true);
     anotarLoPuestoSolo();
     pintarEquipo();
     pintarAvance();
@@ -692,7 +745,12 @@
     else localStorage.removeItem(LLAVE_YO);
   });
 
-  $('botonNoSoyYo').addEventListener('click', olvidarYo);
+  /* Con la cuenta mandando, "No soy yo" es salir de ella: el nombre es el de
+     la cuenta, y cambiarlo sin salir sería pedir a nombre de otro. */
+  $('botonNoSoyYo').addEventListener('click', () => {
+    if(fijadoALaCuenta && window.soporteCuenta) soporteCuenta.salir();
+    else olvidarYo();
+  });
 
   /* ---------- cuánto falta ----------
      Solo lo obligatorio: si contara lo opcional, la barra nunca llegaría al
@@ -1075,6 +1133,7 @@
     /* Limpiar vacía la planilla, no la memoria: quien ya se identificó no
        tiene por qué volver a hacerlo por haber querido reescribir su problema. */
     if(!aplicarYo()) mostrarIdentidad('buscador');
+    identificarPorCuenta();
     pintarAvance();
   }
 
@@ -1634,7 +1693,11 @@
        identificarPorCuenta más abajo). Quien sí marcó "recordarme" no se
        toca: leerYo() sigue mandando. */
     if(e.detail && e.detail.entro) identificarPorCuenta();
-    else if(!leerYo()) olvidarYo();
+    else{
+      /* Sin cuenta, el nombre ya no es de nadie en particular: se suelta. */
+      fijarALaCuenta('');
+      if(!leerYo()) olvidarYo(); else pintarAviso(true);
+    }
     pintarAvance();
     pintarMias();
     vigilar();
@@ -1892,7 +1955,10 @@
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
-  if(!aplicarYo()) identificarPorCuenta();
+  /* Las dos: lo recordado pinta al instante, y la cuenta —si es de alguien
+     de la lista— lo corrige en cuanto llega la ficha. */
+  aplicarYo();
+  identificarPorCuenta();
   pintarAvance();
   pintarMias();
 })();
