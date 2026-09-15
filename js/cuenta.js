@@ -49,6 +49,7 @@
 
   /* Lo que Supabase devuelve al entrar, guardado como lo necesita la página. */
   function anotar(r){
+    const previa = leerSesion();
     const s = {
       token: r.access_token,
       refresco: r.refresh_token,
@@ -56,6 +57,11 @@
       correo: (r.user && r.user.email) || '',
       nombre: (r.user && r.user.user_metadata && r.user.user_metadata.nombre) || '',
     };
+    /* La ficha —el nombre tal como lo dice el listado de la casa— cuesta un
+       viaje al servidor. Renovar el testigo cada hora no es motivo para
+       volver a pedirla: es del mismo correo, así que sigue valiendo. */
+    if(previa && previa.correo === s.correo && typeof previa.ficha === 'string')
+      s.ficha = previa.ficha;
     guardarSesion(s);
     return s;
   }
@@ -92,6 +98,56 @@
       headers: Object.assign({'Authorization': 'Bearer ' + t}, cabeceras(),
                              (opts && opts.headers) || {}),
     }));
+  }
+
+  /* ---------- quién eres según el listado de la casa ----------
+     El nombre que guarda la sesión es el que la persona escribió al
+     registrarse. Sirve para saludarla, no para cruzarlo contra el
+     directorio: puede venir corto —'Franklin Reyes' contra 'Franklin David
+     Reyes Delgado'—, con una tilde de menos o con el apellido de casada, y
+     entonces la planilla no reconoce a quien acaba de entrar con el mismo
+     correo que GTIC autorizó.
+
+     Esto devuelve el otro nombre: el del "Listado General correos activos",
+     que es el que alimenta js/directorio.js. Si el correo está en la lista
+     —y para tener cuenta tiene que estarlo— cruza, y la gerencia, el piso,
+     la oficina y el cargo salen solos (ver js/solicitud.js). El vínculo
+     entre un correo y su persona vive en gtic.correos_permitidos y de ahí
+     no se mueve: la migración 12 abre UNA fila, la de quien llama.
+
+     Se pide una vez por sesión y se guarda con ella. No cambia entre una
+     pantalla y la siguiente, y preguntarlo cada vez sería pagar un viaje al
+     servidor por un dato que ya estaba.
+
+     Si el viaje falla —sin red, servidor caído, migración 12 sin correr—
+     devuelve '' y todo sigue como antes de esto: nadie se queda sin pedir
+     soporte porque no se le pudo llenar la gerencia. */
+  let fichaEnVuelo = null;
+
+  async function ficha(){
+    const s = leerSesion();
+    if(!s) return '';
+    if(typeof s.ficha === 'string') return s.ficha;
+    if(fichaEnVuelo) return fichaEnVuelo;
+    const vuelo = (async () => {
+      let nombre = '';
+      try{
+        const r = await pedir('/rest/v1/rpc/mi_ficha', {method: 'POST', body: '{}'});
+        if(r && r.ok){
+          const filas = await r.json();
+          nombre = (Array.isArray(filas) ? (filas[0] && filas[0].nombre) : (filas && filas.nombre)) || '';
+        }
+      }catch(e){ console.warn('No se pudo traer tu ficha:', e); }
+      /* Se anota aunque venga vacía: '' también es una respuesta —"ese correo
+         no tiene nombre en la lista"— y repetir la pregunta en cada pantalla
+         no la va a cambiar. Entrar de nuevo sí, y ahí la sesión se rehace. */
+      const actual = leerSesion();
+      if(actual){ actual.ficha = nombre; guardarSesion(actual); }
+      fichaEnVuelo = null;
+      return nombre;
+    })();
+    fichaEnVuelo = vuelo;
+    return vuelo;
   }
 
   /* ---------- entrar y registrarse ----------
@@ -261,7 +317,12 @@
       }else{
         s = await entrar(correo, clave);
       }
-      const adoptadas = await adoptarLoDeAntes();
+      /* La ficha, antes de avisar. Quien escucha 'soporte:sesion' llena la
+         planilla con ella (ver js/solicitud.js); llegar un instante tarde
+         sería que la planilla aparezca vacía y se rellene sola delante de
+         quien la está mirando. Las dos peticiones a la vez: son
+         independientes y así no se espera una detrás de otra. */
+      const [adoptadas] = await Promise.all([adoptarLoDeAntes(), ficha()]);
       cerrar();
       pintarCabecera();
       window.dispatchEvent(new CustomEvent('soporte:sesion', {detail: {entro: true, adoptadas}}));
@@ -280,6 +341,7 @@
     hay: () => HAY,
     dentro: () => !!leerSesion(),
     quien: () => leerSesion(),
+    ficha,
     pedir,
     abrir,
     async salir(){

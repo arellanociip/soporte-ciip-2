@@ -536,29 +536,67 @@
   }
 
   /* ---------- identificarse con la cuenta ----------
-     Quien entró con su correo de la casa ya dijo su nombre una vez, al
-     crear la cuenta (ver js/cuenta.js). Pedírselo de nuevo aquí sería
-     hacerle escribir dos veces lo mismo. Se prueba igual que si lo hubiera
-     tecleado él mismo: si el nombre calza con el directorio, los seis campos
-     salen ya llenos (ver intentarIdentificar); si no calza, al menos el
-     campo no llega vacío y puede elegirse o corregirse desde ahí.
-     No pisa lo que este navegador ya tuviera recordado — leerYo() manda. */
-  function identificarPorCuenta(){
+     Quien entró con su correo de la casa ya dijo quién es. Pedírselo de
+     nuevo aquí sería hacerle escribir dos veces lo mismo. Se prueba igual
+     que si lo hubiera tecleado él mismo: si el nombre calza con el
+     directorio, los seis campos salen ya llenos (ver intentarIdentificar);
+     si no calza, al menos el campo no llega vacío y puede elegirse o
+     corregirse desde ahí.
+     No pisa lo que este navegador ya tuviera recordado — leerYo() manda.
+
+     HAY DOS NOMBRES, y el orden importa:
+
+       · el de la FICHA (soporteCuenta.ficha) es el del "Listado General
+         correos activos", el mismo que está en DIRECTORIO. Sale de cruzar
+         el correo con el que se entró contra gtic.correos_permitidos, que
+         es donde vive ese vínculo desde la migración 03 y que la migración
+         12 dejó consultable —una fila, la de quien llama—. Cruza siempre.
+
+       · el de la CUENTA lo escribió la persona al registrarse, en un campo
+         libre. Cruza si tuvo suerte: 'Franklin Reyes' contra 'Franklin
+         David Reyes Delgado' no cruzaba, y por eso el único de la casa que
+         entraba con su correo y aun así tenía que escribirlo todo a mano
+         era justamente quien mantiene esto.
+
+     Primero el que sabemos bueno. Y la ficha solo se acepta si el directorio
+     la reconoce: no es desconfianza, es que una fila de correos_permitidos
+     lleva por "nombre" una nota para GTIC —el correo que quedó compartido
+     entre dos personas por un error de captura, ver la migración 11— y esa
+     nota no puede acabar escrita en el nombre de una Hoja de Servicio. */
+  async function identificarPorCuenta(){
     if(leerYo()) return false;
     if(!(window.soporteCuenta && soporteCuenta.dentro())) return false;
+    if($('quienEres').value.trim()) return false;
+
+    const deLaFicha = (soporteCuenta.ficha
+      ? ((await soporteCuenta.ficha()) || '') : '').trim();
+
+    /* Esperar por la ficha le da tiempo a la persona a adelantarse y empezar
+       a escribir su nombre. Si lo hizo, manda ella: pisárselo a media
+       palabra sería peor que no haber rellenado nada. */
+    if($('quienEres').value.trim()) return false;
+
     const quien = soporteCuenta.quien();
-    const nombre = quien && quien.nombre && quien.nombre.trim();
-    if(!nombre || $('quienEres').value.trim()) return false;
+    const deLaCuenta = ((quien && quien.nombre) || '').trim();
+    const nombre = (deLaFicha && directorioBuscar(deLaFicha)) ? deLaFicha : deLaCuenta;
+    if(!nombre) return false;
+
     $('quienEres').value = nombre;
     if(intentarIdentificar()) return true;
 
-    /* El directorio no la confirmó, pero la cuenta ya dijo quién es: el
-       nombre puede venir más corto que el del corte de correos —'Franklin
-       Reyes' contra 'Franklin David Reyes Delgado'— o esa persona puede no
-       estar en la lista todavía. Antes se quedaba en el buscador con su
-       propio nombre escrito, teniendo que pulsar 'No aparezco en la lista'
-       para poder seguir: un paso de más justo después de haber entrado con
-       su correo, que es cuando más identificada está.
+    /* El directorio no la confirmó, pero la cuenta ya dijo quién es. Con la
+       ficha esto se volvió el caso raro —el correo cruza contra el listado
+       de la casa y el listado es el que llena el directorio—, pero no se
+       vació: quedan los tres a los que ese cruce no les sirve. Quien tiene
+       cuenta pero no correo propio en la lista (c.forgione@ciip.com.ve está
+       compartido entre dos personas, ver la migración 11), quien entró
+       mientras el servidor no respondía —la ficha devuelve '' y no se
+       reintenta en esa sesión— y quien se dio de alta desde la bandeja con
+       un correo que todavía no está en el directorio. Antes se quedaban en
+       el buscador con su propio nombre escrito, teniendo que pulsar 'No
+       aparezco en la lista' para poder seguir: un paso de más justo después
+       de haber entrado con su correo, que es cuando más identificada está
+       la persona.
 
        Se abren los seis campos con el nombre puesto. identificado=false
        porque quien lo dice es la cuenta y no la lista: no sale el aviso de
