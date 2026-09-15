@@ -1323,40 +1323,122 @@
   function abrirCorreos(){
     $('pmCorreos').value = '';
     $('avisoCorreo').hidden = true;
+    avisadoSinDirectorio = '';
     limpiarErrores($('veloCorreo'));
     $('veloCorreo').hidden = false;
     $('pmCorreos').focus();
   }
   function cerrarCorreos(){ $('veloCorreo').hidden = true; }
 
-  /* La misma caja sirve para uno o para muchos: se separa por línea o por
-     coma, se descartan los repetidos y los espacios de sobra, y se valida
-     todo antes de mandar nada — mejor decir "esto no es un correo" antes de
-     escribir, que a mitad de un lote. */
+  /* La misma caja sirve para uno o para muchos. Cada línea es un correo y,
+     si se sabe, el nombre de su dueño: "correo Nombre Apellido", "correo,
+     Nombre Apellido" o "Nombre Apellido <correo>", como venga pegado. Una
+     línea con varios correos separados por coma también vale, pero sin
+     nombre: no habría forma de saber de quién es cada uno. Se valida todo
+     antes de mandar nada — mejor decir "esto no es un correo" antes de
+     escribir, que a mitad de un lote.
+
+     El nombre no es adorno: gtic.mi_ficha() (migración 12) se lo devuelve a
+     quien entra con ese correo, y con él la planilla le llena la gerencia,
+     el piso y la oficina. Solo sirve si calza con el directorio, así que se
+     cuadra contra él antes de guardar (ver nombreDelDirectorio). */
+  const RE_CORREO = /^[^\s@"]+@[^\s@"]+\.[^\s@"]+$/;
+  let avisadoSinDirectorio = '';
+
+  function leerCorreos(crudo){
+    const filas = new Map();
+    for(const linea of crudo.split('\n')){
+      const trozos = linea.split(/[\s,;<>]+/).filter(Boolean);
+      const correos = trozos.filter(t => t.includes('@')).map(t => t.toLowerCase());
+      /* Lo que no es correo es el nombre; un guion o unos dos puntos sueltos
+         entre uno y otro, no. */
+      const nombre = trozos.filter(t => !t.includes('@') && /\p{L}/u.test(t)).join(' ');
+      if(!correos.length){
+        if(nombre) return {problema: 'Falta el correo en: ' + linea.trim()};
+        continue;
+      }
+      const invalido = correos.find(c => !RE_CORREO.test(c));
+      if(invalido) return {problema: 'Esto no parece un correo: ' + invalido};
+      if(correos.length > 1 && nombre)
+        return {problema: 'Varios correos en una línea no pueden llevar nombre: ' + linea.trim()};
+      /* Repetido en la caja: gana el que traiga nombre. */
+      correos.forEach(correo => {
+        if(!filas.has(correo) || nombre) filas.set(correo, {correo, nombre});
+      });
+    }
+    return {filas: [...filas.values()]};
+  }
+
+  /* El nombre tal cual lo dice el directorio, o null. Primero exacto, sin
+     tildes ni mayúsculas (directorioBuscar); si no, basta con que todas las
+     palabras escritas estén en el nombre de UNA sola persona: 'Jesus
+     Arellano' da 'Jesus Antonio Arellano Natera'. Con dos candidatos o más
+     no se escoge por nadie — se avisa y decide quien lo escribió. */
+  function nombreDelDirectorio(nombre){
+    if(typeof directorioBuscar !== 'function') return null;
+    const exacto = directorioBuscar(nombre);
+    if(exacto) return exacto.nombre;
+    const palabras = s => String(s || '').toLowerCase()
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '').split(/\s+/).filter(Boolean);
+    const buscadas = palabras(nombre);
+    if(buscadas.length < 2) return null;
+    const candidatos = DIRECTORIO.filter(p => {
+      const suyas = palabras(p.nombre);
+      return buscadas.every(w => suyas.includes(w));
+    });
+    return candidatos.length === 1 ? candidatos[0].nombre : null;
+  }
+
   async function guardarCorreos(){
     const crudo = $('pmCorreos').value;
     limpiarErrores($('veloCorreo'));
-    const correos = [...new Set(
-      crudo.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean)
-    )];
-    const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const invalido = correos.find(c => !RE_CORREO.test(c));
+    $('avisoCorreo').hidden = true;
 
-    if(!correos.length){
-      marcarError('pmCorreos', 'Escribe al menos un correo.');
+    const {filas, problema} = leerCorreos(crudo);
+    if(problema || !filas.length){
+      marcarError('pmCorreos', problema || 'Escribe al menos un correo.');
       $('pmCorreos').focus();
       return;
     }
-    if(invalido){
-      marcarError('pmCorreos', 'Esto no parece un correo: ' + invalido);
-      $('pmCorreos').focus();
+
+    const fuera = [];
+    filas.forEach(f => {
+      if(!f.nombre) return;
+      const oficial = nombreDelDirectorio(f.nombre);
+      if(oficial) f.nombre = oficial; else fuera.push(f.nombre);
+    });
+    /* Un nombre que no está en el directorio se puede guardar —hay quien
+       todavía no sale en él—, pero no le va a llenar la planilla a nadie. Se
+       avisa una vez; pulsar Agregar de nuevo sin tocar la caja lo guarda. */
+    if(fuera.length && avisadoSinDirectorio !== crudo){
+      avisadoSinDirectorio = crudo;
+      $('avisoCorreo').innerHTML = '<span>⚠</span><div>No están en el directorio tal cual: <b>' +
+        fuera.map(esc).join('</b>, <b>') + '</b>. Se pueden guardar, pero la planilla no le ' +
+        'llenará sola la gerencia a quien entre con ese correo. Corrígelos, o pulsa Agregar ' +
+        'otra vez para guardarlos así.</div>';
+      $('avisoCorreo').hidden = false;
       return;
     }
+
+    /* Los que ya están y llegan con otro nombre. La tabla no tiene UPDATE a
+       propósito (migración 06: corregir es quitar uno y agregar otro), así
+       que eso mismo: se quitan aquí y vuelven a entrar en el lote de abajo. */
+    const antes = new Map(correosPermitidos.map(c => [c.correo, c.nombre || '']));
+    const renombrar = filas
+      .filter(f => f.nombre && antes.has(f.correo) && antes.get(f.correo) !== f.nombre)
+      .map(f => f.correo);
 
     const boton = $('guardarCorreos');
     boton.disabled = true; boton.textContent = 'Agregando…';
-    $('avisoCorreo').hidden = true;
+    let quitados = [];
     try{
+      if(renombrar.length){
+        const lista = '(' + renombrar.map(c => '"' + c + '"').join(',') + ')';
+        await pedir('/rest/v1/correos_permitidos?correo=in.' + encodeURIComponent(lista),
+                    {method: 'DELETE'});
+        quitados = renombrar;
+        correosPermitidos = correosPermitidos.filter(c => !renombrar.includes(c.correo));
+      }
       /* resolution=ignore-duplicates: repetir uno que ya está no rompe el
          lote entero, simplemente no hace nada con ese (ON CONFLICT DO
          NOTHING). No usar merge-duplicates: eso es ON CONFLICT DO UPDATE y
@@ -1369,7 +1451,7 @@
           'Content-Type': 'application/json',
           'Prefer': 'resolution=ignore-duplicates,return=representation',
         },
-        body: JSON.stringify(correos.map(correo => ({correo}))),
+        body: JSON.stringify(filas.map(f => ({correo: f.correo, nombre: f.nombre || null}))),
       });
       const guardados = await r.json();
       guardados.forEach(g => {
@@ -1379,7 +1461,12 @@
       pintarCorreos();
       cerrarCorreos();
     }catch(err){
-      $('avisoCorreo').innerHTML = '<span>⚠</span><div>No se pudo agregar: ' + esc(err.message) + '</div>';
+      pintarCorreos();
+      $('avisoCorreo').innerHTML = '<span>⚠</span><div>No se pudo agregar: ' + esc(err.message) +
+        (quitados.length
+          ? '<br>Se quitaron para cambiarles el nombre y no volvieron a entrar: <b>' +
+            quitados.map(esc).join('</b>, <b>') + '</b>. Pulsa Agregar otra vez.'
+          : '') + '</div>';
       $('avisoCorreo').hidden = false;
     }
     boton.disabled = false; boton.textContent = 'Agregar';
