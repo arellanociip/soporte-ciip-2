@@ -1420,6 +1420,13 @@ select.despierta{animation:destello .7s ease;}
    porque son lo mismo —cosas de la gerencia— vistas en otro sitio. */
 .cuentas{display:flex; flex-direction:column; gap:10px;}
 
+/* Correos permitidos ya pasa de 200 filas contando Marca País y el resto
+   de la casa: sin tope, la página entera se convertía en esa lista y la
+   barra de buscar quedaba a un scroll de distancia. Rueda solo esto, con
+   la barra de arriba siempre a la vista. No se toca .cuentas —la misma
+   clase pinta también la lista de Cuentas, que es corta y no lo necesita—. */
+#listaCorreos{max-height:65vh; overflow-y:auto; overscroll-behavior:contain; padding-right:4px;}
+
 .cuenta{
   display:flex; align-items:center; gap:16px; flex-wrap:wrap;
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
