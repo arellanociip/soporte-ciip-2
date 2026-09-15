@@ -417,20 +417,22 @@
 
 <!-- ===================== AGREGAR CORREOS PERMITIDOS =====================
      Uno o varios de una vez: la misma caja sirve para las dos cosas, un
-     correo por línea (o separados por coma). El nombre es opcional y solo
-     decora la lista — no hace falta para que la persona pueda registrarse. -->
+     correo por línea, con el nombre de su dueño detrás si se sabe. El nombre
+     no hace falta para registrarse, pero es con lo que la planilla reconoce
+     a quien entra con ese correo (gtic.mi_ficha, migración 12). -->
 <div class="velo" id="veloCorreo" hidden>
   <div class="hoja" style="max-width:520px">
     <button type="button" class="cerrar" id="cerrarCorreo" aria-label="Cerrar">✕</button>
     <h2>Agregar correos permitidos</h2>
-    <div class="bajada">Uno solo, o varios de una vez: un correo por línea
-      (o separados por coma). Repetir uno que ya está no hace daño.</div>
+    <div class="bajada">Un correo por línea, con el nombre de su dueño detrás.
+      Con nombre, la planilla le llena sola la gerencia a esa persona. Repetir
+      uno que ya está no hace daño; repetirlo con otro nombre lo corrige.</div>
 
     <div class="rejilla" style="margin-top:20px">
       <div class="campo">
         <label for="pmCorreos">Correos *</label>
         <textarea id="pmCorreos" rows="6"
-          placeholder="nombre.apellido@ciip.com.ve&#10;otro.correo@gmail.com"></textarea>
+          placeholder="nombre.apellido@ciip.com.ve Nombre Apellido&#10;otro.correo@gmail.com, Otro Nombre"></textarea>
         <div class="error"></div>
       </div>
     </div>
