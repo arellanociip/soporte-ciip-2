@@ -684,23 +684,117 @@
   /* ---------- elegirse del directorio ----------
      El nombre escrito solo cuenta cuando coincide con alguien de la lista.
      Si no aparece, no se adivina: se abren los seis campos con el nombre ya
-     puesto, porque el directorio es un punto de partida, no una autoridad. */
-  DIRECTORIO.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.nombre;
-    /* Piso y oficina pueden faltar —el corte de correos que alimenta hoy el
-       directorio no los trae— y una etiqueta con "Piso , of. " colgando se ve
-       rota. Se omiten los que no estén. */
+     puesto, porque el directorio es un punto de partida, no una autoridad.
+
+     La búsqueda de arriba —qué aparece mientras se escribe— es otra cosa, y
+     no se dejó en manos del <datalist> nativo: filtra distinto según el
+     navegador, algunos solo desde el principio del texto, y con 206
+     personas escribir el apellido sin que aparezca nada porque el nombre va
+     primero es justo lo que no puede pasar aquí. Se filtra a mano: por
+     nombre, por apellido, en cualquier orden, sin mirar tildes ni
+     mayúsculas —la cédula no entra a propósito: ese dato se sacó del
+     archivo por ser público, ver la nota de arriba en js/directorio.js—. */
+  const normalizarBusqueda = s => String(s || '').toLowerCase().trim()
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  DIRECTORIO.forEach(p => { p._buscar = normalizarBusqueda(p.nombre); });
+
+  function buscarPersonas(texto){
+    const palabras = normalizarBusqueda(texto).split(/\s+/).filter(Boolean);
+    if(!palabras.length) return [];
+    return DIRECTORIO
+      .filter(p => palabras.every(w => p._buscar.includes(w)))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+      .slice(0, 8);
+  }
+
+  let sugerencias = [];
+  let sugerenciaActiva = -1;
+
+  function etiquetaPersona(p){
     const ubicacion = [p.piso && ('Piso ' + p.piso), p.oficina && ('of. ' + p.oficina)]
       .filter(Boolean).join(', ');
-    /* El nombre va también en la etiqueta: Edge y Firefox, cuando una opción
-       tiene label, muestran solo el label y no el value. Con la gerencia sola
-       la lista salía llena de "CONSULTORÍA JURÍDICA" repetido, sin un nombre
-       a la vista. Chrome enseña los dos y el nombre sale doble, que estorba
-       menos que no verlo. */
-    o.label = [p.nombre, p.gerencia, ubicacion].filter(Boolean).join(' · ');
-    $('listaPersonas').append(o);
+    return [p.gerencia, ubicacion].filter(Boolean).join(' · ');
+  }
+
+  function pintarActiva(){
+    $('sugerenciasPersona').querySelectorAll('button').forEach((b, i) => {
+      b.classList.toggle('activa', i === sugerenciaActiva);
+    });
+  }
+
+  function ocultarSugerencias(){
+    sugerencias = []; sugerenciaActiva = -1;
+    $('sugerenciasPersona').hidden = true;
+    $('sugerenciasPersona').innerHTML = '';
+    $('quienEres').setAttribute('aria-expanded', 'false');
+  }
+
+  function elegirSugerencia(p){
+    $('quienEres').value = p.nombre;
+    ocultarSugerencias();
+    intentarIdentificar();
+  }
+
+  function pintarSugerencias(texto){
+    sugerencias = buscarPersonas(texto);
+    const caja = $('sugerenciasPersona');
+    sugerenciaActiva = -1;
+    if(!texto.trim()){ ocultarSugerencias(); return; }
+    if(!sugerencias.length){
+      caja.innerHTML = '<div class="vacia">No aparece nadie así en la lista.</div>';
+      caja.hidden = false;
+      $('quienEres').setAttribute('aria-expanded', 'true');
+      return;
+    }
+    caja.innerHTML = sugerencias.map((p, i) => {
+      const detalle = etiquetaPersona(p);
+      return '<button type="button" role="option" data-i="' + i + '">'
+        + escapar(p.nombre) + (detalle ? '<small>' + escapar(detalle) + '</small>' : '')
+        + '</button>';
+    }).join('');
+    caja.hidden = false;
+    $('quienEres').setAttribute('aria-expanded', 'true');
+  }
+
+  $('sugerenciasPersona').addEventListener('mousedown', e => {
+    /* mousedown y no click: se adelanta al blur del input, que si no se
+       dispara primero y cierra la caja antes de que el clic llegue a pintar
+       nada. */
+    const b = e.target.closest('button[data-i]');
+    if(!b) return;
+    e.preventDefault();
+    elegirSugerencia(sugerencias[Number(b.dataset.i)]);
   });
+
+  $('quienEres').addEventListener('input', () => {
+    /* El nombre completo, tecleado entero o pegado, sigue calzando aunque
+       no se elija ninguna sugerencia —para no romper a quien ya escribía
+       así antes de que existiera este cuadro—. */
+    intentarIdentificar();
+    pintarSugerencias($('quienEres').value);
+  });
+
+  $('quienEres').addEventListener('keydown', e => {
+    if($('sugerenciasPersona').hidden || !sugerencias.length) return;
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      sugerenciaActiva = (sugerenciaActiva + 1) % sugerencias.length;
+      pintarActiva();
+    }else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      sugerenciaActiva = (sugerenciaActiva - 1 + sugerencias.length) % sugerencias.length;
+      pintarActiva();
+    }else if(e.key === 'Enter' && sugerenciaActiva >= 0){
+      e.preventDefault();
+      elegirSugerencia(sugerencias[sugerenciaActiva]);
+    }else if(e.key === 'Escape'){
+      ocultarSugerencias();
+    }
+  });
+
+  /* Clic fuera de la caja: se cierra. El propio botón ya se atendió arriba
+     con mousedown, así que este blur nunca le gana al clic de elegir. */
+  $('quienEres').addEventListener('blur', () => ocultarSugerencias());
 
   function intentarIdentificar(){
     const p = directorioBuscar($('quienEres').value);
@@ -720,12 +814,6 @@
     pintarAvance();
     return true;
   }
-
-  /* El datalist dispara 'change' al elegir de la lista y 'input' al teclear;
-     se prueba en ambos para que valga tanto elegir con el ratón como escribir
-     el nombre completo a mano. */
-  $('quienEres').addEventListener('change', intentarIdentificar);
-  $('quienEres').addEventListener('input', intentarIdentificar);
 
   /* "No aparezco en la lista": los seis campos, con el nombre ya escrito. */
   $('botonNoEstoy').addEventListener('click', () => {

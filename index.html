@@ -148,9 +148,12 @@
       <div class="rejilla" id="buscadorPersona">
         <div class="campo c8">
           <label for="quienEres">¿Quién eres? *</label>
-          <input type="text" id="quienEres" list="listaPersonas" autocomplete="name"
-                 placeholder="Escribe tu nombre y apellido">
-          <datalist id="listaPersonas"></datalist>
+          <div class="buscador-persona">
+            <input type="text" id="quienEres" autocomplete="off" aria-autocomplete="list"
+                   aria-expanded="false" role="combobox"
+                   placeholder="Escribe tu nombre o tu apellido">
+            <div class="sugerencias" id="sugerenciasPersona" role="listbox" hidden></div>
+          </div>
           <div class="ayuda">Elígete de la lista y el resto se llena solo ·
             <button type="button" class="enlace" id="botonNoEstoy">No aparezco en la lista</button></div>
           <div class="error"></div>

@@ -152,6 +152,29 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 
 .contador{font-size:11px; color:var(--gray-soft); text-align:right;}
 
+/* ---------- buscarse en la lista de la casa ----------
+   El <datalist> nativo filtra distinto según el navegador —algunos solo por
+   el principio del texto—, y con 206 personas escribir el apellido y no
+   encontrar nada porque el nombre va primero es justo lo que no puede pasar
+   aquí. Este cuadro lo pinta y filtra js/solicitud.js a mano: por nombre,
+   por apellido, en cualquier orden y sin importar tildes. */
+.buscador-persona{position:relative;}
+.sugerencias{
+  position:absolute; z-index:20; top:calc(100% + 4px); left:0; right:0;
+  max-height:264px; overflow-y:auto; overscroll-behavior:contain;
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-sm);
+  box-shadow:var(--shadow); padding:5px;
+}
+.sugerencias button{
+  display:block; width:100%; text-align:left; background:none; border:none;
+  cursor:pointer; font-family:inherit; padding:8px 9px; border-radius:6px;
+  color:var(--ink);
+}
+.sugerencias button:hover, .sugerencias button.activa{background:var(--navy-soft);}
+.sugerencias b{font-weight:700;}
+.sugerencias small{display:block; font-size:11.5px; color:var(--gray-soft); margin-top:1px;}
+.sugerencias .vacia{padding:10px 9px; font-size:12.5px; color:var(--gray-soft); cursor:default;}
+
 /* La casilla de recordar: ocupa la fila entera, debajo de los datos. */
 .recuerdame{
   grid-column:span 12; display:flex; align-items:flex-start; gap:9px;
