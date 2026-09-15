@@ -15,11 +15,19 @@
    marcadas, porque tres se llaman igual en los dos entes y en la Hoja de
    Servicio hay que poder distinguirlas.
 
+   En orden jerárquico, no alfabético: Auditoría Interna primero porque es un
+   cuerpo autónomo que audita a todos, incluida la Presidencia; después
+   Presidencia y Vicepresidencia; después las gerencias generales. Marca País
+   repite el mismo patrón al final, con su propia cabeza.
+
    La última es la salida para quien no encuentre la suya: sin ella, alguien de
    una gerencia que el listado no recoja no podría ni pedir soporte. */
 const CAT_GERENCIAS = [
   'AUDITORÍA INTERNA',
+  'PRESIDENCIA',
+  'VICEPRESIDENCIA',
   'CONSULTORÍA JURÍDICA',
+  'GERENCIA GENERAL DEL DESPACHO',
   'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA',
   'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL',
   'GERENCIA GENERAL DE GESTIÓN HUMANA',
@@ -28,22 +36,19 @@ const CAT_GERENCIAS = [
   'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS',
   'GERENCIA GENERAL DE SEGURIDAD INTEGRAL',
   'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN',
-  'GERENCIA GENERAL DEL DESPACHO',
   'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO',
-  'PRESIDENCIA',
-  'VICEPRESIDENCIA',
   'AUDITORÍA INTERNA (MARCA PAÍS)',
+  'PRESIDENCIA (MARCA PAÍS)',
+  'GERENCIA GENERAL (MARCA PAÍS)',
   'CONSULTORÍA JURÍDICA (MARCA PAÍS)',
+  'GERENTE DE ARTICULACIÓN ESTRATÉGICA PARA EL IMPULSO DE LA MARCA PAÍS (MARCA PAÍS)',
   'GERENCIA DE ATENCIÓN CIUDADANA (MARCA PAÍS)',
   'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)',
+  'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)',
   'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)',
   'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)',
-  'GERENCIA GENERAL (MARCA PAÍS)',
   'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)',
   'GERENCIA GENERAL DE REGULACIÓN, USO Y SEGUIMIENTO DE LA MARCA PAÍS (MARCA PAÍS)',
-  'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)',
-  'GERENTE DE ARTICULACIÓN ESTRATÉGICA PARA EL IMPULSO DE LA MARCA PAÍS (MARCA PAÍS)',
-  'PRESIDENCIA (MARCA PAÍS)',
   'OTRA (no aparece en la lista)',
 ];
 
