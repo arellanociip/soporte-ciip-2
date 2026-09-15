@@ -1357,13 +1357,17 @@
     boton.disabled = true; boton.textContent = 'Agregando…';
     $('avisoCorreo').hidden = true;
     try{
-      /* resolution=merge-duplicates: repetir uno que ya está no rompe el
-         lote entero, simplemente no hace nada con ese. */
+      /* resolution=ignore-duplicates: repetir uno que ya está no rompe el
+         lote entero, simplemente no hace nada con ese (ON CONFLICT DO
+         NOTHING). No usar merge-duplicates: eso es ON CONFLICT DO UPDATE y
+         Postgres exige permiso de UPDATE, que authenticated no tiene sobre
+         esta tabla (solo select, insert, delete — ver migraciones 06 y 08).
+         Los repetidos no vuelven en la respuesta, pero ya están en la lista. */
       const r = await pedir('/rest/v1/correos_permitidos?on_conflict=correo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=representation',
+          'Prefer': 'resolution=ignore-duplicates,return=representation',
         },
         body: JSON.stringify(correos.map(correo => ({correo}))),
       });
