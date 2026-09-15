@@ -1,16 +1,25 @@
 /* ---------- Directorio de la casa ----------
    Quién trabaja dónde. Dos fuentes:
 
-   · CIIP: "Listado General correos activos", 176 personas (177 filas del
-     listado, menos una duplicada por error de captura).
+   · CIIP: "Listado_de_personal_150926_Correos_Completo.xlsx", el corte del
+     15/09/2026, 158 personas. Antes traía 176, del "Listado General correos
+     activos" de agosto; se comparó nombre por nombre contra este corte
+     nuevo —27 ya no aparecen y se sacaron, 9 son altas que no estaban antes—
+     y de paso corrigió tres cruces de nombre que venían mal desde agosto:
+     Frenddy Enrique Santana Buitriago -> Buitrago, "Bracho Angel" -> Angel
+     Domingo Bracho Garcia, y Rosbely del Carmen Bracho Indriago -> Godoy
+     Briceño (el apellido de otra persona, copiado por error al restaurar
+     piso y oficina en agosto —ver más abajo—).
    · Marca País: "Listado de los correos" del Instituto (18/08/2026), 48
      de sus 50 personas —quedaron fuera dos sin correo en ese listado, sin
      forma de registrar una cuenta—, cruzadas por cédula contra el corte de
      control de acceso del 27/07/2026 para recuperar gerencia, piso,
-     oficina y cargo: ese Excel solo traía cédula, nombre y el Gmail.
+     oficina y cargo: ese Excel solo traía cédula, nombre y el Gmail. No se
+     tocó con el corte del 15/09: ese listado es solo del CIIP.
 
-   224 personas en total. Sirve para que nadie escriba su gerencia ni su
-   cargo: escribe su nombre, se elige de la lista y el resto se llena solo.
+   206 personas en total (158 + 48). Sirve para que nadie escriba su
+   gerencia ni su cargo: escribe su nombre, se elige de la lista y el resto
+   se llena solo.
 
    NO LLEVA CÉDULA, a propósito. La versión anterior sí la llevaba, con esta
    nota: "vale mientras esto viva en la red interna; el día que el sitio salga
@@ -19,18 +28,12 @@
    ahora: la Hoja de Servicio sigue pudiendo llevar cédula, pero la escribe
    quien pide, no la sirve este archivo a cualquiera que abra la página.
 
-   Piso y oficina: el listado de correos del CIIP no los trae, y al rehacer
-   este archivo desde él (18/08) se quedaron vacíos para 180 personas. Se
-   devolvieron desde la versión anterior del directorio (la de las 224, del
-   12–13/08), cruzando por nombre sin mirar tildes: 163 los recuperan. Tres
-   de ellas cambiaron de nombre entre un listado y otro y se cruzaron a mano
-   —Frenddy Enrique Santana Buitriago ('Buitrago'), Yarizmit Gheinsy Herrera
-   Medina ('Herrera Medina Herrera Medina') y Rosbely del Carmen Bracho
-   Indriago ('Godoy Briceño'), misma gerencia y mismo cargo—. Marca País
-   los trae del cruce por cédula. Quien siga sin ellos —17 del CIIP, que no
-   estaban en la versión anterior o llegaron con otro nombre— los escribe a
-   mano, como si no apareciera en la lista. Son los de agosto: si alguien
-   se mudó de oficina, se corrige aquí.
+   Piso y oficina: el corte del 15/09 no los trae —solo dependencia, cargo
+   y correo—, así que para las 149 personas del CIIP que ya estaban aquí se
+   conservó lo que había (cruzado por nombre, sin mirar tildes ni mayúsculas,
+   contra el corte anterior). Las 9 altas del corte nuevo quedan sin piso ni
+   oficina, igual que cualquiera sin ese dato: el formulario ya sabe llenar
+   ese hueco a mano.
 
    No lleva correo ni contraseña, ni falta que hacen aquí: los correos van
    en gtic.correos_permitidos (ver sql/), que decide quién puede REGISTRARSE,
@@ -39,10 +42,8 @@
    cualquiera descarga sin clave. La otra, nunca.
    Prefijo: DIRECTORIO. */
 const DIRECTORIO = [
-  {nombre:'Adrian Enrique Figueroa Barrios', gerencia:'CONSULTORÍA JURÍDICA', piso:'', oficina:'', cargo:'Profesional'},
   {nombre:'Aimee Estefania Ruiz Galavis', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Profesional'},
   {nombre:'Airuth del Valle Irazabal Hurtado', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
-  {nombre:'Alcides Alejandro Robles Gordillo', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Gerente General'},
   {nombre:'Alejandro Enrique Puglia Costas', gerencia:'PRESIDENCIA', piso:'9', oficina:'', cargo:'Presidente'},
   {nombre:'Alexander Daniel Blanco Ladino', gerencia:'GERENCIA GENERAL DEL DESPACHO', piso:'8', oficina:'8-02', cargo:'Coordinador'},
   {nombre:'Alfredo Antonio Carrera Perez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Gerente'},
@@ -50,131 +51,119 @@ const DIRECTORIO = [
   {nombre:'Ana Maria Arraiz de Conde', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Bachiller'},
   {nombre:'Ana Maria Villarroel', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Andry Jesus Tovar Cabrera', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Profesional'},
-  {nombre:'Andrymar Mileydys Arellano Olivier', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-04', cargo:'Asistente Ejecutivo'},
+  {nombre:'Angel Domingo Bracho Garcia', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'', oficina:'', cargo:'Coordinador'},
   {nombre:'Angelica Maria Ramirez Arellano', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-03', cargo:'Bachiller'},
-  {nombre:'Anghela Jacqueline Andrius Dávila Márquez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
+  {nombre:'Anghela Jacqueline Andrius Davila Marquez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
+  {nombre:'Annelin del Carmen Perez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Gerente'},
   {nombre:'Aquiles Augusto Figueroa Mendoza', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Bachiller'},
-  {nombre:'Barbara Yaismely Petterson Delgado', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Profesional'},
   {nombre:'Barbara Yaneth Depablos Torres', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'', oficina:'', cargo:'Bachiller'},
-  {nombre:'Bracho Angel', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'', oficina:'', cargo:'Profesional'},
   {nombre:'Carlos Alberto Belisario Silva', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Profesional'},
-  {nombre:'Carlos Alejandro Garcia Alvarez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
-  {nombre:'Carlos Daniel Torres Rodriguez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
   {nombre:'Carlos Eduardo Barreto Gonzalez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Carlos Eduardo Galindo Suarez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Carlos Eduardo Perea Rangel', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Bachiller'},
   {nombre:'Carlos Enrique Manzano Kossik', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Gerente'},
   {nombre:'Carlos Manuel Rodriguez Lopez', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Bachiller'},
   {nombre:'Carmen Oviedo Urrutia', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller'},
-  {nombre:'Carolina Forgione Franco', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Técnico'},
-  {nombre:'Carolina Isabel Vargas Julio', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asesor Técnico'},
+  {nombre:'Carolina Forgione Franco', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Tecnico'},
+  {nombre:'Carolina Isabel Vargas Julio', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asesor Tecnico'},
   {nombre:'Chuaima Felipe Salas Camacho', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Gerente'},
-  {nombre:'Dailyn Alejandra Romero Ardiles', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Técnico'},
+  {nombre:'Dailyn Alejandra Romero Ardiles', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Tecnico'},
   {nombre:'Dan Keisdert Moreno', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Bachiller'},
   {nombre:'Danger Luis Rivero Ruiz', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Bachiller'},
-  {nombre:'Daniel Alberto Yepes Rivas', gerencia:'GERENCIA GENERAL DEL DESPACHO', piso:'8', oficina:'8-02', cargo:'Profesional'},
-  {nombre:'Danna Alexandra Burguillos Díaz', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Asesor Técnico'},
+  {nombre:'Daniela Patricia Fermin Bandres', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'', oficina:'', cargo:'Coordinador'},
   {nombre:'Danny Joel Aponte Aponte', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'4', oficina:'4-07', cargo:'Gerente'},
   {nombre:'Danyil Rafael Lugo Celis', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Obrero Certificado'},
-  {nombre:'Deiber Jose Francisco Sella Dominguez', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Bachiller'},
-  {nombre:'Deinyelbert Jocksaniel Rodriguez Sarmiento', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller'},
+  {nombre:'Deinyelbert Jocksaniel Rodriguez Sarmiento', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller Iii - Vii'},
   {nombre:'Desiree Alejandra Cordero Lobo', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-04', cargo:'Bachiller'},
-  {nombre:'Diana Carolina Bracho Indriago', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Técnico'},
+  {nombre:'Diana Carolina Bracho Indriago', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Tecnico'},
   {nombre:'Dilia Yamilet Serrano Perez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Gerente'},
   {nombre:'Divarlys Nakarith Ocando Faneyte', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Gerente'},
-  {nombre:'Douglas Emilio Prin Pereira', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Técnico'},
+  {nombre:'Douglas Emilio Prin Pereira', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Tecnico'},
   {nombre:'Eddy Yolanda Peña de Granado', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Gerente'},
+  {nombre:'Edgar Alejandro Bolivar Sanchez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Obrero Certificado'},
   {nombre:'Edward Jhonny Gonzalez', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'2', oficina:'2-03', cargo:'Coordinador'},
   {nombre:'Elias Josue Martinez Luque', gerencia:'PRESIDENCIA', piso:'9', oficina:'', cargo:'Asistente Ejecutivo'},
   {nombre:'Eliub Ricardo Solorzano Perez', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Gerente'},
   {nombre:'Ellius Enrique Rios Hernandez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
-  {nombre:'Elys Daniel Martinez Zambrano', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Gerente'},
-  {nombre:'Emely Miraidy Garcia Osuna', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Técnico'},
+  {nombre:'Emely Miraidy Garcia Osuna', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Tecnico'},
   {nombre:'Emely Nazaret Escalona Correa', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
+  {nombre:'Enry Josue Duran', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'', oficina:'', cargo:'Gerente General'},
   {nombre:'Ericka Dubraska Flores Acevedo', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Gerente'},
-  {nombre:'Fabiola de los Angeles Martinez Duque', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'', oficina:'', cargo:'Asesor Especialista'},
   {nombre:'Felix Armando Arraiz Planchart', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Profesional'},
-  {nombre:'Franciel Jesus Rodriguez Bernal', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Obrero Certificado'},
-  {nombre:'Francy Yusney Rincon', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Gerente'},
   {nombre:'Franklin David Reyes Delgado', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Bachiller'},
   {nombre:'Franklin Nayit Acosta Angarita', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Bachiller'},
   {nombre:'Fravia Vanessa Marquez de Fernandez', gerencia:'PRESIDENCIA', piso:'8', oficina:'8-02', cargo:'Asesor Profesional'},
-  {nombre:'Frenddy Enrique Santana Buitriago', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
+  {nombre:'Frenddy Enrique Santana Buitrago', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
   {nombre:'Gabriel Ramon Reyes Rangel', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'8', oficina:'8-02', cargo:'Obrero Certificado'},
-  {nombre:'Gabriela Carolina de los Angeles Brito Gómez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
+  {nombre:'Gabriela Carolina de los Angeles Brito Gomez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
   {nombre:'Geraldyn de los Angeles Lopez Rojas', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Asistente Ejecutivo'},
   {nombre:'German Javier Gerardino Diaz', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Coordinador'},
   {nombre:'Guillermo Alexander Torres', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
   {nombre:'Gustavo Jose Zuñiga', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Bachiller'},
   {nombre:'Hector Jose Bravo Osuna', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Coordinador'},
   {nombre:'Hedwing Jose Gutierrez Blanco', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Gerente'},
-  {nombre:'Hernan Enrique Marcano Oberto', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Asesor Técnico'},
+  {nombre:'Hernan Enrique Marcano Oberto', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Asesor Tecnico'},
   {nombre:'Hilda Anais Newman Mijares', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
-  {nombre:'Imari del Valle Vasquez Capote', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Técnico'},
+  {nombre:'Imari del Valle Vasquez Capote', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Tecnico'},
   {nombre:'Isabel Maria Peñaranda', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Isbelis Marielys Perez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Isolimar Coromoto Sanchez Fernandez', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Coordinador'},
-  {nombre:'Ivan Arley Llanos', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asesor Técnico'},
+  {nombre:'Ivan Arley Llanos', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asesor Tecnico'},
   {nombre:'Jackelyn Josefina Bermejo', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Jesly Oriana Baez Macedo', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-04', cargo:'Bachiller'},
   {nombre:'Jessica Erlynes Rodriguez Alvarez', gerencia:'GERENCIA GENERAL DEL DESPACHO', piso:'8', oficina:'8-02', cargo:'Profesional'},
   {nombre:'Jesus Antonio Arellano Natera', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Gerente General'},
   {nombre:'Jipson Jesus Granadillo Albarran', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Bachiller'},
   {nombre:'Joel Roman Aguilar Castro', gerencia:'VICEPRESIDENCIA', piso:'9', oficina:'', cargo:'Asistente Ejecutivo'},
-  {nombre:'Johanna Betzabeth De Almada Nieves', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Profesional'},
+  {nombre:'Johanna Betzabeth de Almada Nieves', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Profesional'},
   {nombre:'Jojan Jose Valbuena Garcia', gerencia:'GERENCIA GENERAL DEL DESPACHO', piso:'8', oficina:'8-02', cargo:'Coordinador'},
-  {nombre:'Jonathan Avisai Morales Martínez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
+  {nombre:'Jonathan Avisai Morales Martinez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
   {nombre:'Jonathan George Urbina Fernandez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Obrero Certificado'},
-  {nombre:'Jose Gregorio Hernández Villegas', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Gerente'},
-  {nombre:'Jose Gregorio Muñoz Rodriguez', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Asistente Ejecutivo'},
+  {nombre:'Jose Gregorio Hernandez Villegas', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Gerente'},
   {nombre:'Jose Manuel Barrios Riera', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'4', oficina:'4-07', cargo:'Gerente General'},
   {nombre:'Jose Rafael Olivares Rodriguez', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Gerente'},
-  {nombre:'Juber Anulfo Mendoza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Técnico'},
+  {nombre:'Juber Anulfo Mendoza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Tecnico'},
   {nombre:'Julmar Enrique Moron Vasquez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Gerente'},
   {nombre:'Karelys Juliett Sanchez Lopez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Profesional'},
   {nombre:'Karen de Jesus Perez Muñoz', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
-  {nombre:'Karla Rosibel Sierra Palacios', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:''},
-  {nombre:'Katiuska Elizabeth Sanchez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
+  {nombre:'Karina Valeria Valero Zárraga', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Gerente'},
+  {nombre:'Karla Rosibel Sierra Palacios', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Coordinador'},
   {nombre:'Katiuska del Valle Diaz Yanez', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Gerente General'},
+  {nombre:'Katiuska Elizabeth Sanchez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Kristina Dugnas Sulcas', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Gerente General'},
-  {nombre:'Layla Anabery Gonzalez Varela', gerencia:'CONSULTORÍA JURÍDICA', piso:'', oficina:'', cargo:'Gerente'},
   {nombre:'Leomary Andreina Malave Moreno', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Gerente'},
   {nombre:'Loisbeth Mariana Corvos Arismendi', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asistente Ejecutivo'},
-  {nombre:'Lord Yolindria Guacache Suarez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-03', cargo:'Asesor Profesional'},
   {nombre:'Lucia Sampaio Martins', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
-  {nombre:'Luigersy Enrique Correa Mendez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller'},
+  {nombre:'Luigersy Enrique Correa Mendez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller Iii - Vii'},
   {nombre:'Luis Alberto Ortega', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-03', cargo:'Asesor Profesional'},
   {nombre:'Luis Alejandro Flores Gonzalez', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Bachiller'},
-  {nombre:'Luis Leopoldo Narvaez Gonzalez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Gerente'},
   {nombre:'Luis Miguel Ferrer Belgoderi', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Asesor Profesional'},
   {nombre:'Luis Vicente Garcia Lamas', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-06', cargo:'Profesional'},
   {nombre:'Mairin Celeste Camacho Escobar', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Profesional'},
   {nombre:'Manuel Eduardo Rodriguez Pereira', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Asesor Profesional'},
   {nombre:'Marbelis Eva Davila Santaella', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Profesional'},
-  {nombre:'Marco Antonio Magallanes Grillet', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-07', cargo:'Consultor Jurídico'},
+  {nombre:'Marco Antonio Magallanes Grillet', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-07', cargo:'Consultor Juridico'},
   {nombre:'Maria Emilia Torres Bonten', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
   {nombre:'Maria Fernanda Ruiz Gonzalez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
   {nombre:'Maria Jose Hernandez Morales', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Profesional'},
   {nombre:'Maria Patricia Ferreira Mendoza', gerencia:'PRESIDENCIA', piso:'9', oficina:'', cargo:'Asistente Ejecutivo'},
-  {nombre:'Maria Pia Savoia Rojas', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Gerente'},
-  {nombre:'Maria Rosana Rodriguez Guzman', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller'},
+  {nombre:'Maria Rosana Rodriguez Guzman', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Bachiller Iii - Vii'},
   {nombre:'Maribella Aguilar Peraza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Profesional'},
   {nombre:'Mariela Andrea Curvelo Hernández', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Bachiller'},
+  {nombre:'Mariela Josefina Rodriguez Peralta', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'', oficina:'', cargo:'Asesor Profesional'},
   {nombre:'Marienny Daniela Santos Gonzalez', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
-  {nombre:'Marilin Andreina Nuñez Arraiz', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'4', oficina:'4-07', cargo:'Técnico'},
+  {nombre:'Marilin Andreina Nuñez Arraiz', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'4', oficina:'4-07', cargo:'Tecnico'},
   {nombre:'Marinel Luzey Colmenares Blanco', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
   {nombre:'Martin Rafael Jimenez Calvo', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Asesor Profesional'},
   {nombre:'Marysabel Aguilar Peraza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Profesional'},
-  {nombre:'Maurelys Estefani Gonzalez Mosquera', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Técnico'},
   {nombre:'Mazuris Jiraly Azocar Benitez', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Profesional'},
-  {nombre:'Migdalia Isabel Sanz Vaamondes', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Gerente'},
-  {nombre:'Miguel Angel Cardenas Yepez', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Técnico'},
+  {nombre:'Miguel Angel Cardenas Yepez', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Tecnico'},
   {nombre:'Miguel Angel Espinoza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Milagros de Jesus Torres Gonzalez', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Asistente Ejecutivo'},
   {nombre:'Morella Carmona de Hernandez', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Profesional'},
-  {nombre:'Nahiry de Jesus Alcina Velasquez', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Técnico'},
+  {nombre:'Nahiry de Jesus Alcina Velasquez', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Tecnico'},
   {nombre:'Nancy del Carmen Tovar Sanchez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Asesor Profesional'},
-  {nombre:'Nathalia Yusmairi Guillen Lopez', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Bachiller'},
+  {nombre:'Nathalia Yusmairi Guillen Lopez', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Bachiller Iii - Vii'},
   {nombre:'Nelly del Carmen Rios Deal', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Nelson Jose Berrios', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Obrero General'},
   {nombre:'Noraima del Milagro Coy Parra', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Asistente Ejecutivo'},
@@ -183,35 +172,31 @@ const DIRECTORIO = [
   {nombre:'Orlando Jose Yanez Saez', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'3', oficina:'3-02', cargo:'Obrero Certificado'},
   {nombre:'Rahelenys Josue Burgos Santaella', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-03', cargo:'Gerente General'},
   {nombre:'Rayda Ysabel Vera Parra', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Auditor Interno'},
-  {nombre:'Regulo Antonio Ramirez Yanez', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'', oficina:'', cargo:'Asesor Técnico'},
   {nombre:'Renny Moises Poleo Gascon', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Profesional'},
-  {nombre:'Ricardo Jesus La Cruz Garcia', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Asesor Profesional'},
   {nombre:'Romelis Maria Viña Garcia', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
   {nombre:'Ronnie Percak Mendoza', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Asesor Profesional'},
-  {nombre:'Rosbely del Carmen Bracho Indriago', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
+  {nombre:'Rosbely del Carmen Godoy Briceño', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
   {nombre:'Rosmary Mariana Pantoja Blanco', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Asistente Ejecutivo'},
-  {nombre:'Samy Emerson Osuna Mendoza', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Asesor Profesional'},
   {nombre:'Saray Ailemar Verdu Aragot', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Profesional'},
   {nombre:'Saskia Catheryn Victoria Calderon Veliz', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Profesional'},
   {nombre:'Saudy Coromoto Contreras', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Bachiller'},
   {nombre:'Solangel Nailyn Suinagas Rada', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'2', oficina:'2-03', cargo:'Coordinador'},
   {nombre:'Solisver Coromoto Urbaez de Sandoval', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Coordinador'},
   {nombre:'Treizen Guanipa', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-01', cargo:'Profesional'},
-  {nombre:'Veruska Vanessa Vizcaya Castillo', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'2', oficina:'2-04', cargo:'Asesor Profesional'},
+  {nombre:'Valeria Carolina Ramos Ramos', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Profesional'},
   {nombre:'Vicente Paul Castillo Castellanos', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Profesional'},
-  {nombre:'Viviana Isabel Cuello Pino', gerencia:'GERENCIA GENERAL DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', piso:'2', oficina:'2-01', cargo:'Profesional'},
-  {nombre:'Wilfredo Niebles Villasmil', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Técnico'},
+  {nombre:'Victor Alejandro Jesus Corredor Suarez', gerencia:'GERENCIA GENERAL DE PROYECTOS DE INVERSIÓN Y ACTIVOS', piso:'', oficina:'', cargo:'Asesor Profesional'},
+  {nombre:'Wilfredo Niebles Villasmil', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Tecnico'},
   {nombre:'William Alfredo Castillo Bolle', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Gerente General'},
   {nombre:'Xiomara Sandoval Narvaez', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Coordinador'},
-  {nombre:'Yajaira Coromoto Pinto Diaz', gerencia:'GERENCIA GENERAL DE GESTIÓN HUMANA', piso:'4', oficina:'4-09', cargo:'Asesor Técnico'},
   {nombre:'Yarizmit Gheinsy Herrera Medina', gerencia:'AUDITORÍA INTERNA', piso:'2', oficina:'2-05', cargo:'Profesional'},
+  {nombre:'Yeitson Jose Laguna Leal', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'', oficina:'', cargo:'Obrero Certificado'},
   {nombre:'Yelinet Alexandra Ibarra Isturiz', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
-  {nombre:'Yelitza Yatzyl Armas Liendo', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Técnico'},
+  {nombre:'Yelitza Yatzyl Armas Liendo', gerencia:'GERENCIA GENERAL DEL OBSERVATORIO VENEZOLANO ANTIBLOQUEO', piso:'3', oficina:'3-02', cargo:'Tecnico'},
   {nombre:'Yenaida Fagundez Vera', gerencia:'GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO', piso:'4', oficina:'4-05', cargo:'Profesional'},
   {nombre:'Yender Yuhuare Mendoza', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero General'},
   {nombre:'Yeniffer del Carmen Betancourt', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-08', cargo:'Obrero Supervisor'},
   {nombre:'Yesenia Janerys Martinez Escalona', gerencia:'GERENCIA GENERAL DE GESTIÓN ADMINISTRATIVA', piso:'4', oficina:'4-02', cargo:'Gerente'},
-  {nombre:'Yessica Carolina Gomez Solorzano', gerencia:'GERENCIA GENERAL DE GESTIÓN COMUNICACIONAL', piso:'', oficina:'', cargo:'Bachiller'},
   {nombre:'Yoliskar de los Angeles Diaz Velasquez', gerencia:'GERENCIA GENERAL DE PROMOCIÓN DE INVERSIONES', piso:'1', oficina:'1-02', cargo:'Profesional'},
   {nombre:'Yosmary Vanesa Valero Paredes', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'', oficina:'', cargo:'Bachiller'},
   {nombre:'Yuraima Karina Martinez Diaz', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Asesor Especialista'},
