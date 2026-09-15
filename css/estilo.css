@@ -47,7 +47,7 @@ body{font-size:14px; line-height:1.5;}
    index.html esta misma hoja de estilos sigue con el fondo liso. */
 body.pagina-bandeja{
   background-image:
-    linear-gradient(rgba(244,247,251,.94), rgba(244,247,251,.94)),
+    linear-gradient(rgba(244,247,251,.8), rgba(244,247,251,.8)),
     url('../assets/edificio-ciip-bandeja.jpg');
   background-repeat:no-repeat, no-repeat;
   background-position:center, center;
