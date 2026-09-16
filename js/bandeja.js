@@ -245,9 +245,10 @@
      se sabe soyAdmin —al entrar, y al llegar con sesión guardada—, para que
      alguien que dejó de serlo no siga viendo los enlaces tras recargar. */
   function pintarAdmin(){
-    const cuentas = $('botonCuentas'), correos = $('botonCorreos');
+    const cuentas = $('botonCuentas'), correos = $('botonCorreos'), traza = $('botonTrazabilidad');
     if(cuentas) cuentas.hidden = !soyAdmin;
     if(correos) correos.hidden = !soyAdmin;
+    if(traza) traza.hidden = !soyAdmin;
   }
 
   /* El mismo aviso en los dos sitios donde se puede rebotar a alguien: al
@@ -522,7 +523,7 @@
 
   /* Colocar la pantalla en una solicitud: lo que haga falta para que se vea. */
   function irA(id){
-    if(abierto('panelStats') || abierto('panelSaber') || abierto('panelCuentas') || abierto('panelCorreos')) verPanel(null);
+    if(abierto('panelStats') || abierto('panelSaber') || abierto('panelCuentas') || abierto('panelCorreos') || abierto('panelTrazabilidad')) verPanel(null);
     if(!solicitudes.some(s => s.id === id)) return;
     /* si el filtro o la búsqueda la esconden, se sueltan: más vale perder el
        filtro que perder la solicitud */
@@ -873,6 +874,8 @@
      pinta: () => pintarCuentas()},
     {panel: 'panelCorreos', boton: 'botonCorreos', texto: 'Correos permitidos',
      pinta: () => pintarCorreos()},
+    {panel: 'panelTrazabilidad', boton: 'botonTrazabilidad', texto: 'Trazabilidad',
+     pinta: () => cargarTrazabilidad()},
   ];
 
   function verPanel(cual){
@@ -910,6 +913,10 @@
   $('botonCorreos').addEventListener('click', e => {
     e.preventDefault();
     verPanel(abierto('panelCorreos') ? null : 'panelCorreos');
+  });
+  $('botonTrazabilidad').addEventListener('click', e => {
+    e.preventDefault();
+    verPanel(abierto('panelTrazabilidad') ? null : 'panelTrazabilidad');
   });
 
   /* ================= qué sabemos =================
@@ -1430,6 +1437,162 @@
   $('guardarCorreos').addEventListener('click', guardarCorreos);
   $('cancelarCorreo').addEventListener('click', cerrarCorreos);
   $('cerrarCorreo').addEventListener('click', cerrarCorreos);
+
+  /* ---------- trazabilidad: quién hizo qué y cuándo ----------
+     gtic.bitacora se llena sola —un disparador en solicitudes y en
+     correos_permitidos, la Edge Function de Cuentas, y esta misma
+     pantalla al entrar (ver más abajo, en el 'submit' de formAcceso)—.
+     Aquí solo se lee: nadie edita ni borra una fila desde el navegador,
+     ni siquiera un administrador (migración 15). */
+  let trazaFilas = [];
+  let trazaTabla = '';
+
+  const TRAZA_TABLAS = [
+    ['', 'Todas'],
+    ['solicitudes', 'Solicitudes'],
+    ['cuentas', 'Cuentas'],
+    ['correos_permitidos', 'Correos permitidos'],
+    ['sesion', 'Accesos'],
+  ];
+  const TRAZA_TABLA_ETIQUETA = Object.fromEntries(TRAZA_TABLAS);
+  const TRAZA_OP_ETIQUETA = {ALTA: 'Alta', CAMBIO: 'Cambio', BAJA: 'Baja', ACCESO: 'Acceso'};
+
+  async function cargarTrazabilidad(){
+    if(enPrueba){ trazaFilas = []; return; }
+    try{
+      const r = await pedir('/rest/v1/bitacora?select=*&order=ocurrido_en.desc&limit=300', {});
+      trazaFilas = await r.json();
+    }catch(e){ console.warn('No se pudo traer la trazabilidad:', e); }
+    if(abierto('panelTrazabilidad')) pintarTrazabilidad();
+  }
+
+  /* Compara antes y después y cuenta solo lo que cambió, en una línea
+     corta: nadie necesita ver de nuevo las diez columnas que ya estaban
+     igual. Los valores largos se recortan; los objetos y las listas
+     —renglones de equipo, por ejemplo— se anotan como "cambió", no se
+     desarman aquí. */
+  function resumirCambio(fila){
+    const corto = v => {
+      if(v == null || v === '') return '(vacío)';
+      if(typeof v === 'object') return 'cambió';
+      const s = String(v);
+      return s.length > 46 ? s.slice(0, 46) + '…' : s;
+    };
+    if(fila.operacion === 'ALTA'){
+      const n = fila.data_nueva || {};
+      const pistas = [n.usuario, n.nombre, n.correo, n.gerencia].filter(Boolean);
+      return pistas.length ? 'Se creó: ' + esc(pistas.join(' · ')) : 'Se creó.';
+    }
+    if(fila.operacion === 'BAJA'){
+      return 'Se quitó' + (fila.entidad_id ? ': ' + esc(fila.entidad_id) : '.');
+    }
+    if(fila.operacion === 'ACCESO'){
+      return esc(fila.nota || 'Entró a la bandeja.');
+    }
+    // CAMBIO
+    const antes = fila.data_previa || {}, despues = fila.data_nueva || {};
+    const claves = [...new Set([...Object.keys(antes), ...Object.keys(despues)])];
+    const cambios = claves.filter(k => JSON.stringify(antes[k]) !== JSON.stringify(despues[k]));
+    if(!cambios.length) return 'Sin diferencias visibles.';
+    return cambios.slice(0, 5).map(k =>
+      `<b>${esc(k)}</b>: ${esc(corto(antes[k]))} → ${esc(corto(despues[k]))}`
+    ).join(' · ') + (cambios.length > 5 ? ` · y ${cambios.length - 5} más` : '');
+  }
+
+  function fechaHora(iso){
+    if(!iso) return '';
+    return new Date(iso).toLocaleString('es-VE', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  }
+
+  function fichaTrazaHtml(fila){
+    const op = String(fila.operacion || '').toLowerCase();
+    return `<article class="cuenta traza-${op}">
+      <div class="cuenta-q">
+        <b><span class="traza-etiqueta ${op}">${esc(TRAZA_OP_ETIQUETA[fila.operacion] || fila.operacion)}</span>
+          ${esc(TRAZA_TABLA_ETIQUETA[fila.tabla] || fila.tabla)}</b>
+        <span>${fila.correo ? esc(fila.correo) : '(sin sesión — migración o llave de servicio)'}
+          ${fila.entidad_id ? ' → ' + esc(fila.entidad_id) : ''}</span>
+        <div class="traza-detalle">${resumirCambio(fila)}</div>
+      </div>
+      <div class="cuenta-d"><span>${esc(fechaHora(fila.ocurrido_en))}</span></div>
+    </article>`;
+  }
+
+  function pintarTrazaTabs(){
+    $('trazaTabs').innerHTML = TRAZA_TABLAS.map(([k, l]) =>
+      `<button type="button" class="ficha ${trazaTabla===k?'on':''}" data-tabla="${k}">${l}</button>`
+    ).join('');
+  }
+
+  function pintarTrazabilidad(){
+    pintarTrazaTabs();
+    const q = $('buscarTraza').value.trim().toLowerCase();
+    const desde = $('trazaDesde').value ? new Date($('trazaDesde').value) : null;
+    const hasta = $('trazaHasta').value ? new Date($('trazaHasta').value + 'T23:59:59') : null;
+
+    const vistas = trazaFilas.filter(f => {
+      if(trazaTabla && f.tabla !== trazaTabla) return false;
+      const cuando = new Date(f.ocurrido_en);
+      if(desde && cuando < desde) return false;
+      if(hasta && cuando > hasta) return false;
+      if(q && ![f.correo, f.entidad_id, f.nota, f.tabla].some(v =>
+        String(v || '').toLowerCase().includes(q))) return false;
+      return true;
+    });
+
+    $('listaTraza').innerHTML = vistas.length
+      ? `<div class="cuentas">${vistas.map(fichaTrazaHtml).join('')}</div>`
+      : `<div class="vacio">${trazaFilas.length
+          ? 'Nada coincide con lo que buscas.'
+          : 'Todavía no hay nada en la trazabilidad.'}</div>`;
+  }
+
+  /* CSV con lo que está filtrado en pantalla, no con todo lo cargado:
+     lo que se ve es lo que se descarga. */
+  function descargarTrazaCsv(){
+    const filas = [...$('listaTraza').querySelectorAll('.cuenta')];
+    if(!filas.length){ alert('No hay nada que descargar con este filtro.'); return; }
+    const encabezado = ['ocurrido_en', 'correo', 'operacion', 'tabla', 'entidad_id', 'nota'];
+    const q = $('buscarTraza').value.trim().toLowerCase();
+    const desde = $('trazaDesde').value ? new Date($('trazaDesde').value) : null;
+    const hasta = $('trazaHasta').value ? new Date($('trazaHasta').value + 'T23:59:59') : null;
+    const vistas = trazaFilas.filter(f => {
+      if(trazaTabla && f.tabla !== trazaTabla) return false;
+      const cuando = new Date(f.ocurrido_en);
+      if(desde && cuando < desde) return false;
+      if(hasta && cuando > hasta) return false;
+      if(q && ![f.correo, f.entidad_id, f.nota, f.tabla].some(v =>
+        String(v || '').toLowerCase().includes(q))) return false;
+      return true;
+    });
+    const csvCelda = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lineas = [encabezado.join(',')].concat(
+      vistas.map(f => encabezado.map(k => csvCelda(f[k])).join(','))
+    );
+    lineas.push('');
+    lineas.push('# Exportado ' + fechaHora(new Date().toISOString()) + ' · ' + vistas.length +
+      ' de ' + trazaFilas.length + ' filas cargadas (últimas 300) · filtro: ' +
+      (trazaTabla || 'todas') + (q ? ' · buscando "' + q + '"' : ''));
+    const blob = new Blob(['﻿' + lineas.join('\n')], {type: 'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'trazabilidad-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $('trazaTabs').addEventListener('click', e => {
+    const b = e.target.closest('[data-tabla]');
+    if(!b) return;
+    trazaTabla = b.dataset.tabla;
+    pintarTrazabilidad();
+  });
+  $('buscarTraza').addEventListener('input', pintarTrazabilidad);
+  $('trazaDesde').addEventListener('change', pintarTrazabilidad);
+  $('trazaHasta').addEventListener('change', pintarTrazabilidad);
+  $('botonTrazaCsv').addEventListener('click', descargarTrazaCsv);
 
   /* ---------- apuntar el equipo de alguien ----------
      Se abre desde la ficha, con lo que el técnico acabe de escribir en el
@@ -2256,6 +2419,11 @@
       inventarioTraer().then(() => { if(!$('velo').hidden) pintarFicha(); });
       if(soyAdmin){ cargarCuentas(); cargarCorreos(); }
       vigilar();
+      /* La trazabilidad no espera por esto: quien entra no tiene por qué
+         notarlo, y si falla —sin red, la migración 15 sin correr todavía—
+         entrar sigue funcionando igual que antes de que existiera esto. */
+      pedir('/rest/v1/rpc/registrar_acceso', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'})
+        .catch(e => console.warn('No se pudo anotar el acceso:', e));
     }catch(err){
       /* A esta persona no le falta la clave, le falta el papel. Decirle 'no se
          pudo entrar' la dejaría probando contraseñas que sí son correctas. */
