@@ -59,10 +59,15 @@ svg{display:block;}
 a{color:var(--navy);}
 .tnum{font-variant-numeric:tabular-nums;}
 
-/* Los títulos, en el serif. Va aquí arriba y sin !important: es el suelo, y
-   cualquier regla posterior más específica lo sustituye sin pelear —empezando
-   por la Hoja de Servicio, que se queda en Arial unas líneas más abajo. */
-h1, h2, h3{font-family:var(--display); font-weight:400; letter-spacing:.01em;}
+/* El serif NO va en todo h1/h2/h3. Instrument Serif solo trae el regular de
+   400, así que cualquier título que siga pidiendo 700 —el de una tarjeta de
+   guía, el de un panel de estadísticas— sale en negrita sintética: el
+   navegador engorda el trazo a la fuerza y se ve emborronado.
+
+   Y además no le toca: en Atlas el serif es la letra de lo que se anuncia
+   —el logotipo, el título de la pantalla—, mientras que los rótulos pequeños
+   que ordenan una lista van en la sans, en 700. Aquí se hace igual: el serif
+   se pone a mano, título por título, en los cuatro sitios donde manda. */
 
 /* Las cifras que se leen en columna o se copian a mano. */
 .cifras{font-family:var(--cifras); font-variant-numeric:tabular-nums;}
@@ -193,7 +198,8 @@ body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
 .tarjeta + .tarjeta{margin-top:16px;}
 
 .intro{margin-bottom:16px;}
-.intro h1{font-size:30px; font-weight:400; letter-spacing:.01em;}
+.intro h1{font-family:var(--display); font-size:30px; font-weight:400;
+  letter-spacing:.01em;}
 /* La bajada es contexto, no titular: un cuerpo de texto normal al lado de un
    h1 le resta jerarquía a la página entera. */
 .intro p{font-size:13px; color:var(--gray); line-height:1.55; margin-top:4px; max-width:56ch;}
@@ -767,7 +773,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   width:23px; height:23px; fill:none; stroke:currentColor;
   stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
 }
-.acceso-caja h1{font-size:31px; font-weight:400; letter-spacing:.01em; margin-bottom:-8px;}
+.acceso-caja h1{font-family:var(--display); font-size:31px; font-weight:400;
+  letter-spacing:.01em; margin-bottom:-8px;}
 .acceso-bajada{font-size:13px; color:var(--gray); line-height:1.55;}
 .acceso-caja .campo{gap:6px;}
 .acceso-caja input{padding:11px 13px; font-size:14px;}
@@ -964,7 +971,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   color:var(--gray); font-size:16px; line-height:1; font-family:inherit;
 }
 .hoja .cerrar:hover{background:var(--line); color:var(--ink);}
-.hoja h2{font-size:25px; font-weight:400; padding-right:40px;}
+.hoja h2{font-family:var(--display); font-size:25px; font-weight:400;
+  letter-spacing:.01em; padding-right:40px;}
 .hoja .bajada{color:var(--gray-soft); font-size:12.5px; margin-top:3px;}
 
 .datos{display:grid; grid-template-columns:repeat(2,1fr); gap:12px 20px; margin:18px 0;}
@@ -1721,7 +1729,6 @@ select.despierta{animation:destello .7s ease;}
    mano gana a la herencia, así que sin esta línea .hs h2 saldría en serif
    aunque .hs diga Arial. */
 .hs{color:#000; font-family:Arial,Helvetica,sans-serif;}
-.hs h1, .hs h2, .hs h3{font-family:inherit; font-weight:bold; letter-spacing:normal;}
 .hs .hs-cab{display:flex; align-items:flex-start; gap:12px; border-bottom:2px solid #004090; padding-bottom:6px;}
 .hs .hs-cab img{height:34px;}
 .hs .hs-cab .hs-n{
