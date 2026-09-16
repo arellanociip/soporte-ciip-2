@@ -47,6 +47,23 @@
   const cabeceras = () => Object.assign(
     {'Content-Type': 'application/json'}, window.soporteCabeceras());
 
+  /* ---------- volver del correo de recuperación ----------
+     Mismo mecanismo que en la bandeja (ver js/bandeja.js): Supabase manda
+     el enlace con el testigo en el propio hash de la URL —nunca en la
+     ruta ni en la query—, y se lee una sola vez, al cargar la página,
+     borrándolo enseguida para que un refresco no reintente con un enlace
+     ya usado. */
+  let testigoRecuperacionUsuario = null;
+  (function(){
+    if(!HAY) return;
+    const testigo = location.hash.match(/access_token=([^&]+)/);
+    const tipo = location.hash.match(/type=([^&]+)/);
+    if(testigo && tipo && tipo[1] === 'recovery'){
+      testigoRecuperacionUsuario = decodeURIComponent(testigo[1]);
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  })();
+
   /* Lo que Supabase devuelve al entrar, guardado como lo necesita la página. */
   function anotar(r){
     const previa = leerSesion();
@@ -269,6 +286,10 @@
       ? 'Con el correo que GGTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
       : 'Para pedir soporte hay que entrar con el correo que GGTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
+    /* Solo tiene sentido entrando: creando cuenta todavía no hay ninguna
+       clave puesta que se pueda "olvidar". */
+    const olvido = $('botonOlvidoUsuario');
+    if(olvido) olvido.hidden = nuevo;
     /* Los dos campos cambian de papel según el modo, y al navegador hay que
        decírselo. La pareja username + current-password es la firma que
        reconoce como "esto es entrar", y en cuanto la ve rellena las
@@ -294,6 +315,9 @@
   }
 
   function fallar(texto){
+    /* por si quedó en verde: el aviso de "contraseña puesta" que deja la
+       recuperación usa esta misma caja */
+    $('avisoCuentaUsuario').className = 'aviso malo';
     $('avisoCuentaUsuario').innerHTML = '<span>⚠</span><div>' + texto + '</div>';
     $('avisoCuentaUsuario').hidden = false;
   }
@@ -330,7 +354,20 @@
       pintarCabecera();
       window.dispatchEvent(new CustomEvent('soporte:sesion', {detail: {entro: true, adoptadas}}));
     }catch(err){
-      fallar(escapar(err.message || 'No se pudo.'));
+      /* Supabase contesta esto —en inglés, tal cual— cuando el correo ya
+         tiene una fila en auth.users. Puede ser de verdad "ya te
+         registraste y se te olvidó", pero la mitad de las veces es que
+         GGTIC te creó la cuenta desde la bandeja con una clave que
+         inventó el sistema y que nadie te dio: un correo "ya registrado"
+         sin salida, cuando lo que hace falta es poner la clave propia.
+         Se le ofrece el camino en vez de dejarlo mirando un error. */
+      if(modo === 'registrarse' && /already registered/i.test(err.message || '')){
+        fallar('Ese correo ya tiene una cuenta —puede que GGTIC te la haya '
+          + 'creado ya—. <button type="button" class="enlace" id="irAOlvidoDesdeRegistro">'
+          + 'Pon tu propia contraseña aquí</button>.');
+      }else{
+        fallar(escapar(err.message || 'No se pudo.'));
+      }
     }
     boton.disabled = false; boton.textContent = antes;
   }
@@ -338,6 +375,105 @@
   const escapar = s => String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  /* ---------- recuperar la contraseña ----------
+     Dos ventanas, no una: esta pide el correo y manda el enlace; la de
+     abajo (abrirNuevaClaveUsuario) se abre sola cuando se vuelve desde
+     ese correo, con el testigo de un solo uso puesto en la URL. */
+  function abrirOlvidoUsuario(correoDeSobra){
+    $('avisoOlvidoUsuario').hidden = true;
+    $('avisoOlvidoUsuarioOk').hidden = true;
+    $('ouCorreo').value = correoDeSobra || $('cuCorreo').value.trim();
+    $('veloOlvidoUsuario').hidden = false;
+    requestAnimationFrame(() => $('ouCorreo').focus());
+  }
+  function cerrarOlvidoUsuario(){ $('veloOlvidoUsuario').hidden = true; }
+
+  async function enviarOlvidoUsuario(){
+    const avisoMal = $('avisoOlvidoUsuario'), avisoOk = $('avisoOlvidoUsuarioOk');
+    avisoMal.hidden = true; avisoOk.hidden = true;
+    const correo = $('ouCorreo').value.trim();
+    if(!correo || !correo.includes('@')){
+      avisoMal.textContent = 'Escribe un correo válido.';
+      avisoMal.hidden = false;
+      return;
+    }
+    const boton = $('botonEnviarOlvidoUsuario');
+    boton.disabled = true; boton.textContent = 'Enviando…';
+    try{
+      const destino = location.origin + location.pathname;
+      const r = await fetch(B.url + '/auth/v1/recover?redirect_to=' + encodeURIComponent(destino), {
+        method: 'POST', headers: cabeceras(),
+        body: JSON.stringify({email: correo}),
+      });
+      if(!r.ok){
+        const c = await r.json().catch(() => ({}));
+        throw new Error(c.msg || c.error_description || c.message || ('HTTP ' + r.status));
+      }
+      /* Igual en los dos casos a propósito —exista o no esa cuenta—, para
+         no delatar quién tiene cuenta y quién no. */
+      avisoOk.textContent = 'Si esa cuenta existe, le llega un correo con el enlace en un momento.';
+      avisoOk.hidden = false;
+    }catch(err){
+      avisoMal.textContent = 'No se pudo enviar: ' + err.message;
+      avisoMal.hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Enviar enlace';
+  }
+
+  function abrirNuevaClaveUsuario(){
+    $('avisoNuevaClaveUsuario').hidden = true;
+    $('ncuClave').value = ''; $('ncuClave2').value = '';
+    $('veloNuevaClaveUsuario').hidden = false;
+    requestAnimationFrame(() => $('ncuClave').focus());
+  }
+  function cerrarNuevaClaveUsuario(){
+    $('veloNuevaClaveUsuario').hidden = true;
+    /* de un solo uso: si cancela y hace falta otra vez, que pida un enlace nuevo */
+    testigoRecuperacionUsuario = null;
+  }
+
+  async function guardarNuevaClaveUsuario(){
+    const aviso = $('avisoNuevaClaveUsuario');
+    aviso.hidden = true;
+    const c1 = $('ncuClave').value, c2 = $('ncuClave2').value;
+    if(!c1 || c1.length < 6){
+      aviso.textContent = 'La contraseña necesita al menos 6 caracteres.';
+      aviso.hidden = false;
+      return;
+    }
+    if(c1 !== c2){
+      aviso.textContent = 'Las dos casillas no coinciden.';
+      aviso.hidden = false;
+      return;
+    }
+    const boton = $('guardarNuevaClaveUsuario');
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    try{
+      /* El testigo del enlace hace de Authorization: no hay sesión de
+         verdad todavía —esta visita empieza en el correo, no en el
+         formulario de entrar—. */
+      const r = await fetch(B.url + '/auth/v1/user', {
+        method: 'PUT',
+        headers: Object.assign({'Authorization': 'Bearer ' + testigoRecuperacionUsuario}, cabeceras()),
+        body: JSON.stringify({password: c1}),
+      });
+      if(!r.ok){
+        const c = await r.json().catch(() => ({}));
+        throw new Error(c.msg || c.error_description || c.message || ('HTTP ' + r.status));
+      }
+      $('veloNuevaClaveUsuario').hidden = true;
+      testigoRecuperacionUsuario = null;
+      abrir('entrar');
+      $('avisoCuentaUsuario').className = 'aviso bueno';
+      $('avisoCuentaUsuario').innerHTML = '<span>✓</span><div>Contraseña puesta. Entra con la nueva.</div>';
+      $('avisoCuentaUsuario').hidden = false;
+    }catch(err){
+      aviso.textContent = 'No se pudo guardar: ' + err.message;
+      aviso.hidden = false;
+    }
+    boton.disabled = false; boton.textContent = 'Guardar';
+  }
 
   /* ---------- lo que la página usa ---------- */
   window.soporteCuenta = {
@@ -401,12 +537,34 @@
     const caja = $('cuClave');
     if(caja) caja.addEventListener('keydown', e => { if(e.key === 'Enter') aceptar(); });
 
+    /* ---------- recuperar la contraseña ---------- */
+    engancha('botonOlvidoUsuario', e => { e.preventDefault(); abrirOlvidoUsuario(); });
+    engancha('cerrarOlvidoUsuario', cerrarOlvidoUsuario);
+    engancha('cancelarOlvidoUsuario', cerrarOlvidoUsuario);
+    $('veloOlvidoUsuario').addEventListener('click', e => {
+      if(e.target === $('veloOlvidoUsuario')) cerrarOlvidoUsuario();
+    });
+    engancha('botonEnviarOlvidoUsuario', enviarOlvidoUsuario);
+    engancha('cancelarNuevaClaveUsuario', () => { cerrarNuevaClaveUsuario(); abrir('entrar'); });
+    engancha('guardarNuevaClaveUsuario', guardarNuevaClaveUsuario);
+    /* El botón que sale dentro del aviso de "ya está registrado" (ver
+       aceptar()) no existe todavía cuando se enganchan los demás: se
+       delega en el aviso, que sí existe siempre. */
+    $('avisoCuentaUsuario').addEventListener('click', e => {
+      if(e.target.id === 'irAOlvidoDesdeRegistro') abrirOlvidoUsuario($('cuCorreo').value.trim());
+    });
+
     /* Sin sesión, esto es lo primero y lo único que hay. No se cierra, y la
        planilla de atrás está escondida hasta que se entre: dejarla a la vista
        detrás de un velo invita a rellenarla para descubrir al final que no se
-       podía enviar. */
+       podía enviar.
+
+       El enlace de recuperación manda sobre todo eso: si se vuelve del
+       correo con el testigo puesto, lo que hay que hacer es poner la
+       clave nueva, haya sesión guardada o no. */
     pintarPuerta();
-    if(!leerSesion()) abrir('entrar');
+    if(testigoRecuperacionUsuario) abrirNuevaClaveUsuario();
+    else if(!leerSesion()) abrir('entrar');
   });
 
   /* La planilla solo existe para quien entró. La regla de verdad está en el
