@@ -21,6 +21,7 @@
       <a href="#" id="botonStats">Estadísticas</a>
       <a href="#" id="botonCuentas">Cuentas</a>
       <a href="#" id="botonCorreos">Correos permitidos</a>
+      <a href="#" id="botonTrazabilidad">Trazabilidad</a>
       <a href="#" id="botonMisDatos">Mis datos</a>
       <a href="#" id="botonSalir">Salir</a>
     </div>
@@ -236,6 +237,38 @@
     </div>
 
     <div id="listaCorreos"></div>
+  </section>
+
+  <!-- ===================== TRAZABILIDAD =====================
+       Quién hizo qué y cuándo, como en Atlas. Se alimenta sola —un
+       disparador en solicitudes y en correos_permitidos, la propia Edge
+       Function de Cuentas, y esta misma pantalla al entrar—; nadie
+       edita ni borra una fila desde aquí, ni siquiera un administrador. -->
+  <section id="panelTrazabilidad" hidden>
+    <div class="intro">
+      <h1>Trazabilidad</h1>
+      <p>Quién hizo qué y cuándo: solicitudes, cuentas de GGTIC, correos
+      permitidos y quién entró a la bandeja. Ninguna fila de aquí se
+      puede editar ni borrar, ni siquiera como administrador — solo
+      queda anotada.</p>
+    </div>
+
+    <div class="barra">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="buscarTraza" placeholder="Buscar por correo, correo afectado o nota">
+      </div>
+      <input type="date" id="trazaDesde" title="Desde">
+      <input type="date" id="trazaHasta" title="Hasta">
+      <button type="button" class="boton plano chico" id="botonTrazaCsv">Descargar CSV</button>
+    </div>
+
+    <div class="fichas" id="trazaTabs"></div>
+
+    <p class="ayuda" style="margin:2px 0 10px">Se muestran las últimas 300 filas,
+    de más reciente a más vieja. Para algo más viejo, acota por fecha.</p>
+
+    <div id="listaTraza"></div>
   </section>
 
 </main>

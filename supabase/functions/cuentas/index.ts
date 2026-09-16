@@ -122,6 +122,36 @@ function usuarioPublico(u: any, esAdmin: boolean) {
   return o;
 }
 
+/* La bitácora de Cuentas no sale de un disparador sobre gtic.personal a
+   propósito: esa tabla no lleva nombre, cargo ni teléfono —eso vive en el
+   user_metadata de auth.users, que esta función sí ve—, y un disparador
+   ahí se perdería justo lo que a alguien de GGTIC le interesa comparar. Se
+   escribe aquí, a mano, con el antes y el después completos. Si falla, no
+   tumba el alta ni la baja: una cuenta creada sin su registro es mejor que
+   una cuenta que no se pudo crear porque la bitácora no se pudo escribir. */
+// deno-lint-ignore no-explicit-any
+async function registrarBitacora(
+  admin: any,
+  correoActor: string,
+  operacion: 'ALTA' | 'CAMBIO' | 'BAJA',
+  entidadId: string,
+  previa: unknown,
+  nueva: unknown,
+) {
+  try {
+    await admin.schema('gtic').from('bitacora').insert({
+      correo: correoActor.toLowerCase(),
+      operacion,
+      tabla: 'cuentas',
+      entidad_id: entidadId,
+      data_previa: previa ?? null,
+      data_nueva: nueva ?? null,
+    });
+  } catch (e) {
+    console.warn('No se pudo anotar en la bitácora:', mensajeDe(e));
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
@@ -247,7 +277,12 @@ Deno.serve(async (req) => {
       if (!meta.nombre) meta.nombre = correo.split('@')[0].replace(/[._]/g, ' ');
 
       let fila;
+      let antes: Record<string, unknown> | null = null;
       if (previo) {
+        const { data: filaPrevia } = await admin.schema('gtic').from('personal')
+          .select('es_admin').eq('uid', previo.id).maybeSingle();
+        antes = { ...usuarioPublico(previo, !!filaPrevia?.es_admin), clave_cambiada: !!clave };
+
         // deno-lint-ignore no-explicit-any
         const cambios: any = { user_metadata: meta };
         if (clave) cambios.password = clave;   /* sin clave, no se toca la suya */
@@ -289,6 +324,11 @@ Deno.serve(async (req) => {
       const { error: malPapel } = await admin.schema('gtic').from('personal')
         .upsert({ uid: fila.id, correo, es_admin: esAdminNuevo }, { onConflict: 'uid' });
       if (malPapel) throw malPapel;
+
+      await registrarBitacora(
+        admin, yo.email!, previo ? 'CAMBIO' : 'ALTA', correo,
+        antes, usuarioPublico(fila, esAdminNuevo),
+      );
 
       return responder(previo ? 200 : 201, [
         { ...usuarioPublico(fila, esAdminNuevo), clave_nueva: inventada ? clave : null },
@@ -337,12 +377,20 @@ Deno.serve(async (req) => {
       /* Primero el papel y luego la cuenta: si se cae en medio, lo que queda
          es alguien sin entrada a la bandeja, que es el lado seguro. Al revés
          quedaría una fila huérfana en gtic.personal. */
+      const eraAdmin = !!deGtic.get(victima.id);
+
       const { error: malPapel } = await admin.schema('gtic').from('personal')
         .delete().eq('uid', victima.id);
       if (malPapel) throw malPapel;
 
       const { error } = await admin.auth.admin.deleteUser(victima.id);
       if (error) throw error;
+
+      await registrarBitacora(
+        admin, yo.email!, 'BAJA', correo,
+        usuarioPublico(victima, eraAdmin), null,
+      );
+
       return responder(200, [{ correo }]);
     }
 
