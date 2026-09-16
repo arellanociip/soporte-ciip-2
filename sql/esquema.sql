@@ -1,10 +1,10 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Esquema completo. Se pega tal cual en el SQL Editor de Supabase y se
 -- ejecuta una sola vez, en un proyecto nuevo y vacío.
 --
 -- La idea en una línea: cualquiera en la casa puede DEJAR una solicitud sin
--- tener cuenta; solo el personal de GTIC, ya identificado, puede LEERLAS y
+-- tener cuenta; solo el personal de GGTIC, ya identificado, puede LEERLAS y
 -- atenderlas.
 -- =====================================================================
 
@@ -15,14 +15,14 @@ create schema if not exists gtic;
 -- ---------------------------------------------------------------------
 -- Refleja la Hoja de Servicio en papel, separada en dos mitades:
 --   · lo que llena quien pide      (gerencia … descripcion)
---   · lo que llena GTIC al atender (tecnico … observaciones)
+--   · lo que llena GGTIC al atender (tecnico … observaciones)
 -- Los renglones de equipo van en jsonb: en el Excel eran seis filas fijas de
 -- las que casi siempre se usaba una, y una tabla aparte para eso sería más
 -- ceremonia que provecho.
 create table if not exists gtic.solicitudes (
   id            uuid primary key default gen_random_uuid(),
 
-  -- Número correlativo del año, el "N° GTIC-HS/" de la hoja. Lo pone el
+  -- Número correlativo del año, el "N° GGTIC-HS/" de la hoja. Lo pone el
   -- servidor (ver el disparador más abajo), nunca el navegador: si lo
   -- calculara el cliente, dos personas que enviaran a la vez se pisarían.
   numero        integer not null,
@@ -39,7 +39,7 @@ create table if not exists gtic.solicitudes (
   tipo          text,   -- ASISTENCIA | SOPORTE_TECNICO
   detalle       text,   -- una de las opciones que cuelgan del tipo
 
-  -- ---- lo que llena GTIC al atender ----
+  -- ---- lo que llena GGTIC al atender ----
   estado        text not null default 'recibida',
   tecnico       text,
   observaciones text,
@@ -120,7 +120,7 @@ create policy "cualquiera: dejar una solicitud"
     and atendida_en is null
   );
 
--- GTIC, ya identificado: ver y atender todo.
+-- GGTIC, ya identificado: ver y atender todo.
 create policy "gtic: ver las solicitudes"
   on gtic.solicitudes for select to authenticated using (true);
 create policy "gtic: atender las solicitudes"

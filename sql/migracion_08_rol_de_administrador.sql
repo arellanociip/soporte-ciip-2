@@ -1,30 +1,30 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 08: administrador, un rol de verdad
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 07.
 --
 -- De dónde sale esto:
 --
--- Hasta ahora no había roles: cualquier cuenta de GTIC podía lo mismo,
+-- Hasta ahora no había roles: cualquier cuenta de GGTIC podía lo mismo,
 -- incluida la gestión de accesos —dar de alta o de baja a otro técnico,
 -- decidir quién puede pedir soporte—. Eso deja de ser así solo para esas
 -- dos cosas: "Cuentas" y "Correos permitidos" pasan a ser de administrador
 -- nada más. Atender solicitudes, escribir guías, tocar el inventario y ver
--- estadísticas siguen siendo de cualquiera con cuenta de GTIC, como
+-- estadísticas siguen siendo de cualquiera con cuenta de GGTIC, como
 -- siempre.
 --
 -- De paso, se cierra un hueco que tenía la Edge Function de Cuentas desde
 -- que existe: comprobaba que hubiera sesión, pero nunca que esa sesión
--- fuera de GTIC. Cualquiera con cuenta para pedir soporte podía llamarla
+-- fuera de GGTIC. Cualquiera con cuenta para pedir soporte podía llamarla
 -- directo —sin pasar por la bandeja, que es lo único que ocultaba el
--- botón— y listar, crear o borrar cuentas de GTIC. Con el rol de
+-- botón— y listar, crear o borrar cuentas de GGTIC. Con el rol de
 -- administrador puesto, la función exige ese papel para las tres cosas.
 -- =====================================================================
 
 
 -- ---------------------------------------------------------------------
--- 1. El papel, en la misma tabla que ya dice quién es de GTIC
+-- 1. El papel, en la misma tabla que ya dice quién es de GGTIC
 -- ---------------------------------------------------------------------
 alter table gtic.personal
   add column if not exists es_admin boolean not null default false;
@@ -49,7 +49,7 @@ grant execute on function gtic.es_admin() to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------
--- 2. Correos permitidos pasa de "cualquiera de GTIC" a "solo admin"
+-- 2. Correos permitidos pasa de "cualquiera de GGTIC" a "solo admin"
 -- ---------------------------------------------------------------------
 drop policy if exists "gtic: leer los correos permitidos" on gtic.correos_permitidos;
 drop policy if exists "gtic: agregar correos permitidos"  on gtic.correos_permitidos;

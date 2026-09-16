@@ -1,7 +1,7 @@
 /* ---------- Fotos y PDF en la conversación ----------
    Una foto de la pantalla dice en un segundo lo que cuesta tres mensajes
    escribir, y a veces lo único que hay es un PDF. Esto es lo mismo para las dos
-   páginas —la de quien pide y la bandeja de GTIC—, así que vive aparte en vez
+   páginas —la de quien pide y la bandeja de GGTIC—, así que vive aparte en vez
    de escrito dos veces.
 
    Un solo botón, el clip, con las dos opciones dentro: elegir entre "foto" y

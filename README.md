@@ -1,7 +1,7 @@
-# Solicitudes de soporte · GTIC · CIIP
+# Solicitudes de soporte · GGTIC · CIIP
 
 La Hoja de Servicio, en la web. La gente de la casa pide su soporte desde el
-navegador, la solicitud entra sola a una cola con su número, y GTIC la atiende y
+navegador, la solicitud entra sola a una cola con su número, y GGTIC la atiende y
 imprime la misma hoja de siempre para firmar y sellar.
 
 Sale del Excel `HOJA DE SERVICIO NUEVA.xlsx`: las gerencias, los dos tipos de
@@ -17,7 +17,7 @@ servicio y los detalles que cuelgan de cada uno son exactamente sus listas.
 | Página | Para quién | Qué hace |
 |---|---|---|
 | `index.html` | Toda la casa, sin clave | Llenar y enviar la solicitud. Devuelve el número. |
-| `bandeja.html` | Solo GTIC, con clave | Ver la cola, atender, dejar constancia e imprimir la hoja. |
+| `bandeja.html` | Solo GGTIC, con clave | Ver la cola, atender, dejar constancia e imprimir la hoja. |
 
 ---
 
@@ -98,7 +98,7 @@ No se puede borrar al ultimo usuario: dejaria la bandeja cerrada para siempre.
 **Despues de la primera cuenta, la linea de comandos ya no hace falta.** Quien
 esta dentro da de alta a los demas desde el enlace *Cuentas* de la barra azul:
 crear, corregir el nombre o el cargo, poner una clave nueva a quien la olvido, y
-dar de baja. No hay jefes — cualquier cuenta de GTIC puede hacerlo, igual que
+dar de baja. No hay jefes — cualquier cuenta de GGTIC puede hacerlo, igual que
 cualquiera ve y atiende todas las solicitudes.
 
 La clave se puede dejar en blanco: en una cuenta nueva se inventa una que se
@@ -169,7 +169,7 @@ Lo que había que arreglar, y se arregló:
 Lo que sigue abierto, a sabiendas:
 
 - **Va por `http://`, no `https`.** Quien pueda ver el tráfico de la red lee las
-  claves de GTIC al entrar. Es lo más serio que queda y solo se arregla con un
+  claves de GGTIC al entrar. Es lo más serio que queda y solo se arregla con un
   certificado.
 - **`js/directorio.js` lleva 224 cédulas** y `js/inventario.js` 233 seriales: los
   sirve el servidor a cualquiera que abra el formulario. Fue una decisión, y está
@@ -226,7 +226,7 @@ quién puede hacer qué.
 Panel → **Project Settings** → **API** → **Exposed schemas** → agrega `gtic` →
 **Save**.
 
-### 4. Crear las cuentas de GTIC
+### 4. Crear las cuentas de GGTIC
 
 Panel → **Authentication** → **Users** → **Add user** → *Create new user*.
 Correo y contraseña de cada técnico que vaya a usar la bandeja. Marca
@@ -260,10 +260,10 @@ así que no hace falta abrir el puerto. Si un día lo activan, hará falta esto 
 vez, en PowerShell **como administrador**:
 
 ```powershell
-New-NetFirewallRule -DisplayName "Soporte GTIC" -Direction Inbound -Protocol TCP -LocalPort 8123 -Action Allow -Profile Domain,Private
+New-NetFirewallRule -DisplayName "Soporte GGTIC" -Direction Inbound -Protocol TCP -LocalPort 8123 -Action Allow -Profile Domain,Private
 ```
 
-Y para quitarlo: `Remove-NetFirewallRule -DisplayName "Soporte GTIC"`.
+Y para quitarlo: `Remove-NetFirewallRule -DisplayName "Soporte GGTIC"`.
 
 **Por qué un servidor y no abrir el archivo directamente:** con `file://` el
 navegador bloquea la carga de los `js/*.js` y la página arranca vacía.
@@ -327,7 +327,7 @@ atajo en el formulario, quien va a pedir soporte de ese tipo lo ve justo encima
 del botón de enviar: *"Quizá lo resuelvas ahora mismo"*. Puede cerrarlo y enviar
 igual; no obliga a nada.
 
-Ese campo en blanco significa que la guía **no sale de GTIC**. El servidor lo
+Ese campo en blanco significa que la guía **no sale de GGTIC**. El servidor lo
 sostiene con una ruta aparte, `/rest/v1/guias_publicas`, que devuelve solo el
 título y ese párrafo —nunca el cuerpo de la guía— y solo de las que lo tengan.
 Así lo que se publica se decide en un sitio y se lee de un vistazo.
@@ -343,20 +343,20 @@ equipos, a quién llamar— que no tienen por qué salir de la gerencia.
 
 Cuando una solicitud queda atendida, a quien la pidió le sale junto al camino
 de su solicitud un enlace: **Hoja de Servicio**. Baja el mismo documento que
-GTIC imprime y firma, en PDF, sin pasar por el diálogo de imprimir.
+GGTIC imprime y firma, en PDF, sin pasar por el diálogo de imprimir.
 
 Ese enlace dura **cinco minutos**, con su reloj al lado: un aro que se vacía y
 los minutos bajando, y el último minuto en rojo. Cuando se acaba, en su sitio
-queda la frase que dice dónde está la hoja —guardada en GTIC— y que hay que
+queda la frase que dice dónde está la hoja —guardada en GGTIC— y que hay que
 pedírsela a la gerencia.
 
 El plazo es porque la hoja lleva nombre, cédula, teléfono y cargo, y esa
 pantalla se abre lo mismo en el puesto de uno que en la computadora de
 recepción: el comprobante es de uno, pero la pantalla puede no serlo. Cuenta
-desde que el botón aparece a la vista —no desde que GTIC cierra la solicitud—
+desde que el botón aparece a la vista —no desde que GGTIC cierra la solicitud—
 para que a nadie se le venza mientras almuerza, y se anota en el navegador
 junto al resguardo, así que recargar la página no lo reinicia. Lo que se apaga
-es el enlace en esa pantalla, no el archivo: en el servidor de GTIC la hoja
+es el enlace en esa pantalla, no el archivo: en el servidor de GGTIC la hoja
 sigue completa.
 
 En la bandeja no hay plazo, que es de quien la archiva: un botón **PDF** en cada
@@ -380,7 +380,7 @@ y nadie se queda sin su comprobante.
 
 Dentro del chat, el clip abre un menú con dos opciones: **foto o imagen** y
 **documento PDF**. Sirve en las dos direcciones —quien pide manda la foto de la
-pantalla, GTIC manda el instructivo— y hasta cuatro archivos por mensaje. Un
+pantalla, GGTIC manda el instructivo— y hasta cuatro archivos por mensaje. Un
 mensaje puede ser solo una foto, sin texto.
 
 Las fotos se achican en el navegador antes de subirlas: 1600 píxeles del lado
@@ -448,7 +448,7 @@ reúne todo en un solo sitio.
 
 **Quien pide.** Abre el formulario, elige uno de los cinco atajos —"La computadora
 no sirve", "Problema con la impresora"…—, cuenta qué le pasa y envía. Recibe un
-número tipo `GTIC-HS/007-2026`.
+número tipo `GGTIC-HS/007-2026`.
 
 Elegir uno es obligatorio: los cinco son los detalles más pedidos del Excel y
 cubren el 78 % de los casos, y "Otra cosa" abre los desplegables completos para
@@ -478,15 +478,15 @@ los campos con los datos puestos, y **No soy yo** los borra de verdad.
 
 **Y puede ver en qué va.** Al volver al formulario, arriba sale *Lo que has
 pedido*: cada solicitud con su número, las tres etapas del trámite dibujadas
-—Recibida → En proceso → Atendida— y, cuando GTIC la cierra, la respuesta del
+—Recibida → En proceso → Atendida— y, cuando GGTIC la cierra, la respuesta del
 técnico. No hace falta clave ni recordar el número.
 
 **Y puede hablar con quien la atiende.** En cuanto un tecnico la toma, aparece
 su nombre y un hilo para escribirle: a que hora esta, donde lo consigue, lo que
-haga falta. GTIC ve y responde el mismo hilo desde la ficha. Los mensajes no
+haga falta. GGTIC ve y responde el mismo hilo desde la ficha. Los mensajes no
 salen en la Hoja de Servicio; son para ponerse de acuerdo, no para el acta.
 
-> Quien habla no lo dice el mensaje, lo dice como llego: con sesion de GTIC
+> Quien habla no lo dice el mensaje, lo dice como llego: con sesion de GGTIC
 > habla el tecnico; sin ella, habla quien pidio, y su prueba es el mismo id
 > imposible de adivinar de su solicitud. Nadie puede escribir haciendose pasar
 > por otro, y quien pide sigue sin necesitar cuenta.
@@ -502,7 +502,7 @@ queda el porqué y el estado de la que ya tiene. La regla la impone el servidor,
 no la pantalla: desde otro navegador el rechazo llega igual, con un 409 que el
 formulario traduce mostrando la solicitud que ya existía. Se compara por el
 nombre normalizado, porque la cédula es opcional. Si a alguien se le queda una
-abierta y necesita otra cosa, GTIC la cierra o la anula y queda libre.
+abierta y necesita otra cosa, GGTIC la cierra o la anula y queda libre.
 
 > **Cómo se sostiene eso sin cuentas.** Al enviar, el navegador guarda el uid=1050397(f.reyes) gid=1049089 groups=1049089
 > de la solicitud, que es un UUID: 122 bits al azar. El servidor entrega una
@@ -512,10 +512,10 @@ abierta y necesita otra cosa, GTIC la cierra o la anula y queda libre.
 > cédula, teléfono ni gerencia — solo el resumen que a esa persona le sirve.
 >
 > El precio: vive en un navegador. Quien borre sus datos o cambie de equipo
-> pierde el rastro y tendrá que preguntarle a GTIC. Es el resguardo de papel
+> pierde el rastro y tendrá que preguntarle a GGTIC. Es el resguardo de papel
 > que uno se lleva, no un expediente.
 
-**GTIC.** Entra a la bandeja con su correo y clave. Ve las pendientes de primero.
+**GGTIC.** Entra a la bandeja con su correo y clave. Ve las pendientes de primero.
 Abre una, pone quién la atiende, deja las observaciones y llena los renglones de
 equipo —hasta seis, como en el Excel—, cambia el estado a *Atendida* y guarda.
 El botón **Imprimir Hoja de Servicio** saca la hoja completa, con el mismo
@@ -535,7 +535,7 @@ formato de siempre, lista para firmar y sellar.
   fila 18— nunca salía en el desplegable. Igual `UPGRADE DE HARDWARE`, que se
   usaba a mano. Las dos están disponibles ahora.
 - **Tres gerencias que faltaban.** `FUNDACION MARCA PAIS`,
-  `VICEMINISTERIO DE ECONOMIA PRODUCTIVA` y la propia GTIC aparecían en hojas
+  `VICEMINISTERIO DE ECONOMIA PRODUCTIVA` y la propia GGTIC aparecían en hojas
   llenadas pero no en la lista `GERENCIAS`.
 - **Las oficinas se sugieren, no se imponen.** El Excel mezclaba `4-1` y `4-01`
   para la misma. El campo propone las conocidas ya normalizadas, pero admite
@@ -547,7 +547,7 @@ formato de siempre, lista para firmar y sellar.
 
 ```
 index.html          el formulario que llena la casa
-bandeja.html        la cola de GTIC
+bandeja.html        la cola de GGTIC
 css/estilo.css      todo el diseño, incluida la hoja impresa
 servidor.js         ← el servidor de esta PC: sirve las páginas y guarda las solicitudes
 arrancar.vbs        levanta el servidor y el vigia sin ventana (arranca con Windows)
@@ -568,5 +568,5 @@ js/bandeja.js       acceso, cola, atención, guías e impresión
 sql/esquema.sql     la tabla en Supabase, para el día que se mude
 vigia.ps1           el vigía: trae la bandeja al frente cuando entra una solicitud
 vigia.cmd           doble clic para arrancarlo
-datos/              solicitudes, usuarios y guías de GTIC (no va al repositorio)
+datos/              solicitudes, usuarios y guías de GGTIC (no va al repositorio)
 ```

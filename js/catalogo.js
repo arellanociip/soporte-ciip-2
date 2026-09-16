@@ -139,7 +139,7 @@ const CAT_ATAJOS = [
        computadora no sirve" puede tener el CPU muerto, el monitor sin imagen,
        el equipo lentísimo o el teclado que no responde. Lo que se guarda sigue
        siendo una sola clasificación —la de arriba, la que va a la Hoja de
-       Servicio—, pero para ofrecerle lo que GTIC ya sabe hay que mirar todas,
+       Servicio—, pero para ofrecerle lo que GGTIC ya sabe hay que mirar todas,
        y que sea la persona quien diga cuál de ellas es la suya. */
     familia: [
       'OPERATIVIDAD DE CPU',

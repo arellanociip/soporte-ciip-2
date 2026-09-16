@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 10: Marca País entra a correos_permitidos
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 09.
@@ -13,7 +13,7 @@
 --
 -- Solo 48 de las 50 traían correo: Manuel Marcial y Miguel Angel Zapata
 -- Torres se quedaron fuera también de js/directorio.js, sin correo no hay
--- forma de que se registren. En cuanto GTIC consiga el suyo, se agregan
+-- forma de que se registren. En cuanto GGTIC consiga el suyo, se agregan
 -- los dos: uno al directorio y otro a "Correos permitidos" en la bandeja.
 --
 -- on conflict do nothing: si alguno ya estuviera en la lista —por ejemplo,

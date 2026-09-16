@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 06: correos_permitidos se administra desde la bandeja
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 05 (necesita 03, donde nace
@@ -12,7 +12,7 @@
 -- escribe desde ahí" (migración 03). Hasta ahora, agregar o quitar un
 -- correo exigía entrar al SQL Editor de Supabase a mano, uno por uno.
 --
--- Esta migración le da permiso a GTIC —autenticado, gtic.es_gtic()— para
+-- Esta migración le da permiso a GGTIC —autenticado, gtic.es_gtic()— para
 -- leer, agregar y quitar correos desde una pantalla nueva en la bandeja
 -- ("Correos permitidos"), de a uno o varios de una vez. Sigue sin ser
 -- visible para `anon` ni para quien pide soporte, que es lo que había que
@@ -29,7 +29,7 @@
 
 
 -- ---------------------------------------------------------------------
--- 1. GTIC puede administrar la lista desde la bandeja
+-- 1. GGTIC puede administrar la lista desde la bandeja
 -- ---------------------------------------------------------------------
 drop policy if exists "gtic: leer los correos permitidos" on gtic.correos_permitidos;
 drop policy if exists "gtic: agregar correos permitidos"  on gtic.correos_permitidos;

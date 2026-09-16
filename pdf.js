@@ -108,7 +108,7 @@ function hojaPdf(s){
   /* ---- encabezado ---- */
   texto(MARGEN, y + 9, 'CENTRO INTERNACIONAL DE INVERSIÓN PRODUCTIVA', 10, true);
   texto(MARGEN, y + 21, 'GERENCIA DE TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN', 7.5, false);
-  const numero = 'N° GTIC-HS/' + String(s.numero).padStart(3, '0') + '-' + s.anio;
+  const numero = 'N° GGTIC-HS/' + String(s.numero).padStart(3, '0') + '-' + s.anio;
   texto(ANCHO_HOJA - MARGEN - ancho(numero, 10, true), y + 9, numero, 10, true);
   const cuando = new Date(s.atendida_en || s.creada_en);
   const fecha = String(cuando.getDate()).padStart(2,'0') + '/' +
@@ -207,7 +207,7 @@ function hojaPdf(s){
   }
   y += 12;
 
-  /* ---- lo que hizo GTIC ---- */
+  /* ---- lo que hizo GGTIC ---- */
   titulo('OBSERVACIONES:');
   parrafo(s.observaciones || '', 46);
   y += 10;

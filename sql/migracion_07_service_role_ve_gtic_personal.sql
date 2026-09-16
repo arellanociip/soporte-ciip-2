@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 07: service_role puede tocar gtic.personal
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 06.
