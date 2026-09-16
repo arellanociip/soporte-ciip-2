@@ -54,12 +54,22 @@
      borrándolo enseguida para que un refresco no reintente con un enlace
      ya usado. */
   let testigoRecuperacionUsuario = null;
+  /* Un enlace vencido, o ya usado una vez, no manda un testigo: manda esto.
+     Pasa de verdad y seguido —el correo de la casa suele tener un filtro
+     de seguridad que "visita" los enlaces solos para revisarlos antes de
+     que la persona los pinche, y eso ya los gasta—. Sin este aviso la
+     página se quedaba calladita con el error crudo en la URL, sin decir
+     qué pasó ni ofrecer pedir uno nuevo. */
+  let enlaceRecuperacionVencido = false;
   (function(){
     if(!HAY) return;
     const testigo = location.hash.match(/access_token=([^&]+)/);
     const tipo = location.hash.match(/type=([^&]+)/);
     if(testigo && tipo && tipo[1] === 'recovery'){
       testigoRecuperacionUsuario = decodeURIComponent(testigo[1]);
+      history.replaceState(null, '', location.pathname + location.search);
+    }else if(/error=/.test(location.hash)){
+      enlaceRecuperacionVencido = true;
       history.replaceState(null, '', location.pathname + location.search);
     }
   })();
@@ -564,6 +574,14 @@
        clave nueva, haya sesión guardada o no. */
     pintarPuerta();
     if(testigoRecuperacionUsuario) abrirNuevaClaveUsuario();
+    else if(enlaceRecuperacionVencido){
+      abrir('entrar');
+      abrirOlvidoUsuario();
+      $('avisoOlvidoUsuario').textContent =
+        'Ese enlace venció o ya se usó una vez —a veces el propio correo de la ' +
+        'casa lo abre solo para revisarlo antes de que lo pinches—. Pide uno nuevo.';
+      $('avisoOlvidoUsuario').hidden = false;
+    }
     else if(!leerSesion()) abrir('entrar');
   });
 
