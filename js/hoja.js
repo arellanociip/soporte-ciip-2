@@ -51,7 +51,7 @@
     return `<div class="hs">
       <div class="hs-cab">
         <img src="assets/logo_ciip_navy.png" alt="CIIP">
-        <div class="hs-n">N° GTIC-HS/<b>${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}</b>
+        <div class="hs-n">N° GGTIC-HS/<b>${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}</b>
           <div>${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}</div>
         </div>
       </div>

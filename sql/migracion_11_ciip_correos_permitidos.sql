@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 11: el CIIP entra a correos_permitidos
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 10.
@@ -8,7 +8,7 @@
 --
 -- gtic.correos_permitidos solo tenía los correos de quien ya se había
 -- registrado antes de que la cuenta fuera obligatoria (migración 03: "los
--- correos de GTIC que ya tienen cuenta entran solos en la lista"). El resto
+-- correos de GGTIC que ya tienen cuenta entran solos en la lista"). El resto
 -- del CIIP —172 personas— nunca pudo registrarse: por eso salía "Ese correo
 -- no está autorizado" al intentar crear la cuenta. Esta migración los
 -- agrega, del mismo "Listado General correos activos" que ya se usó para
@@ -21,7 +21,7 @@
 --   · Carolina Forgione Franco y Ana Maria Arraiz de Conde comparten el
 --     mismo correo en el listado (c.forgione@ciip.com.ve) — un error de
 --     captura de la casa, no de aquí. Solo se puede agregar una vez; queda
---     marcado abajo para que GTIC lo resuelva con quien administre el
+--     marcado abajo para que GGTIC lo resuelva con quien administre el
 --     correo institucional.
 --
 -- Cuatro correos traían un error de tipeo en el dominio —"ciip.cpm.ve",

@@ -1,4 +1,4 @@
-/* ---------- Las cuentas de GTIC, en la nube ----------
+/* ---------- Las cuentas de GGTIC, en la nube ----------
    El equivalente de /auth/v1/admin/users de servidor.js, para cuando el sitio
    corre contra Supabase. Lo llama js/bandeja.js sin enterarse de la
    diferencia: mismos verbos, mismos campos, misma respuesta.
@@ -17,7 +17,7 @@
 
    QUIÉN PUEDE LLAMARLA
 
-   Solo alguien que ya tenga cuenta de GTIC. Se comprueba de verdad: se toma
+   Solo alguien que ya tenga cuenta de GGTIC. Se comprueba de verdad: se toma
    el testigo que manda el navegador y se le pregunta a Supabase de quién es.
    Si no hay testigo, o no vale, se responde 401 y no se toca nada. Sin esa
    comprobación esto sería una puerta abierta para crear cuentas de
@@ -47,7 +47,7 @@ const LLAVE_ANON   = Deno.env.get('SUPABASE_ANON_KEY')
    la firma en la Hoja de Servicio. En Supabase viven en el user_metadata. */
 const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'] as const;
 
-/* Quién es de GTIC, y quién de ellos además es administrador: desde la
+/* Quién es de GGTIC, y quién de ellos además es administrador: desde la
    migración 03 el primer papel vive en gtic.personal, y desde que la
    bandeja pregunta por él —ver js/bandeja.js— una cuenta que no esté en esa
    tabla no puede entrar. Desde la migración 08, es_admin decide quién puede
@@ -56,7 +56,7 @@ const DATOS_TECNICO = ['nombre', 'cargo', 'cedula', 'telefono'] as const;
    cuentas que su propia bandeja rechaza o que nadie puede administrar.
 
    Devuelve uid → es_admin para las tres cosas que hace falta saber: quién
-   es de GTIC (`.has(uid)`), cuántos hay (`.size`, para no dejar la bandeja
+   es de GGTIC (`.has(uid)`), cuántos hay (`.size`, para no dejar la bandeja
    sin nadie) y quién de ellos es administrador (`.get(uid)`).
 
    Lleva la llave de administrador, así que ve la tabla aunque RLS se la
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
 
   /* Gestión de accesos —dar de alta o de baja a un técnico, decidir quién
      puede entrar— es de administrador nada más (migración 08). Antes esta
-     función solo comprobaba que hubiera sesión, nunca que fuera de GTIC:
+     función solo comprobaba que hubiera sesión, nunca que fuera de GGTIC:
      cualquiera con cuenta para pedir soporte podía llamarla directo, sin
      pasar por la bandeja, que es lo único que ocultaba el botón. Se
      pregunta con la llave de administrador porque gtic.personal no tiene
@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
     if (req.method === 'GET') {
       const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
       if (error) throw error;
-      /* Solo los de GTIC. Antes daba igual —toda cuenta lo era— pero hoy
+      /* Solo los de GGTIC. Antes daba igual —toda cuenta lo era— pero hoy
          listar auth.users entero sería enseñar a las 177 personas de la casa
          como si todas pudieran entrar aquí. */
       const deGtic = await filasDeGtic(admin);
@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
         /* El disparador de la migración 03 —solo_correos_de_la_casa— corre
            en CUALQUIER inserción a auth.users, también en esta, hecha con
            la llave de administrador: no distingue "se registró solo" de
-           "GTIC le dio de alta". Sin el correo ya en la lista, Supabase
+           "GGTIC le dio de alta". Sin el correo ya en la lista, Supabase
            responde el genérico "Database error creating new user" y aquí
            no había forma de saber por qué. Se agrega antes de crear la
            cuenta: quien tiene acceso a la bandeja, con más razón puede
@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
           email: correo,
           password: clave,
           /* Se da por buena sin correo de confirmación: la cuenta la está
-             creando GTIC a mano, no se está registrando un desconocido. Sin
+             creando GGTIC a mano, no se está registrando un desconocido. Sin
              esto, la persona no podría entrar hasta pinchar un enlace que
              quizá nunca le llegue. */
           email_confirm: true,
@@ -284,7 +284,7 @@ Deno.serve(async (req) => {
       /* El papel, que es lo que de verdad abre la bandeja, y si además es
          administrador. Va aquí porque hace falta el uid, y se hace también
          cuando la cuenta ya existía: dar de alta a alguien por este panel es
-         decir que es de GTIC, y este formulario es la única forma de
+         decir que es de GGTIC, y este formulario es la única forma de
          cambiarle el rol de administrador después. */
       const { error: malPapel } = await admin.schema('gtic').from('personal')
         .upsert({ uid: fila.id, correo, es_admin: esAdminNuevo }, { onConflict: 'uid' });
@@ -306,12 +306,12 @@ Deno.serve(async (req) => {
       const victima = usuarios.find((u) => u.email?.toLowerCase() === correo);
       if (!victima) return responder(404, { message: 'No existe ninguna cuenta con ese correo.' });
 
-      /* Dar de baja aquí es dar de baja de GTIC, así que quien no lo sea no
+      /* Dar de baja aquí es dar de baja de GGTIC, así que quien no lo sea no
          es asunto de este panel: una cuenta de quien pide soporte no se toca
          desde la bandeja. */
       const deGtic = await filasDeGtic(admin);
       if (!deGtic.has(victima.id)) {
-        return responder(404, { message: 'Esa cuenta no es de GTIC.' });
+        return responder(404, { message: 'Esa cuenta no es de GGTIC.' });
       }
 
       /* Borrarse a uno mismo deja a alguien fuera de la pantalla en la que está
@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
       /* Quedarse sin nadie cierra la bandeja para siempre, y la única salida
          sería el panel de Supabase. */
       if (deGtic.size <= 1) {
-        return responder(409, { message: 'Es la última cuenta de GTIC. Crea antes la que la sustituye.' });
+        return responder(409, { message: 'Es la última cuenta de GGTIC. Crea antes la que la sustituye.' });
       }
       /* Y quedarse sin ningún administrador cierra la gestión de accesos —esta
          función entera— igual de para siempre: la única salida sería, otra

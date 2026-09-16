@@ -25,7 +25,7 @@ const DATOS   = path.join(RAIZ, 'datos');
 const F_SOLIC = path.join(DATOS, 'solicitudes.json');
 const F_USERS = path.join(DATOS, 'usuarios.json');
 const F_GUIAS = path.join(DATOS, 'guias.json');
-/* Lo que GTIC le va agregando al inventario desde la bandeja. El grueso viene
+/* Lo que GGTIC le va agregando al inventario desde la bandeja. El grueso viene
    del cuadro de Patrimonio (js/inventario.js, que es código); esto es lo que
    se descubre atendiendo, y por eso vive con los datos y no con el código. */
 const F_INV   = path.join(DATOS, 'inventario.json');
@@ -139,7 +139,7 @@ function altaUsuario(datos){
 }
 
 /* Una cuenta como se la puede enseñar a alguien: sin la sal ni la huella de la
-   clave, que no salen de este archivo ni para GTIC. */
+   clave, que no salen de este archivo ni para GGTIC. */
 function usuarioPublico(u){
   const o = {correo: u.correo, creado_en: u.creado_en || null};
   DATOS_TECNICO.forEach(k => { o[k] = u[k] || null; });
@@ -248,7 +248,7 @@ function claveCorrecta(correo, clave){
 }
 
 /* ================= sesiones ================= */
-/* Viven en memoria: si se reinicia el servidor, GTIC vuelve a entrar. Para una
+/* Viven en memoria: si se reinicia el servidor, GGTIC vuelve a entrar. Para una
    herramienta de oficina que se apaga cada noche, guardarlas en disco sería
    más riesgo que comodidad. */
 const sesiones = new Map();   /* token -> {correo, expira} */
@@ -572,7 +572,7 @@ function crearSolicitud(datos){
   if(yaTiene){
     const e = new Error('Ya tienes una solicitud abierta: la N° ' +
       String(yaTiene.numero).padStart(3, '0') + '-' + yaTiene.anio +
-      '. Cuando GTIC la cierre podrás pedir otra.');
+      '. Cuando GGTIC la cierre podrás pedir otra.');
     e.codigo = 409;                    /* 409 = choca con algo que ya existe */
     e.abierta = {id: yaTiene.id, numero: yaTiene.numero, anio: yaTiene.anio,
                  estado: yaTiene.estado};
@@ -739,10 +739,10 @@ async function atenderApi(req, res, url){
      obliga a que siempre haya alguien que sepa arrancar un servidor.
 
      Quien ya está dentro puede dar de alta a otro. No hay jefes: todas las
-     cuentas de GTIC ven y atienden todas las solicitudes, así que inventar un
+     cuentas de GGTIC ven y atienden todas las solicitudes, así que inventar un
      escalón solo para esto sería una ceremonia que no protege de nada.
 
-     La sal y la huella de la clave no salen de aquí ni para GTIC: lo que se
+     La sal y la huella de la clave no salen de aquí ni para GGTIC: lo que se
      entrega pasa por usuarioPublico. */
   if(url.pathname === '/auth/v1/admin/users'){
     const s = sesionDe(req);
@@ -797,7 +797,7 @@ async function atenderApi(req, res, url){
   /* ---- escribirle al técnico, o al usuario ----
      Una sola ruta para los dos lados. Quién habla no lo dice el cuerpo del
      mensaje —eso sería confiar en el navegador— sino cómo llegó la petición:
-     con sesión de GTIC, habla el técnico; sin ella, habla quien pidió, y su
+     con sesión de GGTIC, habla el técnico; sin ella, habla quien pidió, y su
      prueba es el id imposible de adivinar de su propia solicitud.
 
      Así nadie puede escribir haciéndose pasar por otro, y quien pide sigue sin
@@ -914,7 +914,7 @@ async function atenderApi(req, res, url){
 
   /* ---- retirar la propia solicitud, sin cuenta ----
      Uno se equivoca al escribir, o resuelve el problema solo, y con la regla de
-     una a la vez se quedaría bloqueado esperando a que GTIC cierre algo que ya
+     una a la vez se quedaría bloqueado esperando a que GGTIC cierre algo que ya
      no hace falta. Aquí puede retirarla.
 
      La prueba de que es suya es el mismo id imposible de adivinar que sirve
@@ -933,7 +933,7 @@ async function atenderApi(req, res, url){
     const s = solicitudes[i];
     if(s.estado !== 'recibida'){
       return responder(res, 409, {message: s.estado === 'en_proceso'
-        ? 'Un técnico ya la tomó. Habla con GTIC para cerrarla.'
+        ? 'Un técnico ya la tomó. Habla con GGTIC para cerrarla.'
         : 'Esa solicitud ya no está abierta.'});
     }
     s.estado = 'anulada';
@@ -945,7 +945,7 @@ async function atenderApi(req, res, url){
     return responder(res, 200, [{id: s.id, numero: s.numero, anio: s.anio, estado: s.estado}]);
   }
 
-  /* ---- el inventario que GTIC va completando ----
+  /* ---- el inventario que GGTIC va completando ----
      Leerlo es público, como el cuadro que ya viaja en js/inventario.js: son los
      equipos de la casa, y el formulario los necesita para mandar el serial sin
      que nadie lo escriba. Agregar es solo con sesión: esto acaba impreso en una
@@ -996,7 +996,7 @@ async function atenderApi(req, res, url){
     return responder(res, 200, publicas);
   }
 
-  /* ---- las guías: lo que GTIC ya sabe ----
+  /* ---- las guías: lo que GGTIC ya sabe ----
      Solo con sesión, las cuatro operaciones. No hay lectura anónima a
      propósito: aquí se escriben mañas de la casa —a quién llamar, qué clave
      tiene tal equipo, por dónde se cuelga el sistema— y eso no sale de la
@@ -1025,7 +1025,7 @@ async function atenderApi(req, res, url){
         titulo: titulo.slice(0, 160),
         categoria: String(datos.categoria || '').trim().slice(0, 120) || 'General',
         cuerpo: cuerpo.slice(0, 20000),
-        /* lo unico de la guia que ve quien pide; en blanco, no sale de GTIC */
+        /* lo unico de la guia que ve quien pide; en blanco, no sale de GGTIC */
         solucion: String(datos.solucion || '').trim().slice(0, 4000) || null,
         /* de qué solicitud salió, cuando sale de una: sirve para volver al caso */
         origen: datos.origen ? String(datos.origen).slice(0, 40) : null,
@@ -1078,7 +1078,7 @@ async function atenderApi(req, res, url){
       if(demasiadas(ip)){
         return responder(res, 429, {message:
           'Han entrado demasiadas solicitudes desde este equipo en la última hora. ' +
-          'Si es un error, llama a GTIC por teléfono.'});
+          'Si es un error, llama a GGTIC por teléfono.'});
       }
       const fila = crearSolicitud(await cuerpoDe(req));
       apuntarCreada(ip);
@@ -1124,7 +1124,7 @@ async function atenderApi(req, res, url){
       }]);
     }
 
-    /* Verlas todas y atenderlas: solo GTIC. */
+    /* Verlas todas y atenderlas: solo GGTIC. */
     if(!sesionDe(req)) return responder(res, 401, {message: 'Hace falta iniciar sesión.'});
 
     if(req.method === 'GET'){
@@ -1286,14 +1286,14 @@ servidor.listen(PUERTO, '0.0.0.0', () => {
   const u = leerUsuarios().length;
   console.log('');
   console.log('  ============================================================');
-  console.log('   SOLICITUD DE SOPORTE · GTIC · CIIP');
+  console.log('   SOLICITUD DE SOPORTE · GGTIC · CIIP');
   console.log('  ============================================================');
   console.log('');
   console.log('   En esta máquina:     http://localhost:' + PUERTO + '/index.html');
   console.log('   Desde la oficina:    http://' + ip + ':' + PUERTO + '/index.html');
-  console.log('   La bandeja de GTIC:  http://' + ip + ':' + PUERTO + '/bandeja.html');
+  console.log('   La bandeja de GGTIC:  http://' + ip + ':' + PUERTO + '/bandeja.html');
   console.log('');
-  console.log('   Solicitudes guardadas: ' + n + '   ·   Usuarios de GTIC: ' + u);
+  console.log('   Solicitudes guardadas: ' + n + '   ·   Usuarios de GGTIC: ' + u);
   if(!u){
     console.log('');
     console.log('   ¡Falta crear el primer usuario para entrar a la bandeja!');

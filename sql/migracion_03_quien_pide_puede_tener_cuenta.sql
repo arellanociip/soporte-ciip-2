@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 03: quien pide soporte también puede tener cuenta
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql, de la migración 01 y de la 02.
@@ -24,7 +24,7 @@
 --
 -- ================= LO QUE HAY QUE ENTENDER ANTES DE CORRER ESTO ======
 --
--- Hasta hoy, en este esquema `authenticated` significaba "es de GTIC".
+-- Hasta hoy, en este esquema `authenticated` significaba "es de GGTIC".
 -- Por eso esquema.sql dice, tal cual:
 --
 --     grant select, insert, update on gtic.solicitudes to authenticated;
@@ -39,21 +39,21 @@
 -- llamar—, y hoy las puede leer cualquier `authenticated`.
 --
 -- Así que esta migración no "añade un login": rehace quién puede qué.
--- Ser de GTIC pasa a ser una cosa explícita —estar en gtic.personal— y
+-- Ser de GGTIC pasa a ser una cosa explícita —estar en gtic.personal— y
 -- no un efecto secundario de tener cuenta.
 --
 -- POR QUÉ UNA TABLA Y NO UNA MARCA EN EL PERFIL
 --
 -- La tentación es poner {"gtic": true} en el user_metadata. No sirve:
 -- ese campo lo puede cambiar la propia persona con una llamada a
--- /auth/v1/user, así que cualquiera se ascendería a GTIC en un minuto.
+-- /auth/v1/user, así que cualquiera se ascendería a GGTIC en un minuto.
 -- Una tabla que solo escribe el administrador no se puede falsificar
 -- desde el navegador.
 -- =====================================================================
 
 
 -- ---------------------------------------------------------------------
--- 1. Quién es de GTIC
+-- 1. Quién es de GGTIC
 -- ---------------------------------------------------------------------
 create table if not exists gtic.personal (
   uid         uuid primary key,
@@ -68,7 +68,7 @@ alter table gtic.personal enable row level security;
 -- de administrador. Sin políticas, RLS lo niega todo, que es lo que se
 -- quiere: una tabla que decide permisos no se toca desde fuera.
 
--- Todas las cuentas que existen HOY son de GTIC: hasta ahora no había otra
+-- Todas las cuentas que existen HOY son de GGTIC: hasta ahora no había otra
 -- forma de tener uná. Se las siembra de una vez para que nadie se quede
 -- fuera de su propia bandeja al correr esto.
 insert into gtic.personal (uid, correo)
@@ -101,7 +101,7 @@ grant execute on function gtic.es_gtic() to anon, authenticated;
 --
 -- La clave NO va en esta tabla, y eso es a propósito. Lo que se autoriza es
 -- el correo; la contraseña se la pone cada quien al registrarse y no la
--- sabe nadie más —ni GTIC—, que es como funciona el resto del sistema.
+-- sabe nadie más —ni GGTIC—, que es como funciona el resto del sistema.
 create table if not exists gtic.correos_permitidos (
   correo      text primary key,
   nombre      text,
@@ -112,7 +112,7 @@ alter table gtic.correos_permitidos enable row level security;
 -- Sin políticas: no se lee ni se escribe desde el navegador. Si se pudiera
 -- leer, sería el directorio de la casa servido a quien lo pida.
 
--- Los correos de GTIC que ya tienen cuenta entran solos en la lista: si no,
+-- Los correos de GGTIC que ya tienen cuenta entran solos en la lista: si no,
 -- el disparador de abajo les impediría volver a crearse una.
 insert into gtic.correos_permitidos (correo, nombre)
   select lower(btrim(email)), coalesce(raw_user_meta_data ->> 'nombre', '')
@@ -136,7 +136,7 @@ as $$
 begin
   if not exists (select 1 from gtic.correos_permitidos c
                   where c.correo = lower(btrim(new.email))) then
-    raise exception 'Ese correo no está autorizado. Pídele a GTIC que lo agregue.'
+    raise exception 'Ese correo no está autorizado. Pídele a GGTIC que lo agregue.'
       using errcode = 'check_violation';
   end if;
   return new;
@@ -178,14 +178,14 @@ drop policy if exists "gtic: atender las solicitudes" on gtic.solicitudes;
 drop policy if exists "ver: gtic todo, cada quien lo suyo" on gtic.solicitudes;
 drop policy if exists "solo gtic atiende"             on gtic.solicitudes;
 
--- GTIC ve la cola entera. Quien pide, solo lo suyo — y solo si entró con
+-- GGTIC ve la cola entera. Quien pide, solo lo suyo — y solo si entró con
 -- su cuenta y la solicitud lleva su nombre puesto.
 create policy "ver: gtic todo, cada quien lo suyo"
   on gtic.solicitudes for select to authenticated
   using (gtic.es_gtic() or (solicitante is not null and solicitante = auth.uid()));
 
 -- Atender —tomar, cerrar, escribir observaciones— sigue siendo solo de
--- GTIC. Que alguien pueda ver su solicitud no lo autoriza a darla por
+-- GGTIC. Que alguien pueda ver su solicitud no lo autoriza a darla por
 -- resuelta.
 create policy "solo gtic atiende"
   on gtic.solicitudes for update to authenticated
@@ -209,7 +209,7 @@ create policy "gtic: borrar las guias"
   on gtic.guias for delete to authenticated using (gtic.es_gtic());
 
 -- El inventario se lee público —son los equipos de la casa, y el
--- formulario los necesita— pero apuntarlos sigue siendo de GTIC: acaba
+-- formulario los necesita— pero apuntarlos sigue siendo de GGTIC: acaba
 -- impreso en una Hoja de Servicio.
 drop policy if exists "gtic: apuntar un equipo" on gtic.inventario;
 create policy "gtic: apuntar un equipo"
@@ -271,7 +271,7 @@ begin
       errcode = 'PT409',
       message = 'Ya tienes una solicitud abierta: la N° ' ||
                 lpad(previa.numero::text, 3, '0') || '-' || previa.anio ||
-                '. Cuando GTIC la cierre podrás pedir otra.',
+                '. Cuando GGTIC la cierre podrás pedir otra.',
       detail  = json_build_object(
                   'id', previa.id, 'numero', previa.numero,
                   'anio', previa.anio, 'estado', previa.estado)::text;
@@ -364,9 +364,9 @@ grant execute on function gtic.adoptar_solicitudes(uuid[]) to authenticated;
 -- 7. Hablar y retirar: también valen para el dueño con cuenta
 -- ---------------------------------------------------------------------
 -- Las dos siguen aceptando el id como prueba, que es como funcionan sin
--- cuenta. Lo que cambia es quién firma el mensaje: con cuenta de GTIC
+-- cuenta. Lo que cambia es quién firma el mensaje: con cuenta de GGTIC
 -- habla el técnico; con cuenta de quien pidió, o sin ninguna, habla quien
--- pidió. Antes bastaba con no ser GTIC; ahora se distingue de verdad.
+-- pidió. Antes bastaba con no ser GGTIC; ahora se distingue de verdad.
 create or replace function gtic.enviar_mensaje(
   id       uuid,
   texto    text  default '',
@@ -431,7 +431,7 @@ begin
 
   claims := nullif(current_setting('request.jwt.claims', true), '')::jsonb;
 
-  /* Ser de GTIC ya no es "tener cuenta": es estar en gtic.personal. Sin
+  /* Ser de GGTIC ya no es "tener cuenta": es estar en gtic.personal. Sin
      esto, cualquiera de los 224 aparecería en el hilo como si fuera el
      técnico que atiende. */
   if gtic.es_gtic() then
@@ -439,7 +439,7 @@ begin
     nombre := coalesce(
                 nullif(btrim(coalesce(claims -> 'user_metadata' ->> 'nombre', '')), ''),
                 claims ->> 'email',
-                'GTIC');
+                'GGTIC');
   else
     de     := 'usuario';
     nombre := s.usuario;
@@ -479,7 +479,7 @@ notify pgrst, 'reload schema';
 -- DESPUÉS DE CORRER ESTO
 -- =====================================================================
 --
--- 1. COMPRUEBA QUE NO TE DEJASTE FUERA A NADIE DE GTIC
+-- 1. COMPRUEBA QUE NO TE DEJASTE FUERA A NADIE DE GGTIC
 --
 --    select p.correo from gtic.personal p;
 --
@@ -495,7 +495,7 @@ notify pgrst, 'reload schema';
 -- 2. CARGA LOS CORREOS DE LA CASA
 --
 --    Sin esto no se puede registrar nadie: la lista arranca solo con las
---    cuentas de GTIC que ya existían. Se cargan de una vez así —una línea
+--    cuentas de GGTIC que ya existían. Se cargan de una vez así —una línea
 --    por persona, el nombre es opcional—:
 --
 --      insert into gtic.correos_permitidos (correo, nombre) values

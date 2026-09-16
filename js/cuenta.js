@@ -106,7 +106,7 @@
      directorio: puede venir corto —'Franklin Reyes' contra 'Franklin David
      Reyes Delgado'—, con una tilde de menos o con el apellido de casada, y
      entonces la planilla no reconoce a quien acaba de entrar con el mismo
-     correo que GTIC autorizó.
+     correo que GGTIC autorizó.
 
      Esto devuelve el otro nombre: el del "Listado General correos activos",
      que es el que alimenta js/directorio.js. Si el correo está en la lista
@@ -266,8 +266,8 @@
     const nuevo = modo === 'registrarse';
     $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Autenticación Requerida';
     $('bajadaCuentaUsuario').textContent = nuevo
-      ? 'Con el correo que GTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
-      : 'Para pedir soporte hay que entrar con el correo que GTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
+      ? 'Con el correo que GGTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
+      : 'Para pedir soporte hay que entrar con el correo que GGTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
     /* Los dos campos cambian de papel según el modo, y al navegador hay que
        decírselo. La pareja username + current-password es la firma que

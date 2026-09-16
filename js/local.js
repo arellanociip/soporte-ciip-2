@@ -122,7 +122,7 @@
 
        `arrancar` es falso cuando la pantalla no está a la vista —una pestaña
        en segundo plano que se repinta sola—: el plazo cuenta desde que la
-       persona lo ve, no desde que GTIC cerró la solicitud, o quien estuviera
+       persona lo ve, no desde que GGTIC cerró la solicitud, o quien estuviera
        almorzando volvería al puesto con el plazo vencido sin haber visto
        nunca el botón. Devuelve null mientras no haya arrancado. */
     plazoHoja(id, arrancar){

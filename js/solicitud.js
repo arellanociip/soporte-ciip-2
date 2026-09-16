@@ -293,10 +293,10 @@
     caja.hidden = false;
   }
 
-  /* ---------- lo que GTIC ya sabe de esto ----------
+  /* ---------- lo que GGTIC ya sabe de esto ----------
      De cada guía de la gerencia sale a esta página una sola cosa: el párrafo
      que el técnico escribió pensando en quien pide. Ni el cuerpo de la guía,
-     ni quién la escribió, ni de qué solicitud salió — eso es de GTIC y se
+     ni quién la escribió, ni de qué solicitud salió — eso es de GGTIC y se
      queda allá. El servidor tampoco lo manda: la ruta que atiende esta página
      devuelve solo el título y ese párrafo.
 
@@ -336,7 +336,7 @@
   }
 
   /* La línea de abajo solo dice que existe; lo que hay escrito se lee en la
-     ventana. Así el formulario no crece cada vez que GTIC escribe una guía. */
+     ventana. Así el formulario no crece cada vez que GGTIC escribe una guía. */
   function pintarAntes(abrirla){
     const linea = $('ayudaLinea');
     if(!linea) return;
@@ -424,7 +424,7 @@
   if(window.soporteMias && soporteMias.olvidarViejas) soporteMias.olvidarViejas(60);
 
   traerGuiasPublicas();
-  /* lo que GTIC fue apuntando desde la bandeja se suma a lo que trajo el
+  /* lo que GGTIC fue apuntando desde la bandeja se suma a lo que trajo el
      cuadro de Patrimonio: por eso se pide al servidor al abrir la página */
   if(typeof inventarioTraer === 'function') inventarioTraer().then(pintarEquipo);
 
@@ -613,7 +613,7 @@
 
      Primero el que sabemos bueno. Y la ficha solo se acepta si el directorio
      la reconoce: no es desconfianza, es que una fila de correos_permitidos
-     lleva por "nombre" una nota para GTIC —el correo que quedó compartido
+     lleva por "nombre" una nota para GGTIC —el correo que quedó compartido
      entre dos personas por un error de captura, ver la migración 11— y esa
      nota no puede acabar escrita en el nombre de una Hoja de Servicio. */
   async function identificarPorCuenta(){
@@ -970,7 +970,7 @@
     if(c.extension) vias.push('la extensión ' + c.extension);
     if(c.correo) vias.push('el correo ' + c.correo);
     return vias.length
-      ? ' Mientras tanto, escribe o llama a ' + (c.gerencia || 'GTIC') + ' por ' + vias.join(' o ') + '.'
+      ? ' Mientras tanto, escribe o llama a ' + (c.gerencia || 'GGTIC') + ' por ' + vias.join(' o ') + '.'
       : '';
   }
 
@@ -1089,7 +1089,7 @@
   async function reflejarEnvio(fila){
     soporteMias.anotar(fila);
     /* La planilla se vacía en cuanto la solicitud sale. Se hace aquí y no al
-       volver a abrirse, porque abrirse es lo que pasa cuando GTIC cierra: si
+       volver a abrirse, porque abrirse es lo que pasa cuando GGTIC cierra: si
        se limpiara entonces, se limpiaría delante de la persona.
 
        Mientras hubo pantalla de acuse esto lo hacía el botón de "pedir otra";
@@ -1099,14 +1099,14 @@
        casilla de recordarte, que la limpieza respeta. */
     limpiar();
     await pintarMias();
-    const numero = 'GTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
+    const numero = 'GGTIC-HS/' + String(fila.numero).padStart(3, '0') + '-' + fila.anio;
     const aviso = $('avisoUnaALaVez');
     aviso.className = 'aviso bueno';
     aviso.innerHTML = `<span>✓</span><div>
       <b>Tu solicitud quedó registrada con el N° ${escapar(numero)}.</b>
       Arriba puedes seguir en qué va.
       ${fila.prueba ? ' <b>Ojo:</b> fue un ensayo, no hay servidor y nadie más la ve.' : ''}
-      <br>Podrás pedir otra en cuanto GTIC cierre esta.</div>`;
+      <br>Podrás pedir otra en cuanto GGTIC cierre esta.</div>`;
     aviso.hidden = false;
     avisoFijado = true;
     window.scrollTo({top: 0, behavior: menosMovimiento ? 'auto' : 'smooth'});
@@ -1292,12 +1292,12 @@
      Las tres etapas del trámite dibujadas: entra, la toma un técnico, se
      cierra. Ver el camino tranquiliza más que leer una palabra suelta, porque
      dice cuánto falta y no solo dónde está. */
-  /* Las mismas tres que GTIC usa en su bandeja: lo que ellos ven como fichas
+  /* Las mismas tres que GGTIC usa en su bandeja: lo que ellos ven como fichas
      para filtrar, aquí se ve como el camino de una sola solicitud. Nombrarlas
      igual a los dos lados evita que la casa y la gerencia hablen distinto de
      lo mismo. */
   const ETAPAS = [
-    {clave: 'recibida',   rot: 'Recibida',   guia: 'Entra a la cola de GTIC',
+    {clave: 'recibida',   rot: 'Recibida',   guia: 'Entra a la cola de GGTIC',
      pie: s => fechaCorta(s.creada_en)},
     {clave: 'en_proceso', rot: 'En proceso', guia: 'Un técnico la toma',
      pie: () => 'Un técnico la toma'},
@@ -1317,7 +1317,7 @@
      aparece a la vista —lo que toma bajarlo— y después se apaga.
 
      Lo que se apaga es el enlace, no el documento: la hoja sigue guardada en
-     el servidor de GTIC, y para volver a tenerla se le pide a la gerencia. Es
+     el servidor de GGTIC, y para volver a tenerla se le pide a la gerencia. Es
      la misma idea del botón de borrar el rastro, pero sin tener que acordarse
      de pulsarlo. */
   const PLAZO_HOJA = 5 * 60 * 1000;
@@ -1346,7 +1346,7 @@
      dónde está la hoja, que es lo único que la persona necesita saber. */
   const vencidaHtml = () =>
     `<div class="mis-vencido">${RELOJITO}<span>Se venció el plazo para bajarla.
-     La hoja queda guardada en GTIC: pídesela a la gerencia.</span></div>`;
+     La hoja queda guardada en GGTIC: pídesela a la gerencia.</span></div>`;
 
   function hojaHtml(s){
     /* Contra Supabase no hay quien arme el PDF: eso lo hace el Edge de la PC
@@ -1373,7 +1373,7 @@
     return `<a class="mis-pdf${queda <= AVISA_HOJA ? ' apurando' : ''}"
           href="${escapar(SOPORTE_BACKEND.url)}/rest/v1/hoja?id=eq.${escapar(s.id)}"
           download ${desde === null ? '' : `data-vence="${desde + PLAZO_HOJA}"`}
-          title="Descargar la Hoja de Servicio en PDF. El enlace dura cinco minutos; después hay que pedírsela a GTIC."
+          title="Descargar la Hoja de Servicio en PDF. El enlace dura cinco minutos; después hay que pedírsela a GGTIC."
           >${PAPEL}<span>Hoja de Servicio</span>${aroHtml(queda)}<b class="queda">${enReloj(queda)}</b></a>`;
   }
 
@@ -1408,13 +1408,13 @@
     if(s.estado === 'anulada'){
       return `<div class="mis-anulada">${s.anulada_por === 'usuario'
         ? 'Retiraste esta solicitud.'
-        : 'Esta solicitud fue anulada por GTIC.'}
+        : 'Esta solicitud fue anulada por GGTIC.'}
         Si sigues necesitando ayuda, puedes pedir una nueva.</div>`;
     }
     const donde = ETAPAS.findIndex(e => e.clave === s.estado);
     /* Al lado del camino, cuando ya está recorrido: la Hoja de Servicio firmada
        es el comprobante de que esto pasó, y quien lo pidió tiene derecho a
-       guardárselo sin ir a pedírselo a GTIC. Va aquí y no en otro sitio porque
+       guardárselo sin ir a pedírselo a GGTIC. Va aquí y no en otro sitio porque
        es justo donde uno mira al ver que ya está atendida. Con su plazo: el
        comprobante es de uno, pero la pantalla puede no serlo. */
     const hoja = s.estado === 'atendida' ? hojaHtml(s) : '';
@@ -1470,7 +1470,7 @@
         <div class="ic">${escapar(iniciales(s.tecnico))}</div>
         <div>
           <b>${escapar(s.tecnico)}</b>
-          <span>${escapar(s.tecnico_cargo || 'GTIC')} · está atendiendo lo tuyo</span>
+          <span>${escapar(s.tecnico_cargo || 'GGTIC')} · está atendiendo lo tuyo</span>
         </div>
       </div>
       <div class="chat-hilo" id="chatHilo">
@@ -1499,7 +1499,7 @@
     /* La observación del técnico solo cuando ya cerró: antes no hay nada que
        leer y sería una caja vacía dando falsas esperanzas. */
     const respuesta = (s.estado === 'atendida' && s.observaciones)
-      ? `<div class="mis-obs"><b>Respuesta de GTIC${s.tecnico ? ' · ' + escapar(s.tecnico) : ''}</b>${escapar(s.observaciones)}</div>`
+      ? `<div class="mis-obs"><b>Respuesta de GGTIC${s.tecnico ? ' · ' + escapar(s.tecnico) : ''}</b>${escapar(s.observaciones)}</div>`
       : '';
     return `<div class="mis-fila">
       <div class="mis-num">${String(s.numero).padStart(3,'0')}<small>${escapar(String(s.anio))}</small></div>
@@ -1693,7 +1693,7 @@
   $('misLista').addEventListener('click', async e => {
     const b = e.target.closest('[data-retirar]');
     if(!b) return;
-    if(!confirm('¿Retirar esta solicitud? GTIC dejará de verla y podrás pedir otra.')) return;
+    if(!confirm('¿Retirar esta solicitud? GGTIC dejará de verla y podrás pedir otra.')) return;
 
     b.disabled = true;
     b.textContent = 'Retirando…';
@@ -1919,7 +1919,7 @@
     }
     const abiertas = filas.filter(s => s.estado === 'recibida' || s.estado === 'en_proceso');
 
-    /* Aquí solo vive lo que sigue en curso. En cuanto GTIC cierra una, se va:
+    /* Aquí solo vive lo que sigue en curso. En cuanto GGTIC cierra una, se va:
        lo terminado no es un pendiente. No se pierde nada —la respuesta del
        técnico incluida— porque el anillo abre el historial completo. */
     const enCurso = abiertas;
@@ -1935,7 +1935,7 @@
     const manda = enCurso[0] || null;
     pintarAnilloMias(manda);
 
-    const ETAPA_LBL = {recibida: 'GTIC la recibió y está en cola',
+    const ETAPA_LBL = {recibida: 'GGTIC la recibió y está en cola',
                        en_proceso: 'Un técnico la está atendiendo'};
     /* Cuántas quedan escondidas: sin decirlo, el anillo no invita a pulsarlo. */
     const ocultas = filas.length - enCurso.length;
@@ -2041,7 +2041,7 @@
     aviso.innerHTML = `<span>🕓</span><div>
       <b>Ya tienes una solicitud abierta</b> —la N° ${escapar(String(abierta.numero).padStart(3,'0'))}-${escapar(String(abierta.anio))}—
       así que no puedes pedir otra todavía. Arriba ves por dónde va.
-      <br>En cuanto GTIC la cierre, esta planilla vuelve a abrirse.
+      <br>En cuanto GGTIC la cierre, esta planilla vuelve a abrirse.
       Si es algo urgente y distinto, llama a la gerencia.</div>`;
     aviso.hidden = false;
   }
@@ -2051,12 +2051,12 @@
   /* Borrar el rastro de esta máquina. Se pregunta antes porque no tiene vuelta
      atrás: sin los id guardados no hay forma de volver a ver esas solicitudes
      —el servidor no las entrega por nombre, justamente para que nadie pueda
-     leer las de otro—. Lo que ya se envió sigue en GTIC, intacto. */
+     leer las de otro—. Lo que ya se envió sigue en GGTIC, intacto. */
   $('botonOlvidar').addEventListener('click', () => {
     const cuantas = soporteMias.leer().length;
     if(!confirm('Se borra de esta computadora el seguimiento de ' +
                 (cuantas === 1 ? 'tu solicitud' : 'tus ' + cuantas + ' solicitudes') +
-                ' y tus datos guardados.\n\nLo que ya enviaste sigue en GTIC: esto solo quita ' +
+                ' y tus datos guardados.\n\nLo que ya enviaste sigue en GGTIC: esto solo quita ' +
                 'el rastro de este navegador, y no se puede deshacer.')) return;
     soporteOlvidarTodo();
     location.reload();

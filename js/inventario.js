@@ -484,7 +484,7 @@ function inventarioImpresorasDe(piso){
   return IMPRESORAS_PISO[String(piso || '').trim()] || [];
 }
 
-/* Lo que GTIC fue agregando desde la bandeja, encima de lo que trajo el cuadro
+/* Lo que GGTIC fue agregando desde la bandeja, encima de lo que trajo el cuadro
    de Patrimonio. Se mezcla al vuelo: lo apuntado a mano manda, porque es más
    nuevo y porque alguien lo miró de frente. */
 function inventarioMezclar(lista){

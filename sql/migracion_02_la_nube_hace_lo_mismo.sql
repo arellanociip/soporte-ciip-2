@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 02: que la nube haga lo mismo que la PC de la oficina
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de migracion_01_solicitudes_sin_cuenta.sql.
@@ -33,7 +33,7 @@
 -- separado, así que una tabla aparte sería más ceremonia que provecho.
 --
 -- `anulada_por` distingue quién la cerró: si la retiró la propia persona
--- o si fue GTIC. Sale en el seguimiento, para que el mensaje diga la
+-- o si fue GGTIC. Sale en el seguimiento, para que el mensaje diga la
 -- verdad en cada caso.
 alter table gtic.solicitudes
   add column if not exists mensajes    jsonb not null default '[]'::jsonb,
@@ -41,7 +41,7 @@ alter table gtic.solicitudes
 
 
 -- ---------------------------------------------------------------------
--- 2. Las guías: lo que GTIC ya sabe
+-- 2. Las guías: lo que GGTIC ya sabe
 -- ---------------------------------------------------------------------
 -- La base del conocimiento. Se lee y se escribe solo con cuenta: aquí van
 -- las mañas de la casa —a quién llamar, qué clave tiene tal equipo, por
@@ -52,7 +52,7 @@ create table if not exists gtic.guias (
   categoria      text not null default 'General',
   cuerpo         text not null,
   -- Lo único de la guía que ve quien pide soporte. En blanco, la guía no
-  -- sale de GTIC: así lo decide el técnico al escribirla, no un permiso.
+  -- sale de GGTIC: así lo decide el técnico al escribirla, no un permiso.
   solucion       text,
   -- De qué solicitud salió, cuando sale de una ("003-2026"): sirve para
   -- volver al caso que la originó.
@@ -132,7 +132,7 @@ grant select on gtic.guias_publicas to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------
--- 4. El inventario que GTIC va completando
+-- 4. El inventario que GGTIC va completando
 -- ---------------------------------------------------------------------
 -- Leerlo es público, como el cuadro que ya viaja en js/inventario.js: son
 -- los equipos de la casa, y el formulario los necesita para mandar el
@@ -193,7 +193,7 @@ grant insert on gtic.inventario to authenticated;
 -- 5. Una solicitud abierta a la vez
 -- ---------------------------------------------------------------------
 -- La regla que la migración 01 dejó pendiente a propósito. En la PC de la
--- oficina lleva firme desde el principio: mientras GTIC no cierre lo que
+-- oficina lleva firme desde el principio: mientras GGTIC no cierre lo que
 -- pediste, no puedes pedir otra cosa. Sin esto, en la nube una misma
 -- persona podía llenar la cola.
 --
@@ -245,7 +245,7 @@ begin
       errcode = 'PT409',
       message = 'Ya tienes una solicitud abierta: la N° ' ||
                 lpad(previa.numero::text, 3, '0') || '-' || previa.anio ||
-                '. Cuando GTIC la cierre podrás pedir otra.',
+                '. Cuando GGTIC la cierre podrás pedir otra.',
       /* La solicitud que ya existe, para que el navegador pueda anotarla y
          seguirla desde el panel sin tener que preguntarla otra vez. Va en
          `detail` porque es el único campo por el que PostgREST deja pasar
@@ -408,7 +408,7 @@ begin
     nombre := coalesce(
                 nullif(btrim(coalesce(claims -> 'user_metadata' ->> 'nombre', '')), ''),
                 claims ->> 'email',
-                'GTIC');
+                'GGTIC');
   else
     de     := 'usuario';
     nombre := s.usuario;
@@ -446,7 +446,7 @@ grant execute on function gtic.enviar_mensaje(uuid, text, jsonb) to anon, authen
 -- 8. Retirar la propia solicitud
 -- ---------------------------------------------------------------------
 -- Uno se equivoca al escribir, o resuelve el problema solo, y con la regla
--- de una a la vez se quedaría bloqueado esperando a que GTIC cierre algo
+-- de una a la vez se quedaría bloqueado esperando a que GGTIC cierre algo
 -- que ya no hace falta. Aquí puede retirarla.
 --
 -- La prueba de que es suya es el mismo id imposible de adivinar que sirve
@@ -471,7 +471,7 @@ begin
     raise exception using
       errcode = 'PT409',
       message = case s.estado
-                  when 'en_proceso' then 'Un técnico ya la tomó. Habla con GTIC para cerrarla.'
+                  when 'en_proceso' then 'Un técnico ya la tomó. Habla con GGTIC para cerrarla.'
                   else 'Esa solicitud ya no está abierta.'
                 end;
   end if;
@@ -599,7 +599,7 @@ notify pgrst, 'reload schema';
 --    solicitudes. Contra un guión decidido haría falta el limitador de
 --    Supabase o el de Vercel, que se configuran en sus paneles.
 --
--- 4. LAS CUENTAS DE GTIC
+-- 4. LAS CUENTAS DE GGTIC
 --
 --    /auth/v1/token y /auth/v1/user los atiende Supabase Auth por su
 --    cuenta; no hay nada que crear aquí. Pero las cuentas que hoy viven

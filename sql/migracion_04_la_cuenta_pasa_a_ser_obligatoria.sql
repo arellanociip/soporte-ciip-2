@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 04: la cuenta pasa a ser obligatoria
 -- Se pega en el SQL Editor de Supabase DESPUÉS de la migración 03.
 --
@@ -91,7 +91,7 @@ begin
       errcode = 'PT409',
       message = 'Ya tienes una solicitud abierta: la N° ' ||
                 lpad(previa.numero::text, 3, '0') || '-' || previa.anio ||
-                '. Cuando GTIC la cierre podrás pedir otra.',
+                '. Cuando GGTIC la cierre podrás pedir otra.',
       detail  = json_build_object(
                   'id', previa.id, 'numero', previa.numero,
                   'anio', previa.anio, 'estado', previa.estado)::text;
@@ -125,7 +125,7 @@ revoke insert on gtic.solicitudes from anon;
 
 
 -- ---------------------------------------------------------------------
--- 2. Hablar y retirar, solo el dueño o GTIC
+-- 2. Hablar y retirar, solo el dueño o GGTIC
 -- ---------------------------------------------------------------------
 -- Antes bastaba el id porque no había con qué identificarse. Ahora sí la
 -- hay, así que el id deja de ser prueba suficiente: quien lo tuviera de

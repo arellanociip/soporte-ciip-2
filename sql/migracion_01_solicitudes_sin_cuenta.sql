@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 01: lo que le faltaba a esquema.sql para que la nube sirviera
 -- de verdad. Se pega en el SQL Editor de Supabase y se corre una sola vez,
 -- DESPUÉS de esquema.sql — tanto si el proyecto ya lo tenía corrido como

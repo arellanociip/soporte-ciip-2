@@ -1,4 +1,4 @@
-/* ---------- La bandeja de GTIC ----------
+/* ---------- La bandeja de GGTIC ----------
    Ver lo que pidió la casa, atenderlo, dejar la constancia e imprimir la Hoja
    de Servicio para firmar y sellar.
 
@@ -117,11 +117,11 @@
     }
     const s = desdeRespuesta(await r.json());
     guardarSesion(s);
-    /* Se comprueba aquí, pegado al guardado: si esta cuenta no es de GTIC,
+    /* Se comprueba aquí, pegado al guardado: si esta cuenta no es de GGTIC,
        la sesión que acabamos de guardar no debe durar ni un instante. */
     if(!(await esDeSoporte())){
       borrarSesion();
-      const e = new Error('Esta cuenta no es de GTIC.');
+      const e = new Error('Esta cuenta no es de GGTIC.');
       e.noEsDeSoporte = true;
       throw e;
     }
@@ -199,7 +199,7 @@
 
   /* ---------- quién puede estar aquí ----------
      La bandeja es de quien atiende, no de cualquiera que tenga cuenta. Y ser
-     de GTIC no es una marca en el perfil —esa la cambia la propia persona con
+     de GGTIC no es una marca en el perfil —esa la cambia la propia persona con
      una llamada a /auth/v1/user, y se ascendería sola en un minuto—: es estar
      en gtic.personal, una tabla que solo escribe el administrador. Por eso la
      pregunta va al servidor, que es el único que puede responderla sin que le
@@ -212,7 +212,7 @@
      manda a la suya.
 
      En modo oficina no aplica: servidor.js no sabe de gtic.personal, y allí
-     quien llega a la bandeja es de GTIC por definición. */
+     quien llega a la bandeja es de GGTIC por definición. */
   async function esDeSoporte(){
     if(enPrueba || B.servidor !== 'supabase') return true;
     const r = await pedir('/rest/v1/rpc/es_gtic', {
@@ -223,7 +223,7 @@
     return (await r.json()) === true;
   }
 
-  /* Administrador es un papel dentro de GTIC, no un tipo de cuenta aparte
+  /* Administrador es un papel dentro de GGTIC, no un tipo de cuenta aparte
      (migración 08): gestiona accesos —Cuentas, Correos permitidos—; el
      resto es igual para cualquiera. Se guarda en una variable del módulo
      porque se pregunta una vez al entrar y de ahí se lee en todos lados
@@ -254,7 +254,7 @@
      entrar, y al llegar con una sesión ya guardada. */
   function avisarQueNoEsDeSoporte(){
     const aviso = $('avisoAcceso');
-    aviso.innerHTML = '<span>⚠</span><div>Esta bandeja es de GTIC, y esta cuenta '
+    aviso.innerHTML = '<span>⚠</span><div>Esta bandeja es de GGTIC, y esta cuenta '
       + 'no lo es. Para pedir soporte, entra por <a href="index.html">la '
       + 'puerta</a>.</div>';
     aviso.hidden = false;
@@ -583,7 +583,7 @@
     return solicitudes.filter(s => s.estado === clave).length;
   }
 
-  const numeroDe = s => 'GTIC-HS/' + String(s.numero).padStart(3, '0') + '-' + s.anio;
+  const numeroDe = s => 'GGTIC-HS/' + String(s.numero).padStart(3, '0') + '-' + s.anio;
 
   function fechaCorta(iso){
     if(!iso) return '';
@@ -683,7 +683,7 @@
      mayúscula cuestan de leer y no dicen nada más.
 
      Las siglas se quedan como están: "Operatividad de CPU", no "Cpu". */
-  const SIGLAS = new Set(['CPU','PC','PCS','RAM','IP','GTIC','CIIP','TIC','UPS','USB',
+  const SIGLAS = new Set(['CPU','PC','PCS','RAM','IP','GGTIC','CIIP','TIC','UPS','USB',
                           'HDMI','VGA','SO','TV','LED','LCD','HP','LG','CD','DVD','S/N']);
 
   /* El mismo texto que hoy está bien escrito en el catálogo: así una solicitud
@@ -1114,7 +1114,7 @@
      —haría falta su llave de administrador, y esa bypasea los permisos de
      todas las tablas, así que no puede vivir en una página—. Allá la misma
      petición va a una Edge Function que la guarda del lado del servidor y
-     comprueba antes que quien llama sea de GTIC. Las dos hablan igual: mismos
+     comprueba antes que quien llama sea de GGTIC. Las dos hablan igual: mismos
      verbos, mismos campos, misma respuesta.
      Ver supabase/functions/cuentas/. */
   const RUTA_CUENTAS = B.servidor === 'supabase'
@@ -1302,7 +1302,7 @@
   /* ---------- correos permitidos: quién puede registrarse ----------
      gtic.correos_permitidos decide quién puede crear una cuenta para pedir
      soporte (ver js/cuenta.js). Nació cerrada al navegador a propósito; la
-     migración 06 le abrió la puerta a GTIC autenticado, nada más — sigue sin
+     migración 06 le abrió la puerta a GGTIC autenticado, nada más — sigue sin
      verse desde `anon` ni desde quien pide soporte. No hace falta que el
      correo termine en @ciip.com.ve: cualquiera sirve. */
   let correosPermitidos = [];
@@ -1574,13 +1574,13 @@
      imprimir() no se enteran del cambio.
      Anular queda aparte, porque no es una etapa del camino sino salirse de él;
      mezclarla entre las tres invitaría a pulsarla por error. */
-  const ETAPAS_GTIC = ['recibida', 'en_proceso', 'atendida'];
+  const ETAPAS_GGTIC = ['recibida', 'en_proceso', 'atendida'];
 
   function estadoHtml(s){
     const anulada = s.estado === 'anulada';
     return `<input type="hidden" id="fEstado" value="${esc(s.estado)}">
       <div class="segm" id="segmEstado" role="group" aria-label="Estado de la solicitud">
-        ${ETAPAS_GTIC.map(e => `<button type="button" data-estado="${e}"
+        ${ETAPAS_GGTIC.map(e => `<button type="button" data-estado="${e}"
           class="${!anulada && e === s.estado ? 'on' : ''}"
           aria-pressed="${!anulada && e === s.estado}">${esc(ESTADO_ETIQUETA[e])}</button>`).join('')}
       </div>
@@ -1643,7 +1643,7 @@
 
   /* ---------- la conversación con quien pidió ----------
      El mismo hilo que ve el usuario, visto desde el otro lado: aquí lo suyo va
-     a la izquierda y lo de GTIC a la derecha. */
+     a la izquierda y lo de GGTIC a la derecha. */
   const iniciales = n => String(n || '').trim().split(/\s+/).slice(0, 2)
     .map(p => p[0] || '').join('').toUpperCase() || '?';
 
@@ -1921,7 +1921,7 @@
         ${dato('Situación planteada', s.descripcion, true)}
       </div>
 
-      <div class="seccion">Atención de GTIC</div>
+      <div class="seccion">Atención de GGTIC</div>
       <div class="rejilla">
         <div class="campo c6"><label>Estado</label>${estadoHtml(s)}</div>
         <div class="campo c6"><label>Técnico que atiende</label>${tecnicoHtml()}</div>
@@ -2223,7 +2223,7 @@
       }
       cerrarNuevaClave();
       /* El enlace no deja una sesión abierta en la bandeja —a propósito:
-         iniciar sesión así se saltaría el candado de "¿esto es GTIC?"—,
+         iniciar sesión así se saltaría el candado de "¿esto es GGTIC?"—,
          así que se manda a la pantalla de entrar de siempre, con la clave
          recién puesta lista para usar ahí. */
       mostrarAcceso();
@@ -2561,7 +2561,7 @@
       return;
     }
     if(!sesion()){ mostrarAcceso(); return; }
-    /* La sesión guardada puede ser de quien ya no es de GTIC —o de quien nunca
+    /* La sesión guardada puede ser de quien ya no es de GGTIC —o de quien nunca
        lo fue—, así que se pregunta antes de pintar nada. Si la pregunta no se
        puede hacer, se sigue adelante: las políticas de la base mandan igual, y
        dejar fuera a un técnico por un tropiezo de red es peor que enseñarle una
@@ -2574,7 +2574,7 @@
         return;
       }
       soyAdmin = await esAdministrador();
-    }catch(err){ console.warn('No se pudo comprobar si la cuenta es de GTIC:', err); }
+    }catch(err){ console.warn('No se pudo comprobar si la cuenta es de GGTIC:', err); }
     mostrarBandeja();
     pintarAdmin();
     try{

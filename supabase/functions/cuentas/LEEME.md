@@ -1,4 +1,4 @@
-# Las cuentas de GTIC, en la nube
+# Las cuentas de GGTIC, en la nube
 
 Esto le da a la bandeja el botón **Cuentas → + Crear una cuenta** cuando el
 sitio corre contra Supabase. Contra el servidor de la oficina ya funciona sin
@@ -19,11 +19,11 @@ Hoy una cuenta recién hecha solo ve lo suyo, no lee las guías, no toca el
 inventario y —desde el cambio de la bandeja— ni siquiera entra a ella.
 
 Y quién puede registrarse ya lo limita el portero de la migración 03: solo
-los correos de `gtic.correos_permitidos`, que llena GTIC.
+los correos de `gtic.correos_permitidos`, que llena GGTIC.
 
 Así que **Authentication → Sign In → "Allow new users to sign up" va
 ENCENDIDO**. Si se apaga, ninguna de las ~177 personas de la casa puede
-hacerse su cuenta y GTIC tendría que crearlas todas a mano.
+hacerse su cuenta y GGTIC tendría que crearlas todas a mano.
 
 Lo que sí hay que comprobar es que el portero esté puesto de verdad, porque
 se instaló envuelto en un manejador que solo avisa si falla:
@@ -74,7 +74,7 @@ repositorio.
 
 ## Quién puede llamarla
 
-Solo alguien que ya tenga cuenta de GTIC. La función toma el testigo que manda
+Solo alguien que ya tenga cuenta de GGTIC. La función toma el testigo que manda
 el navegador y **le pregunta a Supabase de quién es** — no se lo cree. Sin
 testigo válido responde `401` y no toca nada.
 
@@ -85,7 +85,7 @@ todas las solicitudes.
 Dos cosas que sí se impiden, las mismas que en `servidor.js`:
 
 - **darse de baja a uno mismo** — casi siempre es un dedazo
-- **borrar la última cuenta de GTIC** — dejaría la bandeja cerrada para siempre
+- **borrar la última cuenta de GGTIC** — dejaría la bandeja cerrada para siempre
 
 ---
 
@@ -96,8 +96,8 @@ responde el servidor de la oficina:
 
 | Verbo | Qué hace | Devuelve |
 |---|---|---|
-| `GET` | Lista las cuentas **de GTIC** | `[{correo, nombre, cargo, cedula, telefono, creado_en}]` |
-| `POST` | Crea o corrige, y da el papel de GTIC | `[{…, clave_nueva}]` |
+| `GET` | Lista las cuentas **de GGTIC** | `[{correo, nombre, cargo, cedula, telefono, creado_en}]` |
+| `POST` | Crea o corrige, y da el papel de GGTIC | `[{…, clave_nueva}]` |
 | `DELETE ?correo=eq.X` | Da de baja | `[{correo}]` |
 
 Desde que la bandeja pregunta quién eres —`js/bandeja.js` llama a
@@ -145,7 +145,7 @@ Al desplegarla, vale la pena comprobar en este orden:
 4. Corregirle el cargo sin tocar la clave → y volver a entrar con la de antes
 5. Intentar darse de baja a uno mismo → el botón ni debería salir
 6. **Que la cuenta nueva entre a la bandeja** → si la rechaza con "esta
-   cuenta no es de GTIC", el papel no se asignó: míralo con
+   cuenta no es de GGTIC", el papel no se asignó: míralo con
    `select correo from gtic.personal;`
 7. Dar de baja a alguien → debe desaparecer de `gtic.personal` y de
    Authentication → Users

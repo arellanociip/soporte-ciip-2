@@ -1,5 +1,5 @@
 -- =====================================================================
--- Solicitudes de soporte · GTIC · CIIP
+-- Solicitudes de soporte · GGTIC · CIIP
 -- Migración 05: la base del conocimiento, limpia y con contenido real
 -- Se pega en el SQL Editor de Supabase y se corre una sola vez, DESPUÉS
 -- de esquema.sql y de las migraciones 01 a 04.
@@ -30,8 +30,8 @@
 -- probar por su cuenta. Donde no —formatear un equipo, cambiarle una
 -- pieza, dejarle el sistema operativo listo— se deja en blanco a
 -- propósito: no es un hueco por llenar, es la gerencia decidiendo que eso
--- no sale de GTIC. `cuerpo` sí lleva, en los 17 casos, los pasos que un
--- técnico de GTIC puede seguir para atender el caso.
+-- no sale de GGTIC. `cuerpo` sí lleva, en los 17 casos, los pasos que un
+-- técnico de GGTIC puede seguir para atender el caso.
 -- =====================================================================
 
 
@@ -79,7 +79,7 @@ insert into gtic.guias (titulo, categoria, cuerpo, solucion) values
 3. Correo que no sincroniza: revisar el perfil de Outlook/cliente de correo, y si está corrupto, recrear el perfil en vez de repararlo pieza por pieza — suele ser más rápido.
 4. Permisos de carpeta o unidad de red: verificar en el servidor de archivos a qué grupo pertenece la cuenta y si ese grupo tiene el permiso que falta; agregarla al grupo correcto en vez de dar el permiso a la cuenta individual, para que quede documentado por qué lo tiene.
 5. Si la cuenta es nueva (alta de personal), seguir la lista estándar: correo, carpeta de red, impresora del piso, accesos a los sistemas internos que le correspondan por gerencia.',
-'Si el problema es que olvidaste la clave, no sigas intentando adivinarla: después de cinco intentos el sistema empieza a bloquear por más tiempo cada vez. Manda la solicitud directamente y GTIC te la restablece.'),
+'Si el problema es que olvidaste la clave, no sigas intentando adivinarla: después de cinco intentos el sistema empieza a bloquear por más tiempo cada vez. Manda la solicitud directamente y GGTIC te la restablece.'),
 
 ('Instalar o configurar una impresora', 'INSTALACIÓN Y/O CONFIGURACIÓN DE IMPRESORA',
 '1. Confirmar el piso y qué impresora de red le corresponde (son compartidas por piso, no asignadas a una persona).
