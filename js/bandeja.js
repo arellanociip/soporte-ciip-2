@@ -286,7 +286,11 @@
     document.body.style.overflow = '';
     $('pantallaAcceso').hidden = false;
     $('pantallaBandeja').hidden = true;
+    /* Sin sesión no hay menú: la barra se va y el cuerpo recupera su ancho. */
     $('cabDerecha').hidden = true;
+    $('botonMenu').hidden = true;
+    $('latVelo').hidden = true;
+    document.body.classList.remove('con-lat', 'lat-abierta');
     /* el cursor donde va a escribir, sin tener que buscarlo con el ratón */
     requestAnimationFrame(() => {
       const c = $('correo');
@@ -309,6 +313,9 @@
     $('pantallaAcceso').hidden = true;
     $('pantallaBandeja').hidden = false;
     $('cabDerecha').hidden = false;
+    $('botonMenu').hidden = false;
+    document.body.classList.add('con-lat');
+    pintarMenu();
     /* volver a la cola cierra lo que hubiera delante: nunca dos a la vez */
     verPanel(null);
   }
@@ -592,6 +599,12 @@
   }
 
   function pintar(){
+    /* La cuenta de la barra son las pendientes, no el total: lo que importa de
+       una cola es lo que queda por atender. Vacía cuando no hay ninguna, que
+       para eso .cnt:empty se esconde — un 0 permanente es ruido. */
+    const pend = cuenta('pendientes');
+    $('latCuentaCola').textContent = pend ? String(pend) : '';
+
     $('fichas').innerHTML = ESTADOS.map(([k, l]) => {
       const n = cuenta(k);
       return `<button type="button" class="ficha ${filtro===k?'on':''}" data-filtro="${k}">${l}${n?`<span class="n">${n}</span>`:''}</button>`;
@@ -884,11 +897,23 @@
       if(!caja) return;
       const abierto = p.panel === cual;
       caja.hidden = !abierto;
-      /* el enlace dice a dónde lleva, no dónde estás */
-      $(p.boton).textContent = abierto ? 'Ver la cola' : p.texto;
+      /* El rótulo ya no cambia de texto. En una fila de botones, renombrar el
+         del panel abierto a "Ver la cola" era la única forma de ofrecer la
+         vuelta; en una barra lateral el nombre de un destino tiene que
+         quedarse quieto —si no, no se puede aprender dónde está nada— y lo
+         que se mueve es la marca de dónde estás. La vuelta a la cola tiene
+         ahora su propio enlace, el primero de la barra. */
+      const boton = $(p.boton);
+      if(boton) boton.classList.toggle('activo', abierto);
       if(abierto) p.pinta();
     });
+    const cola = $('botonCola');
+    if(cola) cola.classList.toggle('activo', !cual);
     $('pantallaBandeja').hidden = !!cual;
+    /* En móvil la barra es un cajón que tapa el contenido: elegir destino la
+       cierra, o taparía justo lo que acabas de pedir. */
+    document.body.classList.remove('lat-abierta');
+    $('latVelo').hidden = true;
   }
 
   const abierto = cual => { const c = $(cual); return c && !c.hidden; };
@@ -918,6 +943,74 @@
     e.preventDefault();
     verPanel(abierto('panelTrazabilidad') ? null : 'panelTrazabilidad');
   });
+  /* La vuelta a la cola, que antes hacía el enlace renombrado del panel
+     abierto y ahora tiene su propio sitio arriba del todo. */
+  $('botonCola').addEventListener('click', e => { e.preventDefault(); verPanel(null); });
+
+  /* ---------- plegar las secciones de la barra ----------
+     El estado de cada una se recuerda en este navegador: quien no usa
+     "Cuenta y accesos" no tiene por qué volver a cerrarla cada mañana. */
+  const LAT_SECCIONES = 'soporte_lat_secciones';
+  const latEstado = () => {
+    try{ return JSON.parse(localStorage.getItem(LAT_SECCIONES)) || {}; }
+    catch(e){ return {}; }
+  };
+  function latAplicar(sec, abierta){
+    const h = document.querySelector('.lat-sec[data-sec="' + sec + '"]');
+    const c = document.querySelector('.lat-sec-cuerpo[data-sec="' + sec + '"]');
+    if(!h || !c) return;
+    h.setAttribute('aria-expanded', String(abierta));
+    c.setAttribute('data-abierta', abierta ? '1' : '0');
+  }
+  const guardado = latEstado();
+  Object.keys(guardado).forEach(sec => latAplicar(sec, !!guardado[sec]));
+
+  $('menuLateral').addEventListener('click', e => {
+    const h = e.target.closest('.lat-sec');
+    if(!h) return;
+    const sec = h.getAttribute('data-sec');
+    const abierta = h.getAttribute('aria-expanded') !== 'true';
+    latAplicar(sec, abierta);
+    const est = latEstado(); est[sec] = abierta;
+    try{ localStorage.setItem(LAT_SECCIONES, JSON.stringify(est)); }catch(e){}
+  });
+
+  /* ---------- esconder y sacar la barra entera ---------- */
+  const LAT_PLEGADA = 'soporte_lat_plegada';
+  const enEstrecho = () => window.matchMedia('(max-width:900px)').matches;
+  try{
+    if(!enEstrecho() && localStorage.getItem(LAT_PLEGADA) === '1'){
+      document.body.classList.add('lat-plegada');
+    }
+  }catch(e){}
+
+  function pintarMenu(){
+    const visible = enEstrecho()
+      ? document.body.classList.contains('lat-abierta')
+      : !document.body.classList.contains('lat-plegada');
+    $('botonMenu').setAttribute('aria-expanded', String(visible));
+    $('latVelo').hidden = !(enEstrecho() && visible);
+  }
+
+  $('botonMenu').addEventListener('click', () => {
+    if(enEstrecho()){
+      document.body.classList.toggle('lat-abierta');
+    }else{
+      const plegada = document.body.classList.toggle('lat-plegada');
+      try{ localStorage.setItem(LAT_PLEGADA, plegada ? '1' : '0'); }catch(e){}
+    }
+    pintarMenu();
+  });
+  $('latVelo').addEventListener('click', () => {
+    document.body.classList.remove('lat-abierta');
+    pintarMenu();
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && document.body.classList.contains('lat-abierta')){
+      document.body.classList.remove('lat-abierta');
+      pintarMenu();
+    }
+  });
 
   /* ================= qué sabemos =================
      Las guías de la gerencia. Dos maneras de que sirvan, porque son dos
@@ -935,6 +1028,10 @@
       const r = await pedir('/rest/v1/guias?select=*', {});
       guias = await r.json();
     }catch(e){ console.warn('No se pudieron traer las guías:', e); }
+    /* La cuenta de la barra se pone aquí y no solo en pintarGuias(): esa solo
+       corre al abrir el panel, así que el número no aparecía hasta haber
+       entrado una vez. */
+    $('latCuentaGuias').textContent = guias.length ? String(guias.length) : '';
     if(!$('panelSaber').hidden) pintarGuias();
   }
 
@@ -978,6 +1075,8 @@
   }
 
   function pintarGuias(){
+    $('latCuentaGuias').textContent = guias.length ? String(guias.length) : '';
+
     const q = $('buscarGuia').value.trim().toLowerCase();
     const vistas = !q ? guias : guias.filter(g =>
       [g.titulo, g.cuerpo, g.categoria, g.autor]

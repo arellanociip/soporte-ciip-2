@@ -22,6 +22,8 @@
   --amber:#B7791F; --amber-bg:#FBF3E2;
   --rust:#B4502E; --rust-bg:#FBEEE9;
   --r:10px; --r-sm:7px;
+  /* Ancho de la barra lateral de la bandeja. */
+  --lat:252px;
   --shadow:0 1px 2px rgba(14,20,36,.04), 0 6px 18px rgba(14,20,36,.06);
 }
 
@@ -58,12 +60,103 @@ a{color:var(--navy);}
 .cab img{height:38px; width:auto; flex:0 0 auto;}
 .cab .tit{font-size:17px; font-weight:700; line-height:1.2;}
 .cab .sub{font-size:12px; color:rgba(255,255,255,.68); margin-top:2px;}
+
+/* El bloque de la derecha del encabezado. La bandeja ya no lo usa —sus
+   destinos se mudaron a la barra lateral—, pero index.html sí: ahí vive el
+   "quién eres · Salir" de quien pidió soporte. */
 .cab .der{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
 .cab .der a{
   color:rgba(255,255,255,.85); font-size:12.5px; text-decoration:none; white-space:nowrap;
   border:1px solid rgba(255,255,255,.24); border-radius:var(--r-sm); padding:6px 12px;
 }
 .cab .der a:hover{background:rgba(255,255,255,.10); color:#fff;}
+
+/* El botón que esconde y saca la barra lateral. */
+.hamb{
+  width:36px; height:36px; flex:0 0 36px; border:none; border-radius:var(--r-sm);
+  background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-family:inherit;
+}
+.hamb:hover{background:rgba(255,255,255,.20);}
+.hamb svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; display:block;}
+
+/* ===================== BARRA LATERAL =====================
+   Sustituye a la fila de enlaces del encabezado. Los destinos van agrupados
+   en secciones que se pliegan, y el que estás viendo queda marcado — antes
+   el enlace del panel abierto se renombraba a "Ver la cola", así que el
+   nombre de un sitio dependía de dónde estuvieras.
+
+   Sale con la sesión: sin haber entrado, .lat va con [hidden] y el cuerpo no
+   lleva sangría (la pone body.con-lat, que enciende js/bandeja.js a la vez
+   que descubre la barra). */
+.lat{
+  position:fixed; top:0; left:0; bottom:0; width:var(--lat); z-index:30;
+  background:linear-gradient(180deg,#003a82 0%, var(--navy-deep) 100%);
+  color:#fff; display:flex; flex-direction:column; overflow:hidden;
+  transition:transform .2s ease;
+}
+.lat-cuerpo{flex:1 1 auto; overflow-y:auto; padding:14px 10px;}
+.lat-pie{flex:0 0 auto; padding:8px 10px 12px; border-top:1px solid rgba(255,255,255,.10);}
+
+/* El rótulo de sección es un botón de verdad, con aria-expanded: así se pliega
+   también con el teclado y quien use lector de pantalla se entera del estado. */
+.lat-sec{
+  display:flex; align-items:center; width:100%; gap:8px; margin-top:14px;
+  padding:7px 10px; background:transparent; border:none; color:rgba(255,255,255,.55);
+  font-size:11px; font-weight:700; letter-spacing:.01em; cursor:pointer;
+  border-radius:var(--r-sm); font-family:inherit; text-align:left;
+}
+.lat-sec:first-child{margin-top:0;}
+.lat-sec:hover{background:rgba(255,255,255,.06); color:rgba(255,255,255,.78);}
+.lat-sec .chev{width:11px; height:11px; margin-left:auto; flex:0 0 auto; transition:transform .18s ease;}
+.lat-sec .chev svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block;}
+.lat-sec[aria-expanded="true"] .chev{transform:rotate(180deg);}
+.lat-sec-cuerpo{overflow:hidden; max-height:0; transition:max-height .22s ease;}
+.lat-sec-cuerpo[data-abierta="1"]{max-height:420px;}
+
+.lat-item{
+  display:flex; align-items:center; gap:9px; padding:6.5px 10px; border-radius:var(--r-sm);
+  color:rgba(255,255,255,.80); font-size:12.5px; font-weight:500; text-decoration:none;
+  position:relative; cursor:pointer;
+}
+.lat-item:hover{background:rgba(255,255,255,.08); color:#fff;}
+.lat-item .ic{width:15px; height:15px; flex:0 0 auto; opacity:.7;}
+.lat-item .ic svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; display:block;}
+.lat-item.activo{background:rgba(32,176,240,.16); color:#fff; font-weight:700;}
+.lat-item.activo::before{
+  content:""; position:absolute; left:0; top:6px; bottom:6px; width:3px;
+  background:var(--cyan); border-radius:0 3px 3px 0;
+}
+.lat-item.activo .ic{opacity:1; color:var(--cyan);}
+.lat-item .cnt{
+  margin-left:auto; font-size:9.5px; font-weight:700;
+  color:rgba(255,255,255,.55); font-variant-numeric:tabular-nums;
+}
+.lat-item .cnt:empty{display:none;}
+.lat-item.salir{color:rgba(255,255,255,.72);}
+.lat-item.salir:hover{background:rgba(180,80,46,.30); color:#fff;}
+
+/* La sangría que le deja sitio a la barra. Va en el body y no en cada bloque
+   para que el encabezado y el cuerpo se muevan juntos. */
+body.con-lat .cab-in, body.con-lat .envoltura{padding-left:calc(var(--lat) + 20px);}
+body.lat-plegada .lat{transform:translateX(-100%);}
+body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
+
+@media (prefers-reduced-motion:reduce){
+  .lat, .lat-sec-cuerpo, .lat-sec .chev{transition:none;}
+}
+
+/* En pantalla estrecha la barra no reserva sitio: se abre como cajón por
+   encima del contenido, con un velo que la cierra al tocarlo. */
+.lat-velo{position:fixed; inset:0; background:rgba(14,20,36,.45); z-index:25;}
+@media (max-width:900px){
+  .lat{transform:translateX(-100%);}
+  body.con-lat .cab-in, body.con-lat .envoltura{padding-left:20px;}
+  body.lat-abierta .lat{transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.35);}
+}
+@media (min-width:901px){
+  .lat-velo{display:none;}
+}
 
 /* ===================== ARMAZÓN ===================== */
 .envoltura{max-width:940px; margin:0 auto; padding:24px 20px 64px;}
@@ -1073,12 +1166,16 @@ select.despierta{animation:destello .7s ease;}
   /* el nombre completo de la gerencia ocupaba cinco líneas y no dice nada que
      no diga ya el título: en el teléfono sobra */
   .cab .sub{display:none;}
-  /* los enlaces bajan a su propia fila y se reparten el ancho: así se pueden
-     tocar con el dedo en vez de apuntarles */
+  /* En la bandeja los enlaces ya no van aquí —se mudaron a la barra lateral,
+     que en esta anchura se abre como cajón—, pero index.html sigue poniendo
+     su "quién eres · Salir" en .der, y ahí abajo se reparte el ancho para
+     poder tocarlo con el dedo. */
   .cab .der{margin-left:0; width:100%; gap:7px; flex-wrap:wrap;}
   .cab .der a{flex:1 1 auto; text-align:center; padding:8px 10px;}
 
   .envoltura, .envoltura.ancha{padding:16px 14px 48px;}
+  /* Gana a la sangría de body.con-lat, que en estrecho no reserva sitio. */
+  body.con-lat .envoltura, body.con-lat .cab-in{padding-left:14px;}
   .intro h1{font-size:19px;}
   .tarjeta{padding:18px 16px;}
 

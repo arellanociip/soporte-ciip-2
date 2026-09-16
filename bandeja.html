@@ -11,22 +11,106 @@
 
 <header class="cab">
   <div class="cab-in ancha">
+    <!-- Esconde y saca la barra. Sale con la sesión, igual que la barra: sin
+         haber entrado no hay menú que mostrar. -->
+    <button type="button" class="hamb" id="botonMenu" hidden
+            aria-label="Mostrar u ocultar el menú" aria-expanded="true"
+            aria-controls="menuLateral">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>
+      </svg>
+    </button>
     <img src="assets/logo_ciip.png" alt="CIIP">
     <div>
       <div class="tit">Bandeja de soporte</div>
       <div class="sub">Gerencia General de Tecnología de la Información y Comunicación</div>
     </div>
-    <div class="der" id="cabDerecha" hidden>
-      <a href="#" id="botonSaber">Base del conocimiento</a>
-      <a href="#" id="botonStats">Estadísticas</a>
-      <a href="#" id="botonCuentas">Cuentas</a>
-      <a href="#" id="botonCorreos">Correos permitidos</a>
-      <a href="#" id="botonTrazabilidad">Trazabilidad</a>
-      <a href="#" id="botonMisDatos">Mis datos</a>
-      <a href="#" id="botonSalir">Salir</a>
-    </div>
   </div>
 </header>
+
+<!-- Los siete destinos estaban en una fila de botones dentro del encabezado:
+     crecía hacia los lados, no decía cuáles van juntos, y el enlace del panel
+     abierto se renombraba a "Ver la cola" — así que el nombre de un sitio
+     dependía de dónde estuvieras. Aquí van agrupados, con su cuenta al lado,
+     y lo que se mueve es la marca de dónde estás, no el rótulo.
+
+     Conserva los mismos id que antes (botonSaber, botonStats…), así que los
+     enganches de js/bandeja.js siguen siendo los de siempre.
+
+     El velo y el id del <aside> son para el móvil: ahí la barra se abre como
+     cajón por encima del contenido. -->
+<div class="lat-velo" id="latVelo" hidden></div>
+<aside class="lat" id="cabDerecha" hidden>
+  <nav class="lat-cuerpo" id="menuLateral">
+
+    <button type="button" class="lat-sec" data-sec="bandeja" aria-expanded="true">
+      <span>Bandeja</span>
+      <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+    </button>
+    <div class="lat-sec-cuerpo" data-sec="bandeja" data-abierta="1">
+      <a href="#" class="lat-item activo" id="botonCola">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M4.5 5.5h15L21 13v5.5H3V13z"/></svg></span>
+        <span class="rot">La cola</span>
+        <span class="cnt" id="latCuentaCola"></span>
+      </a>
+      <a href="#" class="lat-item" id="botonStats">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>
+        <span class="rot">Estadísticas</span>
+      </a>
+    </div>
+
+    <button type="button" class="lat-sec" data-sec="saber" aria-expanded="true">
+      <span>Base del conocimiento</span>
+      <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+    </button>
+    <div class="lat-sec-cuerpo" data-sec="saber" data-abierta="1">
+      <a href="#" class="lat-item" id="botonSaber">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 004 22z"/><path d="M4 17.5A2.5 2.5 0 016.5 15H20"/></svg></span>
+        <span class="rot">Guías</span>
+        <span class="cnt" id="latCuentaGuias"></span>
+      </a>
+    </div>
+
+    <button type="button" class="lat-sec" data-sec="accesos" aria-expanded="false">
+      <span>Cuenta y accesos</span>
+      <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+    </button>
+    <div class="lat-sec-cuerpo" data-sec="accesos" data-abierta="0">
+      <a href="#" class="lat-item" id="botonCuentas">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 5.5a3.2 3.2 0 010 6"/></svg></span>
+        <span class="rot">Cuentas</span>
+      </a>
+      <a href="#" class="lat-item" id="botonCorreos">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 6.5l9 6 9-6"/></svg></span>
+        <span class="rot">Correos permitidos</span>
+      </a>
+      <a href="#" class="lat-item" id="botonMisDatos">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0114 0"/></svg></span>
+        <span class="rot">Mis datos</span>
+      </a>
+    </div>
+
+    <button type="button" class="lat-sec" data-sec="general" aria-expanded="false">
+      <span>Información general</span>
+      <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+    </button>
+    <div class="lat-sec-cuerpo" data-sec="general" data-abierta="0">
+      <a href="#" class="lat-item" id="botonTrazabilidad">
+        <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <span class="rot">Trazabilidad</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <!-- Salir no va en ninguna sección: es una salida, no un destino. -->
+  <div class="lat-pie">
+    <a href="#" class="lat-item salir" id="botonSalir">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M11 3H6a2 2 0 00-2 2v14a2 2 0 002 2h5"/></svg></span>
+      <span class="rot">Salir</span>
+    </a>
+  </div>
+</aside>
 
 <main class="envoltura ancha">
 
