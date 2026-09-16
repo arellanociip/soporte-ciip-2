@@ -24,6 +24,19 @@
   --r:10px; --r-sm:7px;
   /* Ancho de la barra lateral de la bandeja. */
   --lat:252px;
+
+  /* ---------- las tres familias, como en Atlas ----------
+     La sans ya era la misma; lo que faltaba eran las otras dos.
+
+     --display  Los títulos. Regular de 400, no negrita: el peso lo da la
+                forma. Georgia de reserva por si no llega Google Fonts.
+     --cifras   Números de solicitud, seriales y sellos de tiempo. Con
+                tabular-nums las columnas caen a plomo, y la monoespaciada
+                separa el 0 de la O — que es exactamente el argumento que ya
+                estaba escrito en .clave-dictar, el único sitio donde esta
+                hoja monoespaciaba algo. */
+  --display:'Instrument Serif',Georgia,serif;
+  --cifras:'Geist Mono',ui-monospace,"Cascadia Mono",Consolas,monospace;
   --shadow:0 1px 2px rgba(14,20,36,.04), 0 6px 18px rgba(14,20,36,.06);
 }
 
@@ -39,10 +52,20 @@ html,body{
   color:var(--ink); background:var(--bg);
   -webkit-font-smoothing:antialiased;
 }
-body{font-size:14px; line-height:1.5;}
+/* 13/1,45 y no 14/1,5, como Atlas: en una cola que se lee de arriba abajo,
+   ese punto de menos es un renglón más por pantalla. */
+body{font-size:13px; line-height:1.45;}
 svg{display:block;}
 a{color:var(--navy);}
 .tnum{font-variant-numeric:tabular-nums;}
+
+/* Los títulos, en el serif. Va aquí arriba y sin !important: es el suelo, y
+   cualquier regla posterior más específica lo sustituye sin pelear —empezando
+   por la Hoja de Servicio, que se queda en Arial unas líneas más abajo. */
+h1, h2, h3{font-family:var(--display); font-weight:400; letter-spacing:.01em;}
+
+/* Las cifras que se leen en columna o se copian a mano. */
+.cifras{font-family:var(--cifras); font-variant-numeric:tabular-nums;}
 
 /* ===================== ENCABEZADO ===================== */
 .cab{
@@ -58,7 +81,8 @@ a{color:var(--navy);}
    con seis enlaces ya no cabía ninguno de los dos cómodos. */
 .cab-in.ancha{max-width:1200px;}
 .cab img{height:38px; width:auto; flex:0 0 auto;}
-.cab .tit{font-size:17px; font-weight:700; line-height:1.2;}
+.cab .tit{font-family:var(--display); font-size:24px; font-weight:400;
+  letter-spacing:.01em; line-height:1.2;}
 .cab .sub{font-size:12px; color:rgba(255,255,255,.68); margin-top:2px;}
 
 /* El bloque de la derecha del encabezado. La bandeja ya no lo usa —sus
@@ -169,7 +193,7 @@ body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
 .tarjeta + .tarjeta{margin-top:16px;}
 
 .intro{margin-bottom:16px;}
-.intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
+.intro h1{font-size:30px; font-weight:400; letter-spacing:.01em;}
 /* La bajada es contexto, no titular: un cuerpo de texto normal al lado de un
    h1 le resta jerarquía a la página entera. */
 .intro p{font-size:13px; color:var(--gray); line-height:1.55; margin-top:4px; max-width:56ch;}
@@ -743,7 +767,7 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   width:23px; height:23px; fill:none; stroke:currentColor;
   stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
 }
-.acceso-caja h1{font-size:22px; font-weight:700; letter-spacing:-.01em; margin-bottom:-8px;}
+.acceso-caja h1{font-size:31px; font-weight:400; letter-spacing:.01em; margin-bottom:-8px;}
 .acceso-bajada{font-size:13px; color:var(--gray); line-height:1.55;}
 .acceso-caja .campo{gap:6px;}
 .acceso-caja input{padding:11px 13px; font-size:14px;}
@@ -802,7 +826,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 }
 .ficha:hover{border-color:var(--gray-soft); color:var(--ink);}
 .ficha.on{background:var(--navy); border-color:var(--navy); color:#fff;}
-.ficha .n{opacity:.7; margin-left:5px; font-variant-numeric:tabular-nums;}
+.ficha .n{font-family:var(--cifras); opacity:.7; margin-left:5px;
+  font-variant-numeric:tabular-nums;}
 
 .lista{display:flex; flex-direction:column; gap:1px; background:var(--line-soft);
   border:1px solid var(--line); border-radius:var(--r); overflow:hidden;}
@@ -811,7 +836,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   display:grid; grid-template-columns:88px 1fr auto; gap:14px; align-items:center;
 }
 .fila:hover{background:#FAFCFF;}
-.fila .num{font-size:12.5px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
+.fila .num{font-family:var(--cifras); font-size:12px; font-weight:500;
+  color:var(--navy-medio); font-variant-numeric:tabular-nums;}
 .fila .num small{display:block; font-size:10px; font-weight:600; color:var(--gray-soft);}
 .fila .quien{font-weight:700; font-size:13.5px;}
 .fila .donde{font-size:11.5px; color:var(--gray-soft); margin-top:1px;}
@@ -938,7 +964,7 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   color:var(--gray); font-size:16px; line-height:1; font-family:inherit;
 }
 .hoja .cerrar:hover{background:var(--line); color:var(--ink);}
-.hoja h2{font-size:18px; font-weight:700; padding-right:40px;}
+.hoja h2{font-size:25px; font-weight:400; padding-right:40px;}
 .hoja .bajada{color:var(--gray-soft); font-size:12.5px; margin-top:3px;}
 
 .datos{display:grid; grid-template-columns:repeat(2,1fr); gap:12px 20px; margin:18px 0;}
@@ -1162,7 +1188,7 @@ select.despierta{animation:destello .7s ease;}
   .cab{padding:12px 0;}
   .cab-in{flex-wrap:wrap; gap:10px; padding:0 14px;}
   .cab img{height:30px;}
-  .cab .tit{font-size:15px;}
+  .cab .tit{font-size:21px;}
   /* el nombre completo de la gerencia ocupaba cinco líneas y no dice nada que
      no diga ya el título: en el teléfono sobra */
   .cab .sub{display:none;}
@@ -1176,7 +1202,7 @@ select.despierta{animation:destello .7s ease;}
   .envoltura, .envoltura.ancha{padding:16px 14px 48px;}
   /* Gana a la sangría de body.con-lat, que en estrecho no reserva sitio. */
   body.con-lat .envoltura, body.con-lat .cab-in{padding-left:14px;}
-  .intro h1{font-size:19px;}
+  .intro h1{font-size:26px;}
   .tarjeta{padding:18px 16px;}
 
   /* el buscador en su línea, y los filtros en la suya */
@@ -1480,7 +1506,7 @@ select.despierta{animation:destello .7s ease;}
 }
 /* El número va al final de su fila, no encima de la barra: dentro de una barra
    corta no cabría y quedaría recortado. */
-.bfila .n{font-size:12.5px; font-weight:700; color:var(--gray);
+.bfila .n{font-family:var(--cifras); font-size:12px; font-weight:500; color:var(--gray);
   font-variant-numeric:tabular-nums;}
 .bfila .riel{grid-column:1 / -1; height:10px; background:var(--line-soft); border-radius:5px;}
 .bfila .riel i{
@@ -1688,7 +1714,14 @@ select.despierta{animation:destello .7s ease;}
   @page{size:letter portrait; margin:12mm 10mm;}
 }
 
+/* La Hoja de Servicio impresa no entra en el cambio de tipografía: es un acta
+   que se firma y se sella, y Arial está en cualquier impresora sin depender de
+   que Google Fonts conteste. El `font-family:inherit` de los títulos es lo que
+   impide que el serif de arriba se cuele aquí dentro: una familia puesta a
+   mano gana a la herencia, así que sin esta línea .hs h2 saldría en serif
+   aunque .hs diga Arial. */
 .hs{color:#000; font-family:Arial,Helvetica,sans-serif;}
+.hs h1, .hs h2, .hs h3{font-family:inherit; font-weight:bold; letter-spacing:normal;}
 .hs .hs-cab{display:flex; align-items:flex-start; gap:12px; border-bottom:2px solid #004090; padding-bottom:6px;}
 .hs .hs-cab img{height:34px;}
 .hs .hs-cab .hs-n{
