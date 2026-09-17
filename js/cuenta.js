@@ -180,6 +180,32 @@
     return vuelo;
   }
 
+  /* ---------- lo que Supabase contesta, en español y sin tecnicismos ----------
+     GoTrue manda sus errores en inglés, tal cual, y algunos ni siquiera están
+     pensados para enseñárselos a quien pide soporte —"Invalid login
+     credentials" no dice nada de más por seguridad, y así se queda; lo que
+     cambia es el idioma—. Se reconocen los más comunes; lo que no se
+     reconoce no sale crudo: se cae a un mensaje genérico, pero sigue en
+     español. Nunca le llega inglés a quien está intentando entrar. */
+  function traducirErrorAuth(mensaje){
+    const m = String(mensaje || '');
+    const reglas = [
+      [/invalid login credentials/i, 'Correo o contraseña incorrectos.'],
+      [/email not confirmed/i, 'Todavía falta confirmar este correo.'],
+      [/password should be at least/i, 'La contraseña necesita al menos 6 caracteres.'],
+      [/unable to validate email address/i, 'Ese correo no tiene un formato válido.'],
+      [/email rate limit exceeded/i, 'Se mandaron muchos correos en poco tiempo. Espera unos minutos y vuelve a intentar.'],
+      [/error sending (confirmation|recovery) email/i, 'No se pudo enviar el correo. Intenta de nuevo en un momento.'],
+      [/same.password/i, 'La contraseña nueva no puede ser igual a la anterior.'],
+      [/for security purposes.*after (\d+) ?seconds?/i, c => 'Espera ' + c[1] + ' segundos antes de volver a pedirlo.'],
+    ];
+    for(const [patron, salida] of reglas){
+      const c = m.match(patron);
+      if(c) return typeof salida === 'function' ? salida(c) : salida;
+    }
+    return '';
+  }
+
   /* ---------- entrar y registrarse ----------
      Son dos rutas distintas de Supabase pero una sola pantalla: quien llega
      aquí no tiene por qué saber si ya tiene cuenta o no. */
@@ -189,7 +215,10 @@
       body: JSON.stringify({email: correo, password: clave}),
     });
     const c = await r.json().catch(() => ({}));
-    if(!r.ok) throw new Error(c.msg || c.error_description || c.message || 'No se pudo entrar.');
+    if(!r.ok){
+      const original = c.msg || c.error_description || c.message || '';
+      throw new Error(traducirErrorAuth(original) || 'No se pudo entrar. Intenta de nuevo en un momento.');
+    }
     return anotar(c);
   }
 
@@ -199,7 +228,14 @@
       body: JSON.stringify({email: correo, password: clave, data: {nombre: nombre || ''}}),
     });
     const c = await r.json().catch(() => ({}));
-    if(!r.ok) throw new Error(c.msg || c.error_description || c.message || 'No se pudo crear la cuenta.');
+    if(!r.ok){
+      const original = c.msg || c.error_description || c.message || '';
+      /* "already registered" se detecta más abajo, en aceptar(), sobre este
+         mismo texto en inglés —ese sí necesita saber cuál fue el error
+         exacto para decidir qué ofrecer—, así que aquí se manda intacto
+         cuando no hay traducción, en vez de caer al genérico. */
+      throw new Error(traducirErrorAuth(original) || original || 'No se pudo crear la cuenta.');
+    }
     /* Con la confirmación por correo encendida, Supabase no devuelve testigo:
        la cuenta existe pero hay que pinchar un enlace antes de entrar. */
     if(!c.access_token) return null;
@@ -419,14 +455,15 @@
       });
       if(!r.ok){
         const c = await r.json().catch(() => ({}));
-        throw new Error(c.msg || c.error_description || c.message || ('HTTP ' + r.status));
+        const original = c.msg || c.error_description || c.message || ('HTTP ' + r.status);
+        throw new Error(traducirErrorAuth(original) || 'No se pudo enviar el correo. Intenta de nuevo en un momento.');
       }
       /* Igual en los dos casos a propósito —exista o no esa cuenta—, para
          no delatar quién tiene cuenta y quién no. */
       avisoOk.textContent = 'Si esa cuenta existe, le llega un correo con el enlace en un momento.';
       avisoOk.hidden = false;
     }catch(err){
-      avisoMal.textContent = 'No se pudo enviar: ' + err.message;
+      avisoMal.textContent = err.message;
       avisoMal.hidden = false;
     }
     boton.disabled = false; boton.textContent = 'Enviar enlace';
@@ -471,7 +508,8 @@
       });
       if(!r.ok){
         const c = await r.json().catch(() => ({}));
-        throw new Error(c.msg || c.error_description || c.message || ('HTTP ' + r.status));
+        const original = c.msg || c.error_description || c.message || ('HTTP ' + r.status);
+        throw new Error(traducirErrorAuth(original) || 'No se pudo guardar la contraseña. Intenta de nuevo en un momento.');
       }
       $('veloNuevaClaveUsuario').hidden = true;
       testigoRecuperacionUsuario = null;
@@ -480,7 +518,7 @@
       $('avisoCuentaUsuario').innerHTML = '<span>✓</span><div>Contraseña puesta. Entra con la nueva.</div>';
       $('avisoCuentaUsuario').hidden = false;
     }catch(err){
-      aviso.textContent = 'No se pudo guardar: ' + err.message;
+      aviso.textContent = err.message;
       aviso.hidden = false;
     }
     boton.disabled = false; boton.textContent = 'Guardar';
