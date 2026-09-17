@@ -330,7 +330,7 @@
     $('tituloCuentaUsuario').textContent = nuevo ? 'Crear una cuenta' : 'Autenticación Requerida';
     $('bajadaCuentaUsuario').textContent = nuevo
       ? 'Con el correo que GGTIC autorizó para tu cuenta. La contraseña la eliges tú y no la sabe nadie más.'
-      : 'Para pedir soporte hay que entrar con el correo que GGTIC autorizó para tu cuenta. Si es la primera vez, crea tu cuenta abajo.';
+      : 'Entra con tu correo institucional. Si es la primera vez, crea tu cuenta abajo.';
     $('campoNombreCuenta').hidden = !nuevo;
     /* Solo tiene sentido entrando: creando cuenta todavía no hay ninguna
        clave puesta que se pueda "olvidar". */
