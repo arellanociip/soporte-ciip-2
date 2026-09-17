@@ -1296,13 +1296,33 @@
      para filtrar, aquí se ve como el camino de una sola solicitud. Nombrarlas
      igual a los dos lados evita que la casa y la gerencia hablen distinto de
      lo mismo. */
+  /* El nombre del técnico va entero, tal como él lo escribió en Mis datos.
+     Se probó a abreviarlo a "nombre + primer apellido" para que cupiera en una
+     línea, y la regla falla con los nombres compuestos que son normales aquí:
+     de las 206 personas del directorio, "Airuth del Valle Irazabal Hurtado"
+     salía como "Airuth Valle" y "Geraldyn de los Ángeles López Rojas" como
+     "Geraldyn los Ángeles" — el "de los Ángeles" es parte del nombre de pila,
+     no un apellido, y no hay forma de saberlo mirando las palabras.
+     Equivocarse aquí es llamar a alguien por un apellido que no es el suyo,
+     así que se prefiere una línea que envuelve. */
+
   const ETAPAS = [
     {clave: 'recibida',   rot: 'Recibida',   guia: 'Entra a la cola de GGTIC',
      pie: s => fechaCorta(s.creada_en)},
+    /* Con nombre en cuanto se sepa. "Un técnico" es el único que quedaba sin
+       cara en todo el camino: quien pide ya ve la fecha en que entró y la
+       fecha en que se cerró, pero de la persona que la tiene en la mano no
+       sabía ni el nombre. Se cae al texto de antes mientras nadie la ha
+       tomado, que es cuando de verdad no hay a quién nombrar. */
     {clave: 'en_proceso', rot: 'En proceso', guia: 'Un técnico la toma',
-     pie: () => 'Un técnico la toma'},
+     pie: s => s.tecnico || 'Un técnico la toma'},
+    /* Aquí sí había un dato que no se puede perder —cuándo se cerró—, así que
+       el nombre se suma con el punto medio en vez de sustituirlo. */
     {clave: 'atendida',   rot: 'Atendida',   guia: 'Resuelta y firmada',
-     pie: s => s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta'},
+     pie: s => {
+       const cuando = s.atendida_en ? fechaCorta(s.atendida_en) : 'Resuelta';
+       return s.tecnico ? s.tecnico + ' · ' + cuando : cuando;
+     }},
   ];
   /* la hoja con su esquina doblada: el papel que uno se lleva */
   const PAPEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><polyline points="14 3 14 8 19 8"/><polyline points="9 14 12 17 15 14"/><line x1="12" y1="11" x2="12" y2="17"/></svg>';
@@ -1935,8 +1955,15 @@
     const manda = enCurso[0] || null;
     pintarAnilloMias(manda);
 
-    const ETAPA_LBL = {recibida: 'GGTIC la recibió y está en cola',
-                       en_proceso: 'Un técnico la está atendiendo'};
+    /* El renglón de arriba dice en qué va lo tuyo. Con la solicitud tomada
+       dice también quién la tiene: es lo primero que se pregunta quien está
+       esperando, y hasta ahora había que abrir el hilo del chat para saberlo. */
+    const etapaLbl = s => {
+      if(s.estado === 'recibida') return 'GGTIC la recibió y está en cola';
+      if(s.estado !== 'en_proceso') return '';
+      return s.tecnico ? 'La atiende ' + s.tecnico
+                       : 'Un técnico la está atendiendo';
+    };
     /* Cuántas quedan escondidas: sin decirlo, el anillo no invita a pulsarlo. */
     const ocultas = filas.length - enCurso.length;
     const cola = ocultas
@@ -1947,7 +1974,7 @@
       ? 'Todo lo que has pedido · ' + filas.length +
         (filas.length === 1 ? ' solicitud' : ' solicitudes')
       : (manda
-          ? ETAPA_LBL[manda.estado] + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio + cola
+          ? etapaLbl(manda) + ' · N° ' + String(manda.numero).padStart(3,'0') + '-' + manda.anio + cola
           : 'No tienes nada pendiente' + cola);
 
     /* El anillo solo se ofrece si hay algo más detrás. */
