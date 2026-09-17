@@ -875,6 +875,11 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .ficha .n{font-family:var(--cifras); opacity:.7; margin-left:5px;
   font-variant-numeric:tabular-nums;}
 
+/* "Todas" ya pasa de 20 solicitudes contando lo atendido, y sin tope la
+   página entera se convertía en esta lista, con los filtros y el
+   buscador de arriba a un scroll de distancia. Rueda solo esto, igual
+   que Correos permitidos y Trazabilidad (#listaCorreos, #listaTraza). */
+#lista{max-height:65vh; overflow-y:auto; overscroll-behavior:contain; padding-right:2px;}
 .lista{display:flex; flex-direction:column; gap:1px; background:var(--line-soft);
   border:1px solid var(--line); border-radius:var(--r); overflow:hidden;}
 .fila{
