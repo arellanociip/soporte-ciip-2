@@ -22,6 +22,21 @@
   --amber:#B7791F; --amber-bg:#FBF3E2;
   --rust:#B4502E; --rust-bg:#FBEEE9;
   --r:10px; --r-sm:7px;
+  /* Ancho de la barra lateral de la bandeja. */
+  --lat:252px;
+
+  /* ---------- las tres familias, como en Atlas ----------
+     La sans ya era la misma; lo que faltaba eran las otras dos.
+
+     --display  Los títulos. Regular de 400, no negrita: el peso lo da la
+                forma. Georgia de reserva por si no llega Google Fonts.
+     --cifras   Números de solicitud, seriales y sellos de tiempo. Con
+                tabular-nums las columnas caen a plomo, y la monoespaciada
+                separa el 0 de la O — que es exactamente el argumento que ya
+                estaba escrito en .clave-dictar, el único sitio donde esta
+                hoja monoespaciaba algo. */
+  --display:'Instrument Serif',Georgia,serif;
+  --cifras:'Geist Mono',ui-monospace,"Cascadia Mono",Consolas,monospace;
   --shadow:0 1px 2px rgba(14,20,36,.04), 0 6px 18px rgba(14,20,36,.06);
 }
 
@@ -37,10 +52,25 @@ html,body{
   color:var(--ink); background:var(--bg);
   -webkit-font-smoothing:antialiased;
 }
-body{font-size:14px; line-height:1.5;}
+/* 13/1,45 y no 14/1,5, como Atlas: en una cola que se lee de arriba abajo,
+   ese punto de menos es un renglón más por pantalla. */
+body{font-size:13px; line-height:1.45;}
 svg{display:block;}
 a{color:var(--navy);}
 .tnum{font-variant-numeric:tabular-nums;}
+
+/* El serif NO va en todo h1/h2/h3. Instrument Serif solo trae el regular de
+   400, así que cualquier título que siga pidiendo 700 —el de una tarjeta de
+   guía, el de un panel de estadísticas— sale en negrita sintética: el
+   navegador engorda el trazo a la fuerza y se ve emborronado.
+
+   Y además no le toca: en Atlas el serif es la letra de lo que se anuncia
+   —el logotipo, el título de la pantalla—, mientras que los rótulos pequeños
+   que ordenan una lista van en la sans, en 700. Aquí se hace igual: el serif
+   se pone a mano, título por título, en los cuatro sitios donde manda. */
+
+/* Las cifras que se leen en columna o se copian a mano. */
+.cifras{font-family:var(--cifras); font-variant-numeric:tabular-nums;}
 
 /* ===================== ENCABEZADO ===================== */
 .cab{
@@ -56,14 +86,106 @@ a{color:var(--navy);}
    con seis enlaces ya no cabía ninguno de los dos cómodos. */
 .cab-in.ancha{max-width:1200px;}
 .cab img{height:38px; width:auto; flex:0 0 auto;}
-.cab .tit{font-size:17px; font-weight:700; line-height:1.2;}
+.cab .tit{font-family:var(--display); font-size:24px; font-weight:400;
+  letter-spacing:.01em; line-height:1.2;}
 .cab .sub{font-size:12px; color:rgba(255,255,255,.68); margin-top:2px;}
+
+/* El bloque de la derecha del encabezado. La bandeja ya no lo usa —sus
+   destinos se mudaron a la barra lateral—, pero index.html sí: ahí vive el
+   "quién eres · Salir" de quien pidió soporte. */
 .cab .der{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
 .cab .der a{
   color:rgba(255,255,255,.85); font-size:12.5px; text-decoration:none; white-space:nowrap;
   border:1px solid rgba(255,255,255,.24); border-radius:var(--r-sm); padding:6px 12px;
 }
 .cab .der a:hover{background:rgba(255,255,255,.10); color:#fff;}
+
+/* El botón que esconde y saca la barra lateral. */
+.hamb{
+  width:36px; height:36px; flex:0 0 36px; border:none; border-radius:var(--r-sm);
+  background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-family:inherit;
+}
+.hamb:hover{background:rgba(255,255,255,.20);}
+.hamb svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; display:block;}
+
+/* ===================== BARRA LATERAL =====================
+   Sustituye a la fila de enlaces del encabezado. Los destinos van agrupados
+   en secciones que se pliegan, y el que estás viendo queda marcado — antes
+   el enlace del panel abierto se renombraba a "Ver la cola", así que el
+   nombre de un sitio dependía de dónde estuvieras.
+
+   Sale con la sesión: sin haber entrado, .lat va con [hidden] y el cuerpo no
+   lleva sangría (la pone body.con-lat, que enciende js/bandeja.js a la vez
+   que descubre la barra). */
+.lat{
+  position:fixed; top:0; left:0; bottom:0; width:var(--lat); z-index:30;
+  background:linear-gradient(180deg,#003a82 0%, var(--navy-deep) 100%);
+  color:#fff; display:flex; flex-direction:column; overflow:hidden;
+  transition:transform .2s ease;
+}
+.lat-cuerpo{flex:1 1 auto; overflow-y:auto; padding:14px 10px;}
+.lat-pie{flex:0 0 auto; padding:8px 10px 12px; border-top:1px solid rgba(255,255,255,.10);}
+
+/* El rótulo de sección es un botón de verdad, con aria-expanded: así se pliega
+   también con el teclado y quien use lector de pantalla se entera del estado. */
+.lat-sec{
+  display:flex; align-items:center; width:100%; gap:8px; margin-top:14px;
+  padding:7px 10px; background:transparent; border:none; color:rgba(255,255,255,.55);
+  font-size:11px; font-weight:700; letter-spacing:.01em; cursor:pointer;
+  border-radius:var(--r-sm); font-family:inherit; text-align:left;
+}
+.lat-sec:first-child{margin-top:0;}
+.lat-sec:hover{background:rgba(255,255,255,.06); color:rgba(255,255,255,.78);}
+.lat-sec .chev{width:11px; height:11px; margin-left:auto; flex:0 0 auto; transition:transform .18s ease;}
+.lat-sec .chev svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block;}
+.lat-sec[aria-expanded="true"] .chev{transform:rotate(180deg);}
+.lat-sec-cuerpo{overflow:hidden; max-height:0; transition:max-height .22s ease;}
+.lat-sec-cuerpo[data-abierta="1"]{max-height:420px;}
+
+.lat-item{
+  display:flex; align-items:center; gap:9px; padding:6.5px 10px; border-radius:var(--r-sm);
+  color:rgba(255,255,255,.80); font-size:12.5px; font-weight:500; text-decoration:none;
+  position:relative; cursor:pointer;
+}
+.lat-item:hover{background:rgba(255,255,255,.08); color:#fff;}
+.lat-item .ic{width:15px; height:15px; flex:0 0 auto; opacity:.7;}
+.lat-item .ic svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; display:block;}
+.lat-item.activo{background:rgba(32,176,240,.16); color:#fff; font-weight:700;}
+.lat-item.activo::before{
+  content:""; position:absolute; left:0; top:6px; bottom:6px; width:3px;
+  background:var(--cyan); border-radius:0 3px 3px 0;
+}
+.lat-item.activo .ic{opacity:1; color:var(--cyan);}
+.lat-item .cnt{
+  margin-left:auto; font-size:9.5px; font-weight:700;
+  color:rgba(255,255,255,.55); font-variant-numeric:tabular-nums;
+}
+.lat-item .cnt:empty{display:none;}
+.lat-item.salir{color:rgba(255,255,255,.72);}
+.lat-item.salir:hover{background:rgba(180,80,46,.30); color:#fff;}
+
+/* La sangría que le deja sitio a la barra. Va en el body y no en cada bloque
+   para que el encabezado y el cuerpo se muevan juntos. */
+body.con-lat .cab-in, body.con-lat .envoltura{padding-left:calc(var(--lat) + 20px);}
+body.lat-plegada .lat{transform:translateX(-100%);}
+body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
+
+@media (prefers-reduced-motion:reduce){
+  .lat, .lat-sec-cuerpo, .lat-sec .chev{transition:none;}
+}
+
+/* En pantalla estrecha la barra no reserva sitio: se abre como cajón por
+   encima del contenido, con un velo que la cierra al tocarlo. */
+.lat-velo{position:fixed; inset:0; background:rgba(14,20,36,.45); z-index:25;}
+@media (max-width:900px){
+  .lat{transform:translateX(-100%);}
+  body.con-lat .cab-in, body.con-lat .envoltura{padding-left:20px;}
+  body.lat-abierta .lat{transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.35);}
+}
+@media (min-width:901px){
+  .lat-velo{display:none;}
+}
 
 /* ===================== ARMAZÓN ===================== */
 .envoltura{max-width:940px; margin:0 auto; padding:24px 20px 64px;}
@@ -76,7 +198,8 @@ a{color:var(--navy);}
 .tarjeta + .tarjeta{margin-top:16px;}
 
 .intro{margin-bottom:16px;}
-.intro h1{font-size:21px; font-weight:700; letter-spacing:-.01em;}
+.intro h1{font-family:var(--display); font-size:30px; font-weight:400;
+  letter-spacing:.01em;}
 /* La bajada es contexto, no titular: un cuerpo de texto normal al lado de un
    h1 le resta jerarquía a la página entera. */
 .intro p{font-size:13px; color:var(--gray); line-height:1.55; margin-top:4px; max-width:56ch;}
@@ -650,7 +773,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   width:23px; height:23px; fill:none; stroke:currentColor;
   stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
 }
-.acceso-caja h1{font-size:22px; font-weight:700; letter-spacing:-.01em; margin-bottom:-8px;}
+.acceso-caja h1{font-family:var(--display); font-size:31px; font-weight:400;
+  letter-spacing:.01em; margin-bottom:-8px;}
 .acceso-bajada{font-size:13px; color:var(--gray); line-height:1.55;}
 .acceso-caja .campo{gap:6px;}
 .acceso-caja input{padding:11px 13px; font-size:14px;}
@@ -709,7 +833,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 }
 .ficha:hover{border-color:var(--gray-soft); color:var(--ink);}
 .ficha.on{background:var(--navy); border-color:var(--navy); color:#fff;}
-.ficha .n{opacity:.7; margin-left:5px; font-variant-numeric:tabular-nums;}
+.ficha .n{font-family:var(--cifras); opacity:.7; margin-left:5px;
+  font-variant-numeric:tabular-nums;}
 
 .lista{display:flex; flex-direction:column; gap:1px; background:var(--line-soft);
   border:1px solid var(--line); border-radius:var(--r); overflow:hidden;}
@@ -718,7 +843,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   display:grid; grid-template-columns:88px 1fr auto; gap:14px; align-items:center;
 }
 .fila:hover{background:#FAFCFF;}
-.fila .num{font-size:12.5px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
+.fila .num{font-family:var(--cifras); font-size:12px; font-weight:500;
+  color:var(--navy-medio); font-variant-numeric:tabular-nums;}
 .fila .num small{display:block; font-size:10px; font-weight:600; color:var(--gray-soft);}
 .fila .quien{font-weight:700; font-size:13.5px;}
 .fila .donde{font-size:11.5px; color:var(--gray-soft); margin-top:1px;}
@@ -845,7 +971,8 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
   color:var(--gray); font-size:16px; line-height:1; font-family:inherit;
 }
 .hoja .cerrar:hover{background:var(--line); color:var(--ink);}
-.hoja h2{font-size:18px; font-weight:700; padding-right:40px;}
+.hoja h2{font-family:var(--display); font-size:25px; font-weight:400;
+  letter-spacing:.01em; padding-right:40px;}
 .hoja .bajada{color:var(--gray-soft); font-size:12.5px; margin-top:3px;}
 
 .datos{display:grid; grid-template-columns:repeat(2,1fr); gap:12px 20px; margin:18px 0;}
@@ -1069,17 +1196,21 @@ select.despierta{animation:destello .7s ease;}
   .cab{padding:12px 0;}
   .cab-in{flex-wrap:wrap; gap:10px; padding:0 14px;}
   .cab img{height:30px;}
-  .cab .tit{font-size:15px;}
+  .cab .tit{font-size:21px;}
   /* el nombre completo de la gerencia ocupaba cinco líneas y no dice nada que
      no diga ya el título: en el teléfono sobra */
   .cab .sub{display:none;}
-  /* los enlaces bajan a su propia fila y se reparten el ancho: así se pueden
-     tocar con el dedo en vez de apuntarles */
+  /* En la bandeja los enlaces ya no van aquí —se mudaron a la barra lateral,
+     que en esta anchura se abre como cajón—, pero index.html sigue poniendo
+     su "quién eres · Salir" en .der, y ahí abajo se reparte el ancho para
+     poder tocarlo con el dedo. */
   .cab .der{margin-left:0; width:100%; gap:7px; flex-wrap:wrap;}
   .cab .der a{flex:1 1 auto; text-align:center; padding:8px 10px;}
 
   .envoltura, .envoltura.ancha{padding:16px 14px 48px;}
-  .intro h1{font-size:19px;}
+  /* Gana a la sangría de body.con-lat, que en estrecho no reserva sitio. */
+  body.con-lat .envoltura, body.con-lat .cab-in{padding-left:14px;}
+  .intro h1{font-size:26px;}
   .tarjeta{padding:18px 16px;}
 
   /* el buscador en su línea, y los filtros en la suya */
@@ -1383,7 +1514,7 @@ select.despierta{animation:destello .7s ease;}
 }
 /* El número va al final de su fila, no encima de la barra: dentro de una barra
    corta no cabría y quedaría recortado. */
-.bfila .n{font-size:12.5px; font-weight:700; color:var(--gray);
+.bfila .n{font-family:var(--cifras); font-size:12px; font-weight:500; color:var(--gray);
   font-variant-numeric:tabular-nums;}
 .bfila .riel{grid-column:1 / -1; height:10px; background:var(--line-soft); border-radius:5px;}
 .bfila .riel i{
@@ -1591,6 +1722,12 @@ select.despierta{animation:destello .7s ease;}
   @page{size:letter portrait; margin:12mm 10mm;}
 }
 
+/* La Hoja de Servicio impresa no entra en el cambio de tipografía: es un acta
+   que se firma y se sella, y Arial está en cualquier impresora sin depender de
+   que Google Fonts conteste. El `font-family:inherit` de los títulos es lo que
+   impide que el serif de arriba se cuele aquí dentro: una familia puesta a
+   mano gana a la herencia, así que sin esta línea .hs h2 saldría en serif
+   aunque .hs diga Arial. */
 .hs{color:#000; font-family:Arial,Helvetica,sans-serif;}
 .hs .hs-cab{display:flex; align-items:flex-start; gap:12px; border-bottom:2px solid #004090; padding-bottom:6px;}
 .hs .hs-cab img{height:34px;}
