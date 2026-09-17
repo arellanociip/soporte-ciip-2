@@ -528,20 +528,24 @@
   function pintarAviso(identificado){
     let texto, boton;
     if(fijadoALaCuenta){ texto = 'Entraste como ' + fijadoALaCuenta; boton = '¿No eres tú? Salir'; }
-    /* Sin cuenta de por medio, "No soy yo" ya no sale: el nombre lo puso
-       el propio directorio, no hay ninguna sesión que cerrar ni ningún
-       "a nombre de quién queda esto" que corregir con un clic. */
-    else if(identificado){ texto = 'Ya sabemos quién eres'; boton = ''; }
+    /* Sin cuenta de por medio no se dice nada: ni "No soy yo" —no hay
+       ninguna sesión que cerrar— ni "Ya sabemos quién eres" —el nombre
+       lo puso el propio directorio, y quien lo ve puede simplemente
+       escribir el suyo si el sistema se equivocó—. El aviso entero se
+       esconde en este caso, más abajo. */
+    else if(identificado){ texto = ''; boton = ''; }
     else{ texto = '¿Estás en la lista de la casa?'; boton = 'Buscarme en la lista'; }
     $('avisoIdentificadoTexto').textContent = texto;
     $('botonNoSoyYo').textContent = boton;
     $('separadorNoSoyYo').hidden = !boton;
+    $('avisoIdentificado').hidden = !texto;
   }
 
   /* Muestra los seis campos. `identificado` dice si se llegó porque el
      sistema reconoció a la persona (cuenta, directorio o lo recordado en este
-     navegador) o porque hizo falta "No aparezco en la lista"; cambia lo que
-     dice el aviso de arriba, no si sale. */
+     navegador) o porque hizo falta "No aparezco en la lista"; decide qué
+     dice el aviso de arriba, y si hace falta decir algo —pintarAviso
+     esconde el aviso entero cuando no hay nada que avisar—. */
   function mostrarCampos(identificado){
     mostrarIdentidad('campos');
     $('avisoIdentificado').hidden = false;
@@ -2084,20 +2088,6 @@
   }
 
   $('botonRefrescarMias').addEventListener('click', () => pintarMias());
-
-  /* Borrar el rastro de esta máquina. Se pregunta antes porque no tiene vuelta
-     atrás: sin los id guardados no hay forma de volver a ver esas solicitudes
-     —el servidor no las entrega por nombre, justamente para que nadie pueda
-     leer las de otro—. Lo que ya se envió sigue en GGTIC, intacto. */
-  $('botonOlvidar').addEventListener('click', () => {
-    const cuantas = soporteMias.leer().length;
-    if(!confirm('Se borra de esta computadora el seguimiento de ' +
-                (cuantas === 1 ? 'tu solicitud' : 'tus ' + cuantas + ' solicitudes') +
-                ' y tus datos guardados.\n\nLo que ya enviaste sigue en GGTIC: esto solo quita ' +
-                'el rastro de este navegador, y no se puede deshacer.')) return;
-    soporteOlvidarTodo();
-    location.reload();
-  });
 
   /* ---------- arranque ---------- */
   $('avisoSinServidor').hidden = soporteHayBackend();
