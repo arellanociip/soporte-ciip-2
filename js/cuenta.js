@@ -372,9 +372,10 @@
          sin salida, cuando lo que hace falta es poner la clave propia.
          Se le ofrece el camino en vez de dejarlo mirando un error. */
       if(modo === 'registrarse' && /already registered/i.test(err.message || '')){
-        fallar('Ese correo ya tiene una cuenta —puede que GGTIC te la haya '
-          + 'creado ya—. <button type="button" class="enlace" id="irAOlvidoDesdeRegistro">'
-          + 'Pon tu propia contraseña aquí</button>.');
+        fallar('Este correo ya tiene cuenta. '
+          + '<button type="button" class="enlace" id="irAEntrarDesdeRegistro">Entra</button>, '
+          + 'o <button type="button" class="enlace" id="irAOlvidoDesdeRegistro">recupera tu '
+          + 'contraseña</button> si la olvidaste.');
       }else{
         fallar(escapar(err.message || 'No se pudo.'));
       }
@@ -557,11 +558,26 @@
     engancha('botonEnviarOlvidoUsuario', enviarOlvidoUsuario);
     engancha('cancelarNuevaClaveUsuario', () => { cerrarNuevaClaveUsuario(); abrir('entrar'); });
     engancha('guardarNuevaClaveUsuario', guardarNuevaClaveUsuario);
-    /* El botón que sale dentro del aviso de "ya está registrado" (ver
-       aceptar()) no existe todavía cuando se enganchan los demás: se
-       delega en el aviso, que sí existe siempre. */
+    /* Los dos botones que salen dentro del aviso de "ya está registrado"
+       (ver aceptar()) no existen todavía cuando se enganchan los demás:
+       se delega en el aviso, que sí existe siempre. */
     $('avisoCuentaUsuario').addEventListener('click', e => {
-      if(e.target.id === 'irAOlvidoDesdeRegistro') abrirOlvidoUsuario($('cuCorreo').value.trim());
+      if(e.target.id === 'irAOlvidoDesdeRegistro'){
+        abrirOlvidoUsuario($('cuCorreo').value.trim());
+      }else if(e.target.id === 'irAEntrarDesdeRegistro'){
+        /* Cambia a "Entrar" sin borrar el correo —a diferencia de
+           cambiarModoCuenta, aquí ya se sabe cuál es y volver a pedirlo
+           sería hacer escribir dos veces lo mismo—. Solo la clave se
+           vacía: la que puso al intentar crear la cuenta era una
+           inventada por ella misma, no la de verdad. */
+        const correo = $('cuCorreo').value.trim();
+        modo = 'entrar';
+        pintarModo();
+        $('cuCorreo').value = correo;
+        $('cuClave').value = '';
+        $('avisoCuentaUsuario').hidden = true;
+        $('cuClave').focus();
+      }
     });
 
     /* Sin sesión, esto es lo primero y lo único que hay. No se cierra, y la
