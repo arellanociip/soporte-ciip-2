@@ -384,6 +384,9 @@
             <svg viewBox="0 0 24 24"><path d="M1.8 12S5.9 5.5 12 5.5 22.2 12 22.2 12 18.1 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.1"/></svg>
           </button>
         </div>
+        <!-- Solo tiene sentido entrando: creando cuenta, la contraseña
+             todavía no existe en ningún lado que se pueda "olvidar". -->
+        <button type="button" class="enlace" id="botonOlvidoUsuario">¿Olvidó su contraseña?</button>
       </div>
     </div>
 
@@ -395,6 +398,60 @@
     </div>
     <div class="cuenta-pie">
       <button type="button" class="enlace" id="cambiarModoCuenta">No tengo cuenta · crear una</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== RECUPERAR LA CONTRASEÑA =====================
+     El mismo problema que en la bandeja (ver bandeja.html): a quien
+     GGTIC le crea la cuenta con una clave inventada, "Crear una cuenta"
+     le contesta "ya está registrado" —cierto, pero sin salida— porque
+     nunca eligió esa clave él mismo. Este par de ventanas le dan una:
+     pedir el enlace aquí, con solo el correo, y poner la clave nueva en
+     la de abajo, adonde vuelve desde ese correo. -->
+<div class="velo" id="veloOlvidoUsuario" hidden>
+  <div class="hoja" style="max-width:420px">
+    <button type="button" class="cerrar" id="cerrarOlvidoUsuario" aria-label="Cerrar">✕</button>
+    <h2>Recuperar la contraseña</h2>
+    <div class="bajada">Te llega un enlace al correo para poner una nueva.
+      Vale por poco tiempo; si no llega en unos minutos, revisa spam antes
+      de pedir otro.</div>
+
+    <div class="campo" style="margin-top:16px">
+      <label for="ouCorreo">Correo</label>
+      <input type="text" id="ouCorreo" autocomplete="username" placeholder="tu.correo@ciip.com.ve">
+    </div>
+
+    <div class="aviso malo" id="avisoOlvidoUsuario" hidden style="margin-top:14px"></div>
+    <div class="aviso bueno" id="avisoOlvidoUsuarioOk" hidden style="margin-top:14px"></div>
+
+    <div class="botones" style="margin-top:18px">
+      <button type="button" class="boton primario" id="botonEnviarOlvidoUsuario">Enviar enlace</button>
+      <button type="button" class="boton plano" id="cancelarOlvidoUsuario">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="velo" id="veloNuevaClaveUsuario" hidden>
+  <div class="hoja" style="max-width:420px">
+    <h2>Nueva contraseña</h2>
+    <div class="bajada">Este enlace confirma que eres tú. Escribe la
+      contraseña que vas a usar de ahora en adelante.</div>
+
+    <div class="campo" style="margin-top:16px">
+      <label for="ncuClave">Contraseña nueva</label>
+      <input type="password" id="ncuClave" autocomplete="new-password">
+    </div>
+    <div class="campo" style="margin-top:12px">
+      <label for="ncuClave2">Repítela</label>
+      <input type="password" id="ncuClave2" autocomplete="new-password">
+    </div>
+
+    <div class="aviso malo" id="avisoNuevaClaveUsuario" hidden style="margin-top:14px"></div>
+
+    <div class="botones" style="margin-top:18px">
+      <button type="button" class="boton primario" id="guardarNuevaClaveUsuario">Guardar</button>
+      <button type="button" class="boton plano" id="cancelarNuevaClaveUsuario">Cancelar</button>
     </div>
   </div>
 </div>

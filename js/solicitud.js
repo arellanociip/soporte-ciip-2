@@ -1544,8 +1544,14 @@
      manda sobre lo anterior. */
   function avisarCambio(estado, s){
     const num = s ? ' N° ' + String(s.numero).padStart(3,'0') + '-' + s.anio : '';
+    /* Con nombre cuando se sabe cuál es —tomarla se lo pone al mismo
+       tiempo que el estado, ver accionRapida en js/bandeja.js—; genérico
+       solo para lo viejo que quedó sin ese dato antes de que existiera. */
+    const quien = s && s.tecnico
+      ? 'El técnico ' + escapar(s.tecnico)
+      : 'Un técnico';
     const dicho = {
-      en_proceso: ['bueno', '👋', '<b>Un técnico tomó tu solicitud' + num + '.</b> Va en camino.'],
+      en_proceso: ['bueno', '👋', '<b>' + quien + ' tomó tu solicitud' + num + '.</b> Va en camino.'],
       atendida:   ['bueno', '✓',  '<b>Tu solicitud' + num + ' quedó atendida.</b> Abajo está lo que hicieron.'],
       anulada:    ['alerta', '⚠', '<b>Tu solicitud' + num + ' fue anulada.</b> Si sigues necesitando ayuda, puedes pedir otra.'],
       recibida:   ['alerta', '↩', '<b>Tu solicitud' + num + ' volvió a la cola.</b>'],
