@@ -1614,18 +1614,35 @@
     });
   }
 
-  function fichaTrazaHtml(fila){
+  /* Los mismos tres filtros —pestaña, fecha, buscador— los usan la tabla
+     en pantalla y el CSV, así que se calculan en un solo sitio: que
+     alguien busque algo y descargue tiene que bajar justo lo que ve, ni
+     una fila más. */
+  function trazaFiltradas(){
+    const q = $('buscarTraza').value.trim().toLowerCase();
+    const desde = $('trazaDesde').value ? new Date($('trazaDesde').value) : null;
+    const hasta = $('trazaHasta').value ? new Date($('trazaHasta').value + 'T23:59:59') : null;
+    return trazaFilas.filter(f => {
+      if(trazaTabla && f.tabla !== trazaTabla) return false;
+      const cuando = new Date(f.ocurrido_en);
+      if(desde && cuando < desde) return false;
+      if(hasta && cuando > hasta) return false;
+      if(q && ![f.correo, f.entidad_id, f.nota, f.tabla].some(v =>
+        String(v || '').toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }
+
+  function filaTrazaHtml(fila){
     const op = String(fila.operacion || '').toLowerCase();
-    return `<article class="cuenta traza-${op}">
-      <div class="cuenta-q">
-        <b><span class="traza-etiqueta ${op}">${esc(TRAZA_OP_ETIQUETA[fila.operacion] || fila.operacion)}</span>
-          ${esc(TRAZA_TABLA_ETIQUETA[fila.tabla] || fila.tabla)}</b>
-        <span>${fila.correo ? esc(fila.correo) : '(sin sesión — migración o llave de servicio)'}
-          ${fila.entidad_id ? ' → ' + esc(fila.entidad_id) : ''}</span>
-        <div class="traza-detalle">${resumirCambio(fila)}</div>
-      </div>
-      <div class="cuenta-d"><span>${esc(fechaHora(fila.ocurrido_en))}</span></div>
-    </article>`;
+    return `<tr class="traza-${op}">
+      <td class="td-cuando">${esc(fechaHora(fila.ocurrido_en))}</td>
+      <td>${fila.correo ? esc(fila.correo) : '<i>sin sesión</i>'}</td>
+      <td><span class="traza-etiqueta ${op}">${esc(TRAZA_OP_ETIQUETA[fila.operacion] || fila.operacion)}</span></td>
+      <td>${esc(TRAZA_TABLA_ETIQUETA[fila.tabla] || fila.tabla)}</td>
+      <td class="td-entidad">${fila.entidad_id ? esc(fila.entidad_id) : ''}</td>
+      <td class="td-detalle">${resumirCambio(fila)}</td>
+    </tr>`;
   }
 
   function pintarTrazaTabs(){
@@ -1636,22 +1653,15 @@
 
   function pintarTrazabilidad(){
     pintarTrazaTabs();
-    const q = $('buscarTraza').value.trim().toLowerCase();
-    const desde = $('trazaDesde').value ? new Date($('trazaDesde').value) : null;
-    const hasta = $('trazaHasta').value ? new Date($('trazaHasta').value + 'T23:59:59') : null;
-
-    const vistas = trazaFilas.filter(f => {
-      if(trazaTabla && f.tabla !== trazaTabla) return false;
-      const cuando = new Date(f.ocurrido_en);
-      if(desde && cuando < desde) return false;
-      if(hasta && cuando > hasta) return false;
-      if(q && ![f.correo, f.entidad_id, f.nota, f.tabla].some(v =>
-        String(v || '').toLowerCase().includes(q))) return false;
-      return true;
-    });
+    const vistas = trazaFiltradas();
 
     $('listaTraza').innerHTML = vistas.length
-      ? `<div class="cuentas">${vistas.map(fichaTrazaHtml).join('')}</div>`
+      ? `<table class="tabla-traza">
+          <thead><tr>
+            <th>Cuándo</th><th>Quién</th><th>Operación</th><th>Tabla</th><th>Afectado</th><th>Detalle</th>
+          </tr></thead>
+          <tbody>${vistas.map(filaTrazaHtml).join('')}</tbody>
+        </table>`
       : `<div class="vacio">${trazaFilas.length
           ? 'Nada coincide con lo que buscas.'
           : 'Todavía no hay nada en la trazabilidad.'}</div>`;
@@ -1660,26 +1670,15 @@
   /* CSV con lo que está filtrado en pantalla, no con todo lo cargado:
      lo que se ve es lo que se descarga. */
   function descargarTrazaCsv(){
-    const filas = [...$('listaTraza').querySelectorAll('.cuenta')];
-    if(!filas.length){ alert('No hay nada que descargar con este filtro.'); return; }
+    const vistas = trazaFiltradas();
+    if(!vistas.length){ alert('No hay nada que descargar con este filtro.'); return; }
     const encabezado = ['ocurrido_en', 'correo', 'operacion', 'tabla', 'entidad_id', 'nota'];
-    const q = $('buscarTraza').value.trim().toLowerCase();
-    const desde = $('trazaDesde').value ? new Date($('trazaDesde').value) : null;
-    const hasta = $('trazaHasta').value ? new Date($('trazaHasta').value + 'T23:59:59') : null;
-    const vistas = trazaFilas.filter(f => {
-      if(trazaTabla && f.tabla !== trazaTabla) return false;
-      const cuando = new Date(f.ocurrido_en);
-      if(desde && cuando < desde) return false;
-      if(hasta && cuando > hasta) return false;
-      if(q && ![f.correo, f.entidad_id, f.nota, f.tabla].some(v =>
-        String(v || '').toLowerCase().includes(q))) return false;
-      return true;
-    });
     const csvCelda = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const lineas = [encabezado.join(',')].concat(
       vistas.map(f => encabezado.map(k => csvCelda(f[k])).join(','))
     );
     lineas.push('');
+    const q = $('buscarTraza').value.trim();
     lineas.push('# Exportado ' + fechaHora(new Date().toISOString()) + ' · ' + vistas.length +
       ' de ' + trazaFilas.length + ' filas cargadas (últimas 300) · filtro: ' +
       (trazaTabla || 'todas') + (q ? ' · buscando "' + q + '"' : ''));
