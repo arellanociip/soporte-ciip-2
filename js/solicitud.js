@@ -528,10 +528,14 @@
   function pintarAviso(identificado){
     let texto, boton;
     if(fijadoALaCuenta){ texto = 'Entraste como ' + fijadoALaCuenta; boton = '¿No eres tú? Salir'; }
-    else if(identificado){ texto = 'Ya sabemos quién eres'; boton = 'No soy yo'; }
+    /* Sin cuenta de por medio, "No soy yo" ya no sale: el nombre lo puso
+       el propio directorio, no hay ninguna sesión que cerrar ni ningún
+       "a nombre de quién queda esto" que corregir con un clic. */
+    else if(identificado){ texto = 'Ya sabemos quién eres'; boton = ''; }
     else{ texto = '¿Estás en la lista de la casa?'; boton = 'Buscarme en la lista'; }
     $('avisoIdentificadoTexto').textContent = texto;
     $('botonNoSoyYo').textContent = boton;
+    $('separadorNoSoyYo').hidden = !boton;
   }
 
   /* Muestra los seis campos. `identificado` dice si se llegó porque el

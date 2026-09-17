@@ -168,12 +168,16 @@
       </div>
 
       <div class="rejilla" id="camposIdentidad" hidden>
-        <!-- La salida de vuelta al buscador. Si los seis campos se llenaron
-             solos dice "Ya sabemos quién eres · No soy yo"; si no, "Buscarme
-             en la lista". Los textos los pone js/solicitud.js (pintarAviso). -->
+        <!-- La salida de vuelta al buscador. Cuando los seis campos se
+             llenaron solos por la cuenta, dice "Entraste como X · ¿No eres
+             tú? Salir"; si no, "Buscarme en la lista". Cuando los llenó el
+             directorio sin cuenta de por medio, no hay "No soy yo": el
+             texto sale solo, sin nada que deshacer. Los textos los pone
+             js/solicitud.js (pintarAviso). -->
         <div class="campo" id="avisoIdentificado" hidden>
-          <div class="ayuda"><span id="avisoIdentificadoTexto">Ya sabemos quién eres</span> ·
-            <button type="button" class="enlace" id="botonNoSoyYo">No soy yo</button></div>
+          <div class="ayuda"><span id="avisoIdentificadoTexto">Ya sabemos quién eres</span>
+            <span id="separadorNoSoyYo"> ·
+              <button type="button" class="enlace" id="botonNoSoyYo">No soy yo</button></span></div>
         </div>
         <div class="campo c8">
           <label for="gerencia">Gerencia solicitante *</label>
