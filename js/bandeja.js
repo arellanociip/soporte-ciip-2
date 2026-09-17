@@ -1554,6 +1554,8 @@
      ni siquiera un administrador (migración 15). */
   let trazaFilas = [];
   let trazaTabla = '';
+  let trazaPagina = 1;
+  let trazaPorPagina = 25;
 
   const TRAZA_TABLAS = [
     ['', 'Todas'],
@@ -1566,6 +1568,7 @@
   const TRAZA_OP_ETIQUETA = {ALTA: 'Alta', CAMBIO: 'Cambio', BAJA: 'Baja', ACCESO: 'Acceso'};
 
   async function cargarTrazabilidad(){
+    trazaPagina = 1;
     if(enPrueba){ trazaFilas = []; return; }
     try{
       const r = await pedir('/rest/v1/bitacora?select=*&order=ocurrido_en.desc&limit=300', {});
@@ -1646,25 +1649,71 @@
   }
 
   function pintarTrazaTabs(){
-    $('trazaTabs').innerHTML = TRAZA_TABLAS.map(([k, l]) =>
-      `<button type="button" class="ficha ${trazaTabla===k?'on':''}" data-tabla="${k}">${l}</button>`
-    ).join('');
+    $('trazaTabs').innerHTML = TRAZA_TABLAS.map(([k, l]) => {
+      const n = k ? trazaFilas.filter(f => f.tabla === k).length : trazaFilas.length;
+      return `<button type="button" class="ficha ${trazaTabla===k?'on':''}" data-tabla="${k}">${l}${
+        n ? `<span class="n">${n}</span>` : ''}</button>`;
+    }).join('');
+  }
+
+  /* Las mismas cuatro cosas que ya se pueden mirar por pestaña, resumidas
+     arriba en una cifra cada una —como en Atlas—: se entiende el tamaño
+     de cada cosa sin tener que contar filas de una tabla. Clic en una
+     salta a esa pestaña, igual que allá. */
+  function pintarTrazaKpis(){
+    const cuenta = tabla => trazaFilas.filter(f => f.tabla === tabla).length;
+    const tarjetas = [
+      ['solicitudes', 'Solicitudes', cuenta('solicitudes')],
+      ['cuentas', 'Cuentas de GGTIC', cuenta('cuentas')],
+      ['correos_permitidos', 'Correos permitidos', cuenta('correos_permitidos')],
+      ['sesion', 'Accesos', cuenta('sesion')],
+    ];
+    $('trazaKpis').innerHTML = tarjetas.map(([clave, rotulo, n]) => `
+      <button type="button" class="kpi" data-tabla-kpi="${clave}">
+        <div class="r">${esc(rotulo)}</div>
+        <div class="v">${n}</div>
+        <div class="s">de ${trazaFilas.length} en las últimas 300</div>
+      </button>`).join('');
   }
 
   function pintarTrazabilidad(){
     pintarTrazaTabs();
+    pintarTrazaKpis();
     const vistas = trazaFiltradas();
+    const totalPaginas = Math.max(1, Math.ceil(vistas.length / trazaPorPagina));
+    if(trazaPagina > totalPaginas) trazaPagina = totalPaginas;
+    const inicio = (trazaPagina - 1) * trazaPorPagina;
+    const pagina = vistas.slice(inicio, inicio + trazaPorPagina);
 
     $('listaTraza').innerHTML = vistas.length
       ? `<table class="tabla-traza">
           <thead><tr>
             <th>Cuándo</th><th>Quién</th><th>Operación</th><th>Tabla</th><th>Afectado</th><th>Detalle</th>
           </tr></thead>
-          <tbody>${vistas.map(filaTrazaHtml).join('')}</tbody>
+          <tbody>${pagina.map(filaTrazaHtml).join('')}</tbody>
         </table>`
       : `<div class="vacio">${trazaFilas.length
           ? 'Nada coincide con lo que buscas.'
           : 'Todavía no hay nada en la trazabilidad.'}</div>`;
+
+    $('trazaPie').innerHTML = !vistas.length ? '' : `
+      <span>${inicio + 1}–${Math.min(inicio + trazaPorPagina, vistas.length)} de ${vistas.length}
+        · <select id="trazaPorPaginaSel">
+            ${[25, 50, 100].map(n => `<option value="${n}" ${n===trazaPorPagina?'selected':''}>${n} por página</option>`).join('')}
+          </select></span>
+      <span class="paginas">
+        <button type="button" id="trazaPagAnt" ${trazaPagina<=1?'disabled':''}>‹ Anterior</button>
+        Página ${trazaPagina} de ${totalPaginas}
+        <button type="button" id="trazaPagSig" ${trazaPagina>=totalPaginas?'disabled':''}>Siguiente ›</button>
+      </span>`;
+    const sel = $('trazaPorPaginaSel');
+    if(sel) sel.addEventListener('change', () => {
+      trazaPorPagina = Number(sel.value); trazaPagina = 1; pintarTrazabilidad();
+    });
+    const ant = $('trazaPagAnt');
+    if(ant) ant.addEventListener('click', () => { trazaPagina--; pintarTrazabilidad(); });
+    const sig = $('trazaPagSig');
+    if(sig) sig.addEventListener('click', () => { trazaPagina++; pintarTrazabilidad(); });
   }
 
   /* CSV con lo que está filtrado en pantalla, no con todo lo cargado:
@@ -1694,11 +1743,31 @@
     const b = e.target.closest('[data-tabla]');
     if(!b) return;
     trazaTabla = b.dataset.tabla;
+    trazaPagina = 1;
     pintarTrazabilidad();
   });
-  $('buscarTraza').addEventListener('input', pintarTrazabilidad);
-  $('trazaDesde').addEventListener('change', pintarTrazabilidad);
-  $('trazaHasta').addEventListener('change', pintarTrazabilidad);
+  /* Las tarjetas de arriba llevan a la pestaña de lo mismo que cuentan,
+     igual que en Atlas: mirar un número y querer ver esas filas es un
+     solo gesto, no dos. */
+  $('trazaKpis').addEventListener('click', e => {
+    const b = e.target.closest('[data-tabla-kpi]');
+    if(!b) return;
+    trazaTabla = b.dataset.tablaKpi;
+    trazaPagina = 1;
+    pintarTrazabilidad();
+  });
+  const filtroTrazaCambio = () => { trazaPagina = 1; pintarTrazabilidad(); };
+  $('buscarTraza').addEventListener('input', filtroTrazaCambio);
+  $('trazaDesde').addEventListener('change', filtroTrazaCambio);
+  $('trazaHasta').addEventListener('change', filtroTrazaCambio);
+  $('limpiarFiltrosTraza').addEventListener('click', () => {
+    $('buscarTraza').value = '';
+    $('trazaDesde').value = '';
+    $('trazaHasta').value = '';
+    trazaTabla = '';
+    trazaPagina = 1;
+    pintarTrazabilidad();
+  });
   $('botonTrazaCsv').addEventListener('click', descargarTrazaCsv);
 
   /* ---------- apuntar el equipo de alguien ----------

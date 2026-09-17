@@ -1475,7 +1475,15 @@ select.despierta{animation:destello .7s ease;}
 .kpi{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
   box-shadow:var(--shadow); padding:18px 20px;
+  /* Estadísticas la usa en un <div>; Trazabilidad la usa en un <button>
+     para poder llevar a la pestaña de lo que cuenta —un <div> no es
+     algo en lo que se pueda hacer clic con el teclado—. Lo de aquí
+     deshace lo que un <button> trae de fábrica en el navegador, para
+     que las dos se vean idénticas. */
+  font-family:inherit; text-align:left; width:100%; display:block;
 }
+.kpi[type=button]{cursor:pointer;}
+.kpi[type=button]:hover{border-color:var(--gray-soft);}
 .kpi .r{
   font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
   color:var(--gray-soft);
@@ -1584,6 +1592,44 @@ select.despierta{animation:destello .7s ease;}
    la barra de arriba siempre a la vista. No se toca .cuentas —la misma
    clase pinta también la lista de Cuentas, que es corta y no lo necesita—. */
 #listaCorreos{max-height:65vh; overflow-y:auto; overscroll-behavior:contain; padding-right:4px;}
+/* La barra lateral de Filtros/Registro y la tabla, uno al lado del otro
+   —igual que en Atlas—: en pantalla angosta se apilan, la barra primero,
+   porque elegir qué mirar viene antes que mirarlo. */
+.traza-cuerpo{display:grid; grid-template-columns:200px 1fr; gap:20px; align-items:start;}
+@media (max-width:760px){ .traza-cuerpo{grid-template-columns:1fr;} }
+.traza-lateral{display:flex; flex-direction:column; gap:20px;}
+.traza-grupo{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:14px; display:flex; flex-direction:column; gap:8px;
+}
+.traza-grupo-tit{
+  font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--gray-soft); margin-bottom:2px;
+}
+/* Las mismas pestañas de siempre (.ficha), pero en columna: al lado, en
+   vez de en fila, porque aquí comparten la barra con los filtros de
+   abajo y no con la cola de solicitudes. */
+.traza-registro{display:flex; flex-direction:column; gap:4px;}
+.traza-registro .ficha{width:100%; text-align:left; justify-content:flex-start;}
+.traza-etq-fecha{font-size:11px; font-weight:600; color:var(--gray-soft); margin-top:2px;}
+.traza-grupo .enlace{align-self:flex-start; margin-top:2px;}
+.traza-principal{min-width:0;}
+
+/* Un renglón de página, no una fila más de botones sueltos: cuántas se
+   ven, cuántas hay en total, y moverse entre páginas. */
+.traza-pie{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  gap:10px; margin-top:12px; font-size:12px; color:var(--gray-soft);
+}
+.traza-pie select{width:auto; padding:5px 26px 5px 9px; font-size:12px;}
+.traza-pie .paginas{display:flex; align-items:center; gap:8px;}
+.traza-pie button{
+  border:1px solid var(--line); background:var(--card); border-radius:var(--r-sm);
+  padding:5px 12px; font-size:12px; cursor:pointer; color:var(--ink);
+}
+.traza-pie button:disabled{opacity:.4; cursor:not-allowed;}
+.traza-pie button:not(:disabled):hover{background:var(--block);}
+
 /* Una tabla, no tarjetas: con 300 filas de auditoría lo que se busca es
    escanear una columna de arriba abajo —quién, cuándo— y las tarjetas de
    Cuentas o Correos permitidos (pocas, para leer una por una) estorbaban
