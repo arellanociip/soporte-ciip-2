@@ -114,6 +114,31 @@
     };
   }
 
+  /* ---------- lo que Supabase contesta, en español y sin tecnicismos ----------
+     Mismo criterio que en js/cuenta.js: GoTrue manda sus errores en inglés,
+     tal cual, y aquí los ve el personal de GGTIC, no solo quien pide
+     soporte —igual merece un mensaje en español, no un texto de proveedor—.
+     Lo que no se reconoce no sale crudo: se cae a un genérico, pero en
+     español siempre. */
+  function traducirErrorAuth(mensaje){
+    const m = String(mensaje || '');
+    const reglas = [
+      [/invalid login credentials/i, 'Correo o contraseña incorrectos.'],
+      [/email not confirmed/i, 'Todavía falta confirmar este correo.'],
+      [/password should be at least/i, 'La contraseña necesita al menos 6 caracteres.'],
+      [/unable to validate email address/i, 'Ese correo no tiene un formato válido.'],
+      [/email rate limit exceeded/i, 'Se mandaron muchos correos en poco tiempo. Espera unos minutos y vuelve a intentar.'],
+      [/error sending (confirmation|recovery) email/i, 'No se pudo enviar el correo. Intenta de nuevo en un momento.'],
+      [/same.password/i, 'La contraseña nueva no puede ser igual a la anterior.'],
+      [/for security purposes.*after (\d+) ?seconds?/i, c => 'Espera ' + c[1] + ' segundos antes de volver a pedirlo.'],
+    ];
+    for(const [patron, salida] of reglas){
+      const c = m.match(patron);
+      if(c) return typeof salida === 'function' ? salida(c) : salida;
+    }
+    return '';
+  }
+
   async function entrar(correo, clave){
     const r = await fetch(B.url + '/auth/v1/token?grant_type=password', {
       method: 'POST',
@@ -122,7 +147,8 @@
     });
     if(!r.ok){
       const cuerpo = await r.json().catch(() => ({}));
-      throw new Error(cuerpo.error_description || cuerpo.msg || ('HTTP ' + r.status));
+      const original = cuerpo.error_description || cuerpo.msg || ('HTTP ' + r.status);
+      throw new Error(traducirErrorAuth(original) || 'No se pudo entrar. Intenta de nuevo en un momento.');
     }
     const s = desdeRespuesta(await r.json());
     guardarSesion(s);
@@ -2498,7 +2524,8 @@
       });
       if(!r.ok){
         const cuerpo = await r.json().catch(() => ({}));
-        throw new Error(cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status));
+        const original = cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status);
+        throw new Error(traducirErrorAuth(original) || 'No se pudo enviar el correo. Intenta de nuevo en un momento.');
       }
       /* Supabase contesta 200 exista o no esa cuenta —para no delatar quién
          tiene cuenta y quién no—, así que el aviso es el mismo en los dos
@@ -2506,7 +2533,7 @@
       avisoOk.textContent = 'Si esa cuenta existe, le llega un correo con el enlace en un momento.';
       avisoOk.hidden = false;
     }catch(err){
-      avisoMal.textContent = 'No se pudo enviar: ' + err.message;
+      avisoMal.textContent = err.message;
       avisoMal.hidden = false;
     }
     boton.disabled = false; boton.textContent = 'Enviar enlace';
@@ -2558,7 +2585,8 @@
       });
       if(!r.ok){
         const cuerpo = await r.json().catch(() => ({}));
-        throw new Error(cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status));
+        const original = cuerpo.msg || cuerpo.error_description || ('HTTP ' + r.status);
+        throw new Error(traducirErrorAuth(original) || 'No se pudo guardar la contraseña. Intenta de nuevo en un momento.');
       }
       cerrarNuevaClave();
       /* El enlace no deja una sesión abierta en la bandeja —a propósito:
@@ -2571,7 +2599,7 @@
       avisoAcceso.innerHTML = '<span>✓</span><div>Contraseña puesta. Entra con la nueva.</div>';
       avisoAcceso.hidden = false;
     }catch(err){
-      aviso.textContent = 'No se pudo guardar: ' + err.message;
+      aviso.textContent = err.message;
       aviso.hidden = false;
     }
     boton.disabled = false; boton.textContent = 'Guardar';
