@@ -344,22 +344,39 @@
       queda anotada.</p>
     </div>
 
-    <div class="barra">
-      <div class="buscador">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
-        <input type="text" id="buscarTraza" placeholder="Buscar por correo, correo afectado o nota">
+    <div class="kpis" id="trazaKpis"></div>
+
+    <div class="traza-cuerpo">
+      <aside class="traza-lateral">
+        <div class="traza-grupo">
+          <div class="traza-grupo-tit">Registro</div>
+          <div id="trazaTabs" class="traza-registro"></div>
+        </div>
+        <div class="traza-grupo">
+          <div class="traza-grupo-tit">Filtros</div>
+          <div class="buscador">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+            <input type="text" id="buscarTraza" placeholder="Correo, afectado o nota">
+          </div>
+          <label class="traza-etq-fecha" for="trazaDesde">Desde</label>
+          <input type="date" id="trazaDesde">
+          <label class="traza-etq-fecha" for="trazaHasta">Hasta</label>
+          <input type="date" id="trazaHasta">
+          <button type="button" class="enlace" id="limpiarFiltrosTraza">Limpiar filtros</button>
+        </div>
+        <div class="traza-grupo">
+          <div class="traza-grupo-tit">Exportar</div>
+          <button type="button" class="boton plano chico ancho" id="botonTrazaCsv">Descargar CSV</button>
+        </div>
+      </aside>
+
+      <div class="traza-principal">
+        <p class="ayuda" style="margin:2px 0 10px">Se muestran las últimas 300 filas,
+        de más reciente a más vieja. Para algo más viejo, acota por fecha.</p>
+        <div id="listaTraza"></div>
+        <div class="traza-pie" id="trazaPie"></div>
       </div>
-      <input type="date" id="trazaDesde" title="Desde">
-      <input type="date" id="trazaHasta" title="Hasta">
-      <button type="button" class="boton plano chico" id="botonTrazaCsv">Descargar CSV</button>
     </div>
-
-    <div class="fichas" id="trazaTabs"></div>
-
-    <p class="ayuda" style="margin:2px 0 10px">Se muestran las últimas 300 filas,
-    de más reciente a más vieja. Para algo más viejo, acota por fecha.</p>
-
-    <div id="listaTraza"></div>
   </section>
 
 </main>
