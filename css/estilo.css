@@ -1613,6 +1613,12 @@ select.despierta{animation:destello .7s ease;}
 .traza-registro .ficha{width:100%; text-align:left; justify-content:flex-start;}
 .traza-etq-fecha{font-size:11px; font-weight:600; color:var(--gray-soft); margin-top:2px;}
 .traza-grupo .enlace{align-self:flex-start; margin-top:2px;}
+/* .buscador trae "flex:1 1 280px" pensado para una barra horizontal
+   (.barra), donde eso es "crece a partir de 280px de ANCHO". Metido tal
+   cual dentro de esta barra lateral —que es de columna, no de fila—, el
+   eje principal es el vertical: el mismo flex la estiraba a 280px de
+   ALTO, empujando la lupa hacia la mitad de ese hueco enorme. */
+.traza-grupo .buscador{flex:0 0 auto; width:100%; min-width:0;}
 .traza-principal{min-width:0;}
 
 /* Un renglón de página, no una fila más de botones sueltos: cuántas se
