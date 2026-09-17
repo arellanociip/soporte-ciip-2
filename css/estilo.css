@@ -708,6 +708,18 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .boton.plano:hover{background:var(--line-soft);}
 .boton:disabled{opacity:.55; cursor:progress;}
 .boton.chico{font-size:12px; padding:6px 13px;}
+/* El botón de segunda fila: el azul claro del sello del candado, sin filete.
+   Existe para lo que antes iba subrayado —"¿Olvidó su contraseña?", "No tengo
+   cuenta"—: dentro de una tarjeta donde todo lo demás tiene caja, un texto
+   subrayado era lo único que no la tenía y se leía como enlace de página web,
+   no como algo que hace algo. En azul claro se nota que es pulsable sin
+   competir con el primario, que va justo debajo y es el camino. */
+.boton.suave{background:var(--navy-soft); color:var(--navy); border-color:transparent;}
+.boton.suave:hover{background:#dbe6f7;}
+/* Debajo del campo de la contraseña no puede ocupar la línea entera: .campo es
+   una columna flex y un hijo suyo se estira solo hasta el borde. En el pie de
+   la ventana de cuenta sí se deja ancho, que ahí va solo y es el otro camino. */
+.campo > .boton.suave{align-self:flex-start;}
 
 /* ===================== AVISOS ===================== */
 .aviso{
