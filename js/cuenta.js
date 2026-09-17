@@ -64,7 +64,13 @@
   (function(){
     if(!HAY) return;
     const testigo = location.hash.match(/access_token=([^&]+)/);
-    const tipo = location.hash.match(/type=([^&]+)/);
+    /* &type=, con el "&" delante a propósito: sin él, "token_type=bearer"
+       —que Supabase manda siempre, junto al testigo— también contiene
+       "type=" (to-KEN_TYPE=bearer) y el regex lo encontraba primero,
+       capturando "bearer" en vez de "recovery". Con eso, ESTE enlace
+       —de verdad, sin vencer— nunca se reconocía como válido: se caía
+       al flujo de siempre y mandaba de vuelta al inicio sin decir nada. */
+    const tipo = location.hash.match(/[&#]type=([^&]+)/);
     if(testigo && tipo && tipo[1] === 'recovery'){
       testigoRecuperacionUsuario = decodeURIComponent(testigo[1]);
       history.replaceState(null, '', location.pathname + location.search);
