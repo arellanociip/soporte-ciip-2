@@ -24,6 +24,11 @@
   --r:10px; --r-sm:7px;
   /* Ancho de la barra lateral de la bandeja. */
   --lat:252px;
+  /* Altura del encabezado. Va aquí y no suelta en .cab porque la cabecera
+     de la barra lateral tiene que medir exactamente lo mismo: son dos
+     elementos independientes que se tocan en el mismo borde, y si se
+     desalinean el azul de la barra asoma por debajo del filete. */
+  --cab-alto:76px;
 
   /* ---------- las tres familias, como en Atlas ----------
      La sans ya era la misma; lo que faltaba eran las otras dos.
@@ -75,7 +80,7 @@ a{color:var(--navy);}
 /* ===================== ENCABEZADO ===================== */
 .cab{
   background:linear-gradient(180deg,#003a82 0%, var(--navy-deep) 100%);
-  color:#fff; padding:18px 0;
+  color:#fff; height:var(--cab-alto); display:flex; align-items:center;
 }
 .cab-in{
   max-width:940px; margin:0 auto; padding:0 20px;
@@ -101,8 +106,18 @@ a{color:var(--navy);}
 .cab .der a:hover{background:rgba(255,255,255,.10); color:#fff;}
 
 /* El botón que esconde y saca la barra lateral. */
+/* Estaba dentro del encabezado, encajonado entre el borde de la barra y el
+   logo: quedaba lejos de lo que abre y pegado a lo que no. Ahora se planta
+   en la esquina de arriba a la izquierda, sobre la cabecera de la propia
+   barra, que es lo que manda.
+
+   Va fijo y por encima de .lat (z-index 30) a propósito: si estuviera DENTRO
+   de la barra se iría con ella al plegarse y no habría forma de traerla de
+   vuelta. Fuera y por encima, se queda quieto en el mismo sitio abra o
+   cierre, que es como se aprende dónde está. */
 .hamb{
-  width:36px; height:36px; flex:0 0 36px; border:none; border-radius:var(--r-sm);
+  position:fixed; top:calc((var(--cab-alto) - 36px) / 2); left:14px; z-index:40;
+  width:36px; height:36px; border:none; border-radius:var(--r-sm);
   background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
   display:flex; align-items:center; justify-content:center; font-family:inherit;
 }
@@ -124,7 +139,13 @@ a{color:var(--navy);}
   color:#fff; display:flex; flex-direction:column; overflow:hidden;
   transition:transform .2s ease;
 }
-.lat-cuerpo{flex:1 1 auto; overflow-y:auto; padding:14px 10px;}
+/* La cabecera de la barra: mide lo mismo que el encabezado y lleva su mismo
+   filete, así que las dos líneas se continúan. Va vacía —el botón se le
+   pone encima— y sin ella los rótulos arrancaban a la altura del título de
+   la página, que es lo que se veía torcido. */
+.lat-head{flex:0 0 auto; height:var(--cab-alto);
+  border-bottom:1px solid rgba(255,255,255,.10);}
+.lat-cuerpo{flex:1 1 auto; overflow-y:auto; padding:10px 10px 14px;}
 .lat-pie{flex:0 0 auto; padding:8px 10px 12px; border-top:1px solid rgba(255,255,255,.10);}
 
 /* El rótulo de sección es un botón de verdad, con aria-expanded: así se pliega
@@ -169,7 +190,10 @@ a{color:var(--navy);}
    para que el encabezado y el cuerpo se muevan juntos. */
 body.con-lat .cab-in, body.con-lat .envoltura{padding-left:calc(var(--lat) + 20px);}
 body.lat-plegada .lat{transform:translateX(-100%);}
-body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
+/* Plegada, la barra ya no cubre esa esquina: el sitio del botón lo tiene que
+   dejar el propio encabezado, o el logo se le monta encima. */
+body.lat-plegada .cab-in{padding-left:64px;}
+body.lat-plegada .envoltura{padding-left:20px;}
 
 @media (prefers-reduced-motion:reduce){
   .lat, .lat-sec-cuerpo, .lat-sec .chev{transition:none;}
@@ -180,7 +204,10 @@ body.lat-plegada .cab-in, body.lat-plegada .envoltura{padding-left:20px;}
 .lat-velo{position:fixed; inset:0; background:rgba(14,20,36,.45); z-index:25;}
 @media (max-width:900px){
   .lat{transform:translateX(-100%);}
-  body.con-lat .cab-in, body.con-lat .envoltura{padding-left:20px;}
+  /* La barra no reserva sitio aquí, pero el botón sigue en su esquina:
+     el hueco se lo deja el encabezado, no la barra. */
+  body.con-lat .cab-in{padding-left:64px;}
+  body.con-lat .envoltura{padding-left:20px;}
   body.lat-abierta .lat{transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.35);}
 }
 @media (min-width:901px){
@@ -1209,7 +1236,8 @@ select.despierta{animation:destello .7s ease;}
 
   .envoltura, .envoltura.ancha{padding:16px 14px 48px;}
   /* Gana a la sangría de body.con-lat, que en estrecho no reserva sitio. */
-  body.con-lat .envoltura, body.con-lat .cab-in{padding-left:14px;}
+  body.con-lat .envoltura{padding-left:14px;}
+  body.con-lat .cab-in{padding-left:58px;}
   .intro h1{font-size:26px;}
   .tarjeta{padding:18px 16px;}
 

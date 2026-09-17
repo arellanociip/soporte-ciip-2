@@ -18,15 +18,6 @@
 
 <header class="cab">
   <div class="cab-in ancha">
-    <!-- Esconde y saca la barra. Sale con la sesión, igual que la barra: sin
-         haber entrado no hay menú que mostrar. -->
-    <button type="button" class="hamb" id="botonMenu" hidden
-            aria-label="Mostrar u ocultar el menú" aria-expanded="true"
-            aria-controls="menuLateral">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>
-      </svg>
-    </button>
     <img src="assets/logo_ciip.png" alt="CIIP">
     <div>
       <div class="tit">Bandeja de soporte</div>
@@ -47,7 +38,22 @@
      El velo y el id del <aside> son para el móvil: ahí la barra se abre como
      cajón por encima del contenido. -->
 <div class="lat-velo" id="latVelo" hidden></div>
+
+<!-- Esconde y saca la barra. Vive fuera del <aside> a propósito: dentro se
+     iría con ella al plegarse y no habría forma de traerla de vuelta. Va
+     antes en el orden del documento porque también va antes en la pantalla:
+     quien navegue con el teclado lo encuentra donde lo ve. Sale con la
+     sesión, igual que la barra — sin haber entrado no hay menú que mostrar. -->
+<button type="button" class="hamb" id="botonMenu" hidden
+        aria-label="Mostrar u ocultar el menú" aria-expanded="true"
+        aria-controls="menuLateral">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>
+  </svg>
+</button>
+
 <aside class="lat" id="cabDerecha" hidden>
+  <div class="lat-head" aria-hidden="true"></div>
   <nav class="lat-cuerpo" id="menuLateral">
 
     <button type="button" class="lat-sec" data-sec="bandeja" aria-expanded="true">
