@@ -449,6 +449,30 @@
   let sinLeer = 0;         /* llegadas mientras la pestaña no se mira */
   const recien = new Set();/* las que están marcadas en la cola */
 
+  /* Quién tenía cada solicitud la última vez que se miró, para notar el
+     instante en que pasa de nadie —o de otro— a alguien: ese es el que
+     avisarTomadas() cuenta, no "está en proceso" a secas, que ya lo
+     tenía la propia fila pintada. null = todavía no se ha cargado nada,
+     igual que 'conocidas'. */
+  let tecnicoConocido = null;
+
+  /* Las que un compañero tomó desde la última vez que se miró —nunca las
+     que tomó uno mismo, que ya lo sabe—. Sirve para que dos técnicos no
+     ataquen el mismo caso sin saberlo: "Franklin tomó la N° 023", no hace
+     falta abrir nada para enterarse. */
+  function tomadasPorOtro(lista){
+    const anterior = tecnicoConocido;
+    tecnicoConocido = new Map(lista.map(s => [s.id, s.tecnico || '']));
+    if(anterior === null) return [];   /* primera carga: nada retroactivo */
+    const yo = (yoTecnico().nombre || '').trim().toLowerCase();
+    return lista.filter(s => {
+      if(s.estado !== 'en_proceso' || !s.tecnico) return false;
+      if(s.tecnico.trim().toLowerCase() === yo) return false;
+      const antes = anterior.get(s.id);
+      return antes !== undefined && antes !== s.tecnico;
+    });
+  }
+
   /* El aviso en el escritorio de Windows, si el navegador lo da: solo existe en
      "contexto seguro" —localhost o https— y solo si esa máquina le dio permiso.
      No se pide ni se explica: quien lo tenga lo tiene, y quien no, tiene el
@@ -488,6 +512,51 @@
         o.start(t + d); o.stop(t + d + 0.14);
       });
     }catch(e){ /* sin sonido se sigue viendo el cartel */ }
+  }
+
+  /* Una nota sola, más grave y más baja que la de "llegó algo": esto es un
+     aviso entre compañeros, no una solicitud nueva que alguien tenga que
+     decidir. Que no se confundan al oído, aunque la persona no esté
+     mirando la pantalla en ese instante. */
+  function sonarTomada(){
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      sonido = sonido || new AC();
+      if(sonido.state === 'suspended') sonido.resume();
+      const t = sonido.currentTime;
+      const o = sonido.createOscillator(), g = sonido.createGain();
+      o.type = 'sine'; o.frequency.value = 523.25;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.11, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+      o.connect(g).connect(sonido.destination);
+      o.start(t); o.stop(t + 0.15);
+    }catch(e){}
+  }
+
+  /* El cartel de "llegó algo" espera una decisión (Ver/Tomar/Después); esto
+     no espera nada, así que no es una ventana: es un aviso que aparece y se
+     va solo, como los que ya usan otros sistemas de la casa. */
+  function avisoFlotante(titulo, cuerpo){
+    const caja = $('avisosFlotantes');
+    if(!caja) return;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = '<b>' + esc(titulo) + '</b>' + esc(cuerpo);
+    caja.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('toast-fuera');
+      setTimeout(() => el.remove(), 250);
+    }, 8000);
+  }
+
+  function avisarTomadas(tomadas){
+    sonarTomada();
+    tomadas.forEach(s => avisoFlotante(
+      s.tecnico + ' tomó una solicitud',
+      'N° ' + String(s.numero).padStart(3, '0') + ' · ' + s.usuario
+    ));
   }
 
   function marcarTitulo(){
@@ -611,9 +680,11 @@
       solicitudes = await r.json();
     }
     const nuevas = llegadas(solicitudes);
+    const tomadas = tomadasPorOtro(solicitudes);
     nuevas.forEach(s => recien.add(s.id));
     pintar();
     if(nuevas.length) avisarDe(nuevas);
+    if(tomadas.length) avisarTomadas(tomadas);
   }
 
   function visibles(){
@@ -2667,7 +2738,7 @@
     cuentas = [];
     /* quien entre después empieza de cero: si no, la primera carga del
        siguiente turno anunciaría como "recién llegado" todo lo del anterior */
-    conocidas = null; recien.clear(); leido();
+    conocidas = null; tecnicoConocido = null; recien.clear(); leido();
     mostrarAcceso();
   });
 
