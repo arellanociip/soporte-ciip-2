@@ -1050,6 +1050,24 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 @keyframes desvanecer{ from{opacity:1; transform:none;} to{opacity:0; transform:translateY(-8px);} }
 @keyframes trazar{ to{stroke-dashoffset:0;} }
 @keyframes girar{ to{transform:rotate(360deg);} }
+
+/* ---------- avisos flotantes ----------
+   "Fulano tomó tal solicitud": aparecen solos, abajo a la derecha, y se
+   apagan solos —nadie tiene que cerrarlos, no hay nada que decidir con
+   ellos—. Apilan hacia arriba si llega más de uno junto. */
+#avisosFlotantes{
+  position:fixed; right:18px; bottom:18px; z-index:70;
+  display:flex; flex-direction:column-reverse; gap:9px;
+  max-width:320px; pointer-events:none;
+}
+.toast{
+  background:var(--card); border:1px solid var(--line); border-left:3px solid var(--navy);
+  border-radius:var(--r); box-shadow:0 10px 28px rgba(14,20,36,.16);
+  padding:11px 14px; font-size:12.5px; color:var(--gray);
+  animation:surgir .25s ease both;
+}
+.toast b{display:block; color:var(--ink); font-size:13px; margin-bottom:1px;}
+.toast.toast-fuera{animation:desvanecer .25s ease both;}
 /* Un temblor corto y de poca amplitud: suficiente para llevar el ojo al campo,
    lejos del zarandeo que marea. */
 @keyframes temblor{
