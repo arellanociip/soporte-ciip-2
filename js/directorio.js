@@ -10,14 +10,12 @@
      Domingo Bracho Garcia, y Rosbely del Carmen Bracho Indriago -> Godoy
      Briceño (el apellido de otra persona, copiado por error al restaurar
      piso y oficina en agosto —ver más abajo—).
-   · Marca País: "Listado de los correos" del Instituto (18/08/2026), 48
-     de sus 50 personas —quedaron fuera dos sin correo en ese listado, sin
-     forma de registrar una cuenta—, cruzadas por cédula contra el corte de
-     control de acceso del 27/07/2026 para recuperar gerencia, piso,
-     oficina y cargo: ese Excel solo traía cédula, nombre y el Gmail. No se
-     tocó con el corte del 15/09: ese listado es solo del CIIP.
+   · Marca País: "LISTADO DE PERSONAL 18-09-26 PARA CORREOS INSTITUCIONALES",
+     personal del Instituto al 21-08-2026, 51 personas con su gerencia,
+     piso, oficina, cargo y correo @ciip.com.ve. Reemplaza al de agosto
+     (48 personas, cruzadas por cédula); ver el comentario del bloque.
 
-   206 personas en total (158 + 48). Sirve para que nadie escriba su
+   209 personas en total (158 + 51). Sirve para que nadie escriba su
    gerencia ni su cargo: escribe su nombre, se elige de la lista y el resto
    se llena solo.
 
@@ -201,66 +199,72 @@ const DIRECTORIO = [
   {nombre:'Yosmary Vanesa Valero Paredes', gerencia:'GERENCIA GENERAL DE SEGURIDAD INTEGRAL', piso:'', oficina:'', cargo:'Bachiller'},
   {nombre:'Yuraima Karina Martínez Díaz', gerencia:'CONSULTORÍA JURÍDICA', piso:'2', oficina:'2-02', cargo:'Asesor Especialista'},
 
-  /* Marca País, del "Listado de los correos" del Instituto Marca País
-     (18/08/2026): 48 personas —de 50, quedaron fuera Manuel Marcial y
-     Miguel Angel Zapata Torres, sin correo en ese listado y por lo tanto
-     sin forma de registrar una cuenta—, cruzadas por cédula contra el
-     corte de control de acceso del 27/07/2026 para recuperar gerencia,
-     piso, oficina y cargo. Ese Excel no traía esos datos, solo cédula,
-     nombre y el Gmail personal (ver gtic.correos_permitidos).
+  /* Marca País, del "LISTADO DE PERSONAL 18-09-26 PARA CORREOS
+     INSTITUCIONALES" (personal del Instituto al 21-08-2026): 51 personas,
+     cada una con gerencia, piso, oficina y cargo. Reemplaza al cruce por
+     cédula de agosto: este listado ya trae todo junto, y los cuatro que
+     antes quedaban solo con el nombre —sin gerencia, sin piso— ahora
+     salen completos.
 
-     Cuatro no cruzaron —dadas de alta después del corte de acceso, o con
-     la cédula mal tecleada en alguno de los dos listados— y se agregan
-     solo con el nombre, sin gerencia: el formulario ya sabe llenar ese
-     hueco a mano, igual que con piso y oficina. */
+     Respecto a lo anterior: entran Andreina Tarazón Bolívar (Presidenta),
+     Rosa Amelia Calzadilla, Miguel Ángel Zapata Torres y Marcial Martín
+     Manuel Méndez —los dos últimos estaban fuera por no tener correo—;
+     Edgar Mata y Gabriela Liendo Paredes pasan a su nombre completo
+     (Edgar Luis Mata, Gabriela María Liendo Paredes); y sale Ramón Antonio
+     Narváez Flores, que ya no aparece en el listado (el cargo de Gerente
+     General de Promociones lo lleva ahora Marcial Martín Manuel Méndez).
+     Los pisos y oficinas ya no son los de agosto sino los del listado. */
   {nombre:'Adriana Carolina Sánchez', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Administrativo'},
   {nombre:'Aidyn Paulina Moreno Escalona', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Profesional'},
   {nombre:'Aimara Alexandra Martínez Cerezo', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
   {nombre:'Alexis Manuel Velásquez Cañate', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Andrea Martínez Carpio', gerencia:'PRESIDENCIA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
+  {nombre:'Andreina Tarazón Bolívar', gerencia:'PRESIDENCIA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Presidenta'},
   {nombre:'Antonio José Gregorio Ramos Martínez', gerencia:'CONSULTORÍA JURÍDICA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Apoyo Profesional'},
   {nombre:'Arizay Ismaelyn Eekhaut Molina', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Aseadora'},
   {nombre:'Astrid Karina Uribe Sánchez', gerencia:'GERENTE DE ARTICULACIÓN ESTRATÉGICA PARA EL IMPULSO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente de Articulación'},
   {nombre:'Carlos Alberto Durán Sánchez', gerencia:'GERENTE DE ARTICULACIÓN ESTRATÉGICA PARA EL IMPULSO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Darwin Nivaldo Zuarce', gerencia:'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Apoyo Profesional'},
-  {nombre:'David Alexander Guerrero Figueroa', gerencia:'', piso:'', oficina:'', cargo:''},
-  {nombre:'Dayana Verónica Chediak Kasrin', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
+  {nombre:'David Alexander Guerrero Figueroa', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Administrativo'},
   {nombre:'Dayana del Carmen Lara Cornielis', gerencia:'AUDITORÍA INTERNA (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Profesional'},
+  {nombre:'Dayana Verónica Chediak Kasrin', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
   {nombre:'Dayannis del Valle Álvarez Millán', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
-  {nombre:'Edgar Mata', gerencia:'', piso:'', oficina:'', cargo:''},
+  {nombre:'Edgar Luis Mata', gerencia:'AUDITORÍA INTERNA (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Auditor Interno'},
   {nombre:'Edignorelia Valbuena Morales', gerencia:'GERENCIA GENERAL DE REGULACIÓN, USO Y SEGUIMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Institucional'},
   {nombre:'Edward Eduardo Lunar', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Administrativo'},
   {nombre:'Elizabeth Mendoza', gerencia:'GERENCIA GENERAL DE REGULACIÓN, USO Y SEGUIMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General de Regulación'},
   {nombre:'Ender José Cobarrubia', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Técnico'},
   {nombre:'Erich Nailen Escalante de Dulcey', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
-  {nombre:'Gabriela Liendo Paredes', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Técnico'},
+  {nombre:'Gabriela María Liendo Paredes', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Técnico'},
   {nombre:'Génesis Ivanova González Dicuru', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Institucional'},
   {nombre:'Ivette Andreina Domínguez Gómez', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Profesional'},
-  {nombre:'Jhoanyeli Nazareth González González', gerencia:'', piso:'', oficina:'', cargo:''},
+  {nombre:'Jhoanyeli Nazareth González González', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Jhon Manuel Gutiérrez Marín', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
   {nombre:'Joeli Vanessa Martínez Welma', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Jonel Manuel Ortiz Denis', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'José Ángel Guerra', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
-  {nombre:'Judelys Daniela Romero Espinoza', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General'},
+  {nombre:'Judelys Daniela Romero Espinoza', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Karen Luisana Monsalve Cedres', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Lisbeth Amparo Padilla Arnal', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
+  {nombre:'Manuel Alexander Reyes Rodríguez', gerencia:'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
+  {nombre:'Marcial Martín Manuel Méndez', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General de Promociones'},
   {nombre:'Maritza Beatriz Nadales', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Institucional'},
   {nombre:'Michelangely Josefina Griffith Añazco', gerencia:'GERENCIA DE ATENCIÓN CIUDADANA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente'},
+  {nombre:'Miguel Ángel Zapata Torres', gerencia:'GERENCIA GENERAL (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General'},
   {nombre:'Niki Benjamín Herrera Gómez', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Honorarios Profesionales'},
   {nombre:'Ninoska García Pérez', gerencia:'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Apoyo Profesional'},
   {nombre:'Niurka Carolina Quintero Contreras', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Gerente'},
   {nombre:'Omar Rogelio García', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Institucional'},
   {nombre:'Patricia Carolina Miranda Villamizar', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Técnico'},
-  {nombre:'Ramón Antonio Narváez Flores', gerencia:'GERENCIA GENERAL DE PROMOCIÓN Y POSICIONAMIENTO DE LA MARCA PAÍS (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Gerente General de Promociones'},
-  {nombre:'Manuel Alexander Reyes Rodríguez', gerencia:'', piso:'4', oficina:'4-06', cargo:''},
+  {nombre:'Rosa Amelia Calzadilla', gerencia:'PRESIDENCIA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Administrativo'},
   {nombre:'Rubén Ernesto Moreno Vásquez', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Gerente'},
   {nombre:'Stefany Valentina Mendible Ramírez', gerencia:'PRESIDENCIA (MARCA PAÍS)', piso:'3', oficina:'3-01', cargo:'Apoyo Profesional'},
   {nombre:'Tana Valentina Vásquez Rojas', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Administrativo'},
-  {nombre:'Víctor José Mosalve Rodríguez', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Chofer'},
+  {nombre:'Victor José Mosalve Rodríguez', gerencia:'GERENCIA DE GESTIÓN ADMINISTRATIVA (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Chofer'},
   {nombre:'Vincent Orlando Oropeza', gerencia:'GERENCIA GESTIÓN COMUNICACIONAL (MARCA PAÍS)', piso:'3', oficina:'3-05', cargo:'Apoyo Profesional'},
   {nombre:'Yaneth Mercedes Duarte de Ortiz', gerencia:'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Apoyo Profesional'},
   {nombre:'Yannely Domínguez Salcedo', gerencia:'GERENCIA DE GESTIÓN HUMANA (MARCA PAÍS)', piso:'3', oficina:'3-04', cargo:'Gerente'},
-  {nombre:'Yarumi Tarazon Betancourt', gerencia:'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Gerente'},
+  {nombre:'Yarumi Tarazón Betancourt', gerencia:'GERENCIA DE PLANIFICACIÓN Y PRESUPUESTO (MARCA PAÍS)', piso:'4', oficina:'4-06', cargo:'Gerente'},
 ];
 
 /* Busca por nombre exacto, sin distinguir mayúsculas, espacios de sobra ni
