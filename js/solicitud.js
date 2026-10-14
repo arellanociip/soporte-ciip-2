@@ -1536,7 +1536,6 @@
         <div class="f">Enviada el ${escapar(fechaCorta(s.creada_en))}${
           s.atendida_en ? ' · atendida el ' + escapar(fechaCorta(s.atendida_en)) : ''}</div>
       </div>
-      <span class="etiqueta ${escapar(s.estado)}">${escapar(ESTADO_LBL[s.estado] || s.estado)}</span>
       ${pasosHtml(s)}
       ${respuesta}
       ${(s.estado === 'recibida' || (!verHistorial && s.tecnico)) ? `<div class="mis-acciones">
