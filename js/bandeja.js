@@ -856,32 +856,69 @@
       .replace(/marca pa[íi]s/gi, 'Marca País');
   }
 
-  function barrasHtml(titulo, sub, filas){
+  /* Cada fila puede llevar a las solicitudes que cuenta: con `campo` la fila
+     es un botón, y al pulsarla sale debajo de las cifras la lista de esas
+     solicitudes. `fmt` cambia cómo se escribe el número —"3,5 h" en vez de
+     "3"— cuando la barra no mide cuántas sino cuánto tarda. */
+  function barrasHtml(titulo, sub, filas, campo, fmt, soloAtendidas){
     if(!filas.length){
       return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
         <div class="vacio-b">Todavía no hay datos.</div></div>`;
     }
     /* Las barras se miden contra el mayor, no contra el total: así la
        diferencia entre el primero y el segundo se ve, que es lo que se lee. */
-    const mayor = filas[0][1];
+    const mayor = Math.max(...filas.map(f => f[1])) || 1;
+    const etiqueta = n => fmt ? fmt(n) : String(n);
     return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
       <div class="barrio-filas">
-      ${filas.map(([et, n]) => `<div class="bfila" title="${esc(et)}: ${n}">
-        <div class="et">${esc(et)}</div><div class="n">${n}</div>
-        <div class="riel"><i style="width:${Math.round(n / mayor * 100)}%"></i></div>
-      </div>`).join('')}
+      ${filas.map(([et, n, extra]) => {
+        const datos = campo ? ` data-campo="${esc(campo)}" data-valor="${esc(et)}"${soloAtendidas ? ' data-atendidas="1"' : ''}` : '';
+        const etq = campo ? 'button type="button"' : 'div';
+        return `<${etq} class="bfila${campo ? ' clic' : ''}"${datos} title="${esc(et)}: ${esc(etiqueta(n))}${extra ? ' · ' + esc(extra) : ''}${campo ? ' · ver cuáles' : ''}">
+        <span class="et">${esc(et)}</span><span class="n">${etiqueta(n)}${extra ? `<small> · ${esc(extra)}</small>` : ''}</span>
+        <span class="riel"><i style="width:${Math.round(n / mayor * 100)}%"></i></span>
+      </${campo ? 'button' : 'div'}>`;
+      }).join('')}
       </div></div>`;
   }
 
   /* Cuánto se tarda de recibida a atendida, en promedio. Solo cuenta las que
      tienen las dos fechas: sin eso el promedio sería inventado. */
+  const horasDe = s => (new Date(s.atendida_en) - new Date(s.creada_en)) / 3600000;
+  const conDuracion = s => s.estado === 'atendida' && s.atendida_en && s.creada_en;
   function tiempoMedio(lista){
-    const cerradas = lista.filter(s => s.estado === 'atendida' && s.atendida_en && s.creada_en);
+    const cerradas = lista.filter(conDuracion);
     if(!cerradas.length) return null;
-    const horas = cerradas.reduce((suma, s) =>
-      suma + (new Date(s.atendida_en) - new Date(s.creada_en)) / 3600000, 0) / cerradas.length;
+    const horas = cerradas.reduce((suma, s) => suma + horasDe(s), 0) / cerradas.length;
     return {horas, sobre: cerradas.length};
   }
+
+  /* Una duración en palabras cortas: minutos si no llega a la hora, horas
+     hasta dos días, y de ahí en adelante días. Lo mismo en la cifra grande,
+     en las barras y en las listas, para que se comparen a simple vista. */
+  function duracion(horas, html){
+    const u = t => html ? `<small>${t}</small>` : ' ' + t;
+    if(horas < 1) return Math.max(1, Math.round(horas * 60)) + u('min');
+    if(horas < 48) return horas.toFixed(1).replace('.', ',').replace(',0', '') + u('h');
+    return (horas / 24).toFixed(1).replace('.', ',').replace(',0', '') + u('días');
+  }
+
+  /* Cuánto lleva esperando una que sigue abierta, contado como lo cuenta
+     edadHtml(): por días de calendario. */
+  function espera(s){
+    const dia = x => { const d = new Date(x); d.setHours(0,0,0,0); return d.getTime(); };
+    const dias = Math.round((dia(Date.now()) - dia(s.creada_en)) / 86400000);
+    return dias <= 0 ? 'desde hoy' : dias === 1 ? 'desde ayer' : 'hace ' + dias + ' días';
+  }
+
+  /* De qué se trata, con el mismo rótulo que usa la lista "Lo que más se
+     pide": así lo que se pulsa allí y lo que sale en el detalle coinciden. */
+  const servicioDe = s => enBonito(s.detalle) || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar');
+  const CLAVES = {
+    servicio: servicioDe,
+    gerencia: s => enBonito(s.gerencia),
+    tecnico:  s => enBonito(s.tecnico),
+  };
 
   /* ---------- el tramo de tiempo ----------
      La misma pregunta —cuánto entró y de dónde— cambia de respuesta según se
@@ -936,6 +973,188 @@
     return 'desde el principio';
   }
 
+  /* ---------- cómo fue llegando ----------
+     El tramo partido en pedazos del tamaño que se lee bien: horas si se mira
+     el día, días si se mira la semana o el mes, meses si se mira el año o
+     todo. Cada pedazo es [desde, hasta) en la hora de la oficina. */
+  function pedazos(){
+    const hoy = new Date();
+    const out = [];
+    const MES = d => d.toLocaleDateString('es-VE', {month: 'short'}).replace('.', '');
+    if(periodo === 'hoy'){
+      const d0 = desdeDe('hoy');
+      for(let h = 0; h <= hoy.getHours(); h++){
+        const a = new Date(d0); a.setHours(h);
+        const b = new Date(d0); b.setHours(h + 1);
+        out.push({a, b, et: String(h), largo: h + ':00 a ' + (h + 1) + ':00'});
+      }
+    }else if(periodo === 'semana' || periodo === 'mes'){
+      const d = new Date(desdeDe(periodo));
+      while(d <= hoy){
+        const a = new Date(d), b = new Date(d); b.setDate(b.getDate() + 1);
+        out.push({a, b, et: periodo === 'semana' ? a.toLocaleDateString('es-VE', {weekday: 'short'}).replace('.', '') : String(a.getDate()),
+                  largo: a.toLocaleDateString('es-VE', {weekday: 'long', day: 'numeric', month: 'long'})});
+        d.setDate(d.getDate() + 1);
+      }
+    }else{
+      let d = periodo === 'anio' ? desdeDe('anio') : null;
+      if(!d){
+        /* "Todo" empieza en el mes de la primera solicitud que haya */
+        const fechas = solicitudes.filter(s => s.creada_en).map(s => new Date(s.creada_en));
+        const primera = fechas.length ? new Date(Math.min(...fechas)) : hoy;
+        d = new Date(primera.getFullYear(), primera.getMonth(), 1);
+      }
+      d = new Date(d);
+      const varios = d.getFullYear() !== hoy.getFullYear();
+      while(d <= hoy){
+        const a = new Date(d), b = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+        out.push({a, b, et: MES(a) + (varios ? ' ' + String(a.getFullYear()).slice(2) : ''),
+                  largo: a.toLocaleDateString('es-VE', {month: 'long', year: 'numeric'})});
+        d = b;
+      }
+    }
+    return out;
+  }
+  let pedazosVistos = [];
+
+  /* Dos columnas por pedazo: lo que entró y lo que se resolvió. "Resueltas"
+     aquí es lo que se cerró ese día, sin importar cuándo había entrado: es la
+     pregunta "¿cuánto trabajo salió?", distinta de la cifra de arriba. Dos
+     colores porque son dos cosas: el azul de siempre para lo que entra y el
+     verde de "atendida" para lo que sale, el mismo de la etiqueta de la fila. */
+  function evolucionHtml(lista){
+    const ps = pedazos();
+    pedazosVistos = ps;
+    const vivas = solicitudes.filter(s => s.estado !== 'anulada');
+    const dentro = (iso, p) => { if(!iso) return false; const t = new Date(iso); return t >= p.a && t < p.b; };
+    const cuentas = ps.map(p => ({
+      ent: lista.filter(s => dentro(s.creada_en, p)).length,
+      res: vivas.filter(s => s.estado === 'atendida' && dentro(s.atendida_en, p)).length,
+    }));
+    const mayor = Math.max(1, ...cuentas.map(c => Math.max(c.ent, c.res)));
+    const totEnt = cuentas.reduce((x, c) => x + c.ent, 0), totRes = cuentas.reduce((x, c) => x + c.res, 0);
+    const cadaCuanto = Math.ceil(ps.length / 16);   /* que los rótulos de abajo no se pisen */
+    const unidad = periodo === 'hoy' ? 'hora' : (periodo === 'semana' || periodo === 'mes') ? 'día' : 'mes';
+    if(!totEnt && !totRes){
+      return `<div class="barrio evol"><h2>Cómo fue llegando</h2><div class="s">Por ${unidad}</div>
+        <div class="vacio-b">Todavía no hay datos en este tramo.</div></div>`;
+    }
+    return `<div class="barrio evol">
+      <div class="evol-cab">
+        <div><h2>Cómo fue llegando</h2>
+          <div class="s">Por ${unidad} · ${totEnt} entraron y ${totRes} se resolvieron · pulsa una columna para ver cuáles</div></div>
+        <div class="evol-ley"><span class="ley ent">Entraron</span><span class="ley res">Resueltas ese ${unidad}</span></div>
+      </div>
+      <div class="evol-marco">
+        <div class="evol-tope">${mayor}</div>
+        <div class="evol-graf" style="grid-template-columns:repeat(${ps.length}, minmax(14px, 1fr))">
+        ${ps.map((p, i) => { const c = cuentas[i]; return `<button type="button" class="evol-col" data-pedazo="${i}"
+            title="${esc(p.largo)}: ${c.ent} entraron, ${c.res} resueltas">
+            <span class="evol-barras">
+              <i class="ent" style="height:${c.ent / mayor * 100}%"></i>
+              <i class="res" style="height:${c.res / mayor * 100}%"></i>
+            </span>
+            <span class="evol-et">${i % cadaCuanto === 0 ? esc(p.et) : ''}</span>
+          </button>`; }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* ---------- tiempos y desempeño ----------
+     Por técnico: lo que tiene entre manos ahora, lo que cerró en el tramo y
+     cuánto tardó en promedio. Es la tabla para repartir el trabajo —quién
+     está libre— y para el informe. Cada fila lleva a sus solicitudes. */
+  function tecnicosHtml(atendidas, abiertas){
+    const t = new Map();
+    const de = nombre => { if(!t.has(nombre)) t.set(nombre, {enProceso: 0, cerradas: []}); return t.get(nombre); };
+    abiertas.filter(s => s.estado === 'en_proceso' && s.tecnico).forEach(s => de(enBonito(s.tecnico)).enProceso++);
+    atendidas.filter(s => s.tecnico).forEach(s => de(enBonito(s.tecnico)).cerradas.push(s));
+    const filas = [...t].sort((a, b) => b[1].cerradas.length - a[1].cerradas.length || b[1].enProceso - a[1].enProceso);
+    const cuerpo = filas.length ? filas.map(([nombre, d]) => {
+      const tm = tiempoMedio(d.cerradas);
+      return `<button type="button" class="tfila" data-tecnico="${esc(nombre)}" title="Ver las solicitudes de ${esc(nombre)}">
+        <span class="tnombre">${esc(nombre)}</span>
+        <span class="tcifra${d.enProceso ? ' ocupado' : ''}">${d.enProceso}</span>
+        <span class="tcifra">${d.cerradas.length}</span>
+        <span class="tcifra">${tm ? duracion(tm.horas) : '—'}</span>
+      </button>`;
+    }).join('') : '<div class="vacio-b">Nadie ha tomado ni cerrado solicitudes en este tramo.</div>';
+    return `<div class="barrio">
+      <h2>Por técnico</h2>
+      <div class="s">Lo que tiene ahora y lo que cerró ${esc(rotuloPeriodo())}</div>
+      <div class="tabla-tec">
+        <div class="tfila tcab"><span>Técnico</span><span>En proceso</span><span>Resueltas</span><span>Tarda en promedio</span></div>
+        ${cuerpo}
+      </div>
+    </div>`;
+  }
+
+  /* Las que más llevan esperando, de la más vieja a la más nueva. Es la
+     cifra "Sin resolver ahora" con nombre y apellido: lo primero que hay que
+     atender si la idea es que nada se quede atrás. */
+  function esperandoHtml(abiertas){
+    const viejas = abiertas.slice().sort((a, b) => new Date(a.creada_en) - new Date(b.creada_en)).slice(0, 8);
+    return `<div class="barrio">
+      <h2>Las que más esperan</h2>
+      <div class="s">${abiertas.length ? 'Sin resolver, de la más antigua a la más reciente' : 'Nada pendiente'}</div>
+      ${viejas.length ? `<div class="det-filas compacta">${viejas.map(detFilaHtml).join('')}</div>`
+                      : '<div class="vacio-b">No hay solicitudes esperando.</div>'}
+    </div>`;
+  }
+
+  /* ---------- el detalle: las solicitudes detrás de una cifra ----------
+     Lo que se está mirando se guarda como una descripción —"las resueltas",
+     "las de tal gerencia"—, no como la lista ya hecha: así, cuando la bandeja
+     se actualiza sola cada pocos segundos, el detalle se rehace con lo nuevo
+     en vez de quedarse con una foto vieja. */
+  let statsVer = null;
+
+  function filasDe(v, lista, atendidas, abiertas){
+    const vivas = solicitudes.filter(s => s.estado !== 'anulada');
+    const recientes = l => l.slice().sort((a, b) => new Date(b.creada_en) - new Date(a.creada_en));
+    if(v.k === 'entraron')  return recientes(lista);
+    if(v.k === 'resueltas') return recientes(atendidas);
+    if(v.k === 'tiempo')    return atendidas.filter(conDuracion).sort((a, b) => horasDe(b) - horasDe(a));
+    if(v.k === 'abiertas')  return abiertas.slice().sort((a, b) => new Date(a.creada_en) - new Date(b.creada_en));
+    if(v.k === 'campo')     return recientes((v.atendidas ? atendidas : lista).filter(s => CLAVES[v.campo](s) === v.valor));
+    if(v.k === 'tecnico')   return recientes(vivas.filter(s => CLAVES.tecnico(s) === v.valor &&
+                                       (s.estado === 'en_proceso' || atendidas.includes(s))));
+    if(v.k === 'pedazo'){
+      const p = pedazosVistos[v.i];
+      if(!p) return [];
+      const dentro = iso => { if(!iso) return false; const t = new Date(iso); return t >= p.a && t < p.b; };
+      return recientes(vivas.filter(s => dentro(s.creada_en) || (s.estado === 'atendida' && dentro(s.atendida_en))));
+    }
+    return [];
+  }
+
+  function detFilaHtml(s){
+    let cuanto = '';
+    if(conDuracion(s)) cuanto = 'resuelta en ' + duracion(horasDe(s));
+    else if(s.estado === 'recibida' || s.estado === 'en_proceso') cuanto = 'esperando ' + espera(s);
+    return `<button type="button" class="det-fila" data-abrir="${esc(s.id)}" title="Abrir la ficha">
+      <span class="dnum">${String(s.numero).padStart(3,'0')}<small>${esc(String(s.anio))}</small></span>
+      <span class="dquien"><b>${esc(s.usuario)}</b><small>${esc(enBonito(s.gerencia))} · ${esc(servicioDe(s))}</small></span>
+      <span class="dfecha">${esc(fechaCorta(s.creada_en))}</span>
+      <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
+      <span class="dtec">${esc(s.tecnico ? enBonito(s.tecnico) : 'Sin técnico')}</span>
+      <span class="dcuanto">${esc(cuanto)}</span>
+    </button>`;
+  }
+
+  function detalleHtml(v, filas){
+    return `<div class="barrio det" id="statsDetalleCaja">
+      <div class="det-cab">
+        <div><h2>${esc(v.titulo)}</h2>
+          <div class="s">${filas.length === 1 ? '1 solicitud' : filas.length + ' solicitudes'}${v.sub ? ' · ' + esc(v.sub) : ''} · pulsa una para abrir su ficha</div></div>
+        <button type="button" class="boton plano" data-cerrar-detalle>Cerrar</button>
+      </div>
+      ${filas.length ? `<div class="det-filas">${filas.map(detFilaHtml).join('')}</div>`
+                     : '<div class="vacio-b">Ninguna solicitud en este grupo.</div>'}
+    </div>`;
+  }
+
   function pintarStats(){
     const lista = delPeriodo();
     const atendidas = lista.filter(s => s.estado === 'atendida');
@@ -950,55 +1169,123 @@
              (n ? `<span class="n">${n}</span>` : '') + '</button>';
     }).join('');
 
-    $('statsPeriodo').textContent = 'Lo que entró ' + rotuloPeriodo() + '.';
+    $('statsPeriodo').textContent = 'Lo que entró ' + rotuloPeriodo() + '. Pulsa cualquier cifra, barra o columna para ver las solicitudes que cuenta.';
 
-    const tiempo = !t ? '—'
-      : t.horas < 1 ? Math.round(t.horas * 60) + '<small>min</small>'
-      : t.horas < 48 ? t.horas.toFixed(1).replace('.', ',') + '<small>h</small>'
-      : (t.horas / 24).toFixed(1).replace('.', ',') + '<small>días</small>';
-
+    /* Las cuatro cifras son botones: cada una lleva a su lista. */
+    const on = k => statsVer && statsVer.k === k ? ' on' : '';
     $('statsKpis').innerHTML = `
-      <div class="kpi">
+      <button type="button" class="kpi${on('entraron')}" data-ver="entraron">
         <div class="r">Entraron</div>
         <div class="v">${lista.length}</div>
         <div class="s">${esc(rotuloPeriodo())}</div>
-      </div>
-      <div class="kpi">
+      </button>
+      <button type="button" class="kpi${on('resueltas')}" data-ver="resueltas">
         <div class="r">Resueltas</div>
         <div class="v">${atendidas.length}</div>
         <div class="s">${lista.length ? Math.round(atendidas.length / lista.length * 100) + '% de las que entraron'
                                       : 'nada que resolver'}</div>
-      </div>
-      <div class="kpi">
+      </button>
+      <button type="button" class="kpi${on('tiempo')}" data-ver="tiempo">
         <div class="r">Tiempo medio</div>
-        <div class="v">${tiempo}</div>
+        <div class="v">${t ? duracion(t.horas, true) : '—'}</div>
         <div class="s">${t ? 'sobre ' + t.sobre + ' resueltas' : 'aún sin resolver ninguna'}</div>
-      </div>
-      <div class="kpi ${abiertas.length ? 'urge' : ''}">
+      </button>
+      <button type="button" class="kpi${on('abiertas')} ${abiertas.length ? 'urge' : ''}" data-ver="abiertas">
         <div class="r">Sin resolver ahora</div>
         <div class="v">${abiertas.length}</div>
         <div class="s">${abiertas.filter(s => s.estado === 'en_proceso').length} ya en proceso,
           de todas las fechas</div>
-      </div>`;
+      </button>`;
+
+    const det = $('statsDetalle');
+    if(statsVer){
+      det.innerHTML = detalleHtml(statsVer, filasDe(statsVer, lista, atendidas, abiertas));
+      det.hidden = false;
+    }else{
+      det.innerHTML = ''; det.hidden = true;
+    }
+
+    $('statsEvolucion').innerHTML = evolucionHtml(lista);
+
+    /* Tiempo medio por servicio: la misma barra, pero midiendo cuánto tarda
+       en vez de cuántas veces. Solo con lo que tiene las dos fechas. */
+    const porServicio = new Map();
+    atendidas.filter(conDuracion).forEach(s => {
+      const k = servicioDe(s); if(!porServicio.has(k)) porServicio.set(k, []);
+      porServicio.get(k).push(horasDe(s));
+    });
+    const tardanza = [...porServicio].map(([k, hs]) => [k, hs.reduce((a, b) => a + b, 0) / hs.length,
+                       hs.length === 1 ? '1 resuelta' : hs.length + ' resueltas']).sort((a, b) => b[1] - a[1]);
 
     $('statsBarras').innerHTML =
-      /* Tres listas y en este orden: qué se pide, quién lo pide, quién lo
-         resuelve. Estaban además "de qué oficina" y "en qué piso", que decían
-         lo mismo dos veces —la oficina ya lleva el piso delante— y con tan
-         pocas solicitudes al día no dicen nada que no se sepa. */
-      barrasHtml('Lo que más se pide', 'Por detalle de servicio',
-        contar(lista, s => enBonito(s.detalle) || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'))) +
-      barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
-        contar(lista, s => enBonito(s.gerencia))) +
-      barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
-        contar(atendidas, s => enBonito(s.tecnico)));
+      /* Qué se pide, quién lo pide, quién lo resuelve y qué tarda más. Estaban
+         además "de qué oficina" y "en qué piso", que decían lo mismo dos
+         veces —la oficina ya lleva el piso delante— y con tan pocas
+         solicitudes al día no dicen nada que no se sepa. */
+      barrasHtml('Lo que más se pide', 'Por detalle de servicio', contar(lista, servicioDe), 'servicio') +
+      barrasHtml('De qué gerencia vienen', 'Quién pide más soporte', contar(lista, CLAVES.gerencia), 'gerencia') +
+      barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico', contar(atendidas, CLAVES.tecnico), 'tecnico', null, true) +
+      barrasHtml('Lo que más tarda', 'Tiempo medio de resolución por servicio', tardanza, 'servicio', h => duracion(h), true);
+
+    $('statsDesempeno').innerHTML = tecnicosHtml(atendidas, abiertas) + esperandoHtml(abiertas);
+  }
+
+  function verDetalle(v){
+    statsVer = v;
+    pintarStats();
+    const caja = $('statsDetalleCaja');
+    if(caja) caja.scrollIntoView({block: 'start', behavior: 'smooth'});
   }
 
   $('statsPeriodos').addEventListener('click', e => {
     const b = e.target.closest('[data-periodo]');
     if(!b) return;
     periodo = b.dataset.periodo;
+    /* lo que se miraba era de otro tramo: una columna de "este mes" no
+       existe en "hoy" */
+    if(statsVer && statsVer.k === 'pedazo') statsVer = null;
     pintarStats();
+  });
+
+  /* Un solo oyente para todo el panel: cifras, barras, columnas, filas de
+     técnico y filas de solicitud. */
+  $('panelStats').addEventListener('click', e => {
+    const abrirla = e.target.closest('[data-abrir]');
+    if(abrirla){ abrir(abrirla.dataset.abrir); return; }
+    if(e.target.closest('[data-cerrar-detalle]')){ statsVer = null; pintarStats(); return; }
+    const kpi = e.target.closest('[data-ver]');
+    if(kpi){
+      const k = kpi.dataset.ver;
+      if(statsVer && statsVer.k === k){ statsVer = null; pintarStats(); return; }
+      const TIT = {
+        entraron:  ['Las que entraron', rotuloPeriodo() + ', de la más reciente a la más antigua'],
+        resueltas: ['Las que se resolvieron', 'entraron ' + rotuloPeriodo()],
+        tiempo:    ['Cuánto tardó cada una', 'de la que más tardó a la que menos'],
+        abiertas:  ['Sin resolver ahora', 'de todas las fechas, de la más antigua a la más reciente'],
+      }[k];
+      verDetalle({k, titulo: TIT[0], sub: TIT[1]});
+      return;
+    }
+    const barra = e.target.closest('[data-campo]');
+    if(barra){
+      const NOMBRE = {servicio: 'Servicio', gerencia: 'Gerencia', tecnico: 'Técnico'};
+      verDetalle({k: 'campo', campo: barra.dataset.campo, valor: barra.dataset.valor, atendidas: !!barra.dataset.atendidas,
+                  titulo: NOMBRE[barra.dataset.campo] + ': ' + barra.dataset.valor,
+                  sub: (barra.dataset.atendidas ? 'resueltas que entraron ' : 'entraron ') + rotuloPeriodo()});
+      return;
+    }
+    const tec = e.target.closest('[data-tecnico]');
+    if(tec){
+      verDetalle({k: 'tecnico', valor: tec.dataset.tecnico, titulo: 'Técnico: ' + tec.dataset.tecnico,
+                  sub: 'en proceso ahora y resueltas que entraron ' + rotuloPeriodo()});
+      return;
+    }
+    const col = e.target.closest('[data-pedazo]');
+    if(col){
+      const p = pedazosVistos[+col.dataset.pedazo];
+      if(p) verDetalle({k: 'pedazo', i: +col.dataset.pedazo, titulo: p.largo.charAt(0).toUpperCase() + p.largo.slice(1),
+                        sub: 'las que entraron o se resolvieron en ese momento'});
+    }
   });
 
   /* ================= los paneles que sustituyen a la cola =================
