@@ -1021,6 +1021,10 @@
      se actualiza sola cada pocos segundos, el detalle se rehace con lo nuevo
      en vez de quedarse con una foto vieja. */
   let statsVer = null;
+  /* Qué sub-pestaña está delante: el resumen o el detalle. El detalle no se
+     tira al volver al resumen: su pestaña sigue ahí hasta que se cierra con
+     la equis, para poder ir y venir entre las dos. */
+  let statsPestana = 'resumen';
 
   function filasDe(v, lista, atendidas, abiertas){
     const vivas = solicitudes.filter(s => s.estado !== 'anulada');
@@ -1054,7 +1058,7 @@
       <div class="det-cab">
         <div><h2>${esc(v.titulo)}</h2>
           <div class="s">${filas.length === 1 ? '1 solicitud' : filas.length + ' solicitudes'}${v.sub ? ' · ' + esc(v.sub) : ''} · pulsa una para abrir su ficha</div></div>
-        <button type="button" class="boton plano" data-cerrar-detalle>Cerrar</button>
+        <button type="button" class="boton plano" data-pestana="resumen">Volver al resumen</button>
       </div>
       ${filas.length ? `<div class="det-filas">${filas.map(detFilaHtml).join('')}</div>`
                      : '<div class="vacio-b">Ninguna solicitud en este grupo.</div>'}
@@ -1103,13 +1107,28 @@
           de todas las fechas</div>
       </button>`;
 
-    const det = $('statsDetalle');
+    /* Las sub-pestañas solo aparecen cuando hay un detalle abierto: sin él
+       no hay entre qué elegir y una pestaña sola es ruido. */
+    const pest = $('statsPestanas'), det = $('statsDetalle'), res = $('statsResumen');
     if(statsVer){
-      det.innerHTML = detalleHtml(statsVer, filasDe(statsVer, lista, atendidas, abiertas));
-      det.hidden = false;
+      const filas = filasDe(statsVer, lista, atendidas, abiertas);
+      const enRes = statsPestana === 'resumen';
+      det.innerHTML = detalleHtml(statsVer, filas);
+      pest.innerHTML = `<button type="button" class="subpestana${enRes ? ' on' : ''}" role="tab"
+          aria-selected="${enRes}" data-pestana="resumen">Resumen</button>
+        <span class="subpestana-det">
+          <button type="button" class="subpestana${enRes ? '' : ' on'}" role="tab" aria-selected="${!enRes}"
+            data-pestana="detalle" title="${esc(statsVer.titulo)}">${esc(statsVer.titulo)}<span class="n">${filas.length}</span></button>
+          <button type="button" class="subpestana-x" data-cerrar-detalle aria-label="Cerrar esta pestaña" title="Cerrar esta pestaña">×</button>
+        </span>`;
+      pest.hidden = false;
     }else{
-      det.innerHTML = ''; det.hidden = true;
+      statsPestana = 'resumen';
+      det.innerHTML = ''; pest.innerHTML = ''; pest.hidden = true;
     }
+    const enDetalle = !!statsVer && statsPestana === 'detalle';
+    det.hidden = !enDetalle;
+    res.hidden = enDetalle;
 
     /* Tiempo medio por servicio: la misma barra, pero midiendo cuánto tarda
        en vez de cuántas veces. Solo con lo que tiene las dos fechas. */
@@ -1134,11 +1153,14 @@
     $('statsDesempeno').innerHTML = tecnicosHtml(atendidas, abiertas) + esperandoHtml(abiertas);
   }
 
+  /* Abrir un detalle es pasar a su pestaña. Si las pestañas quedaron fuera
+     de la vista —se pulsó una barra de abajo—, se sube hasta ellas. */
   function verDetalle(v){
     statsVer = v;
+    statsPestana = 'detalle';
     pintarStats();
-    const caja = $('statsDetalleCaja');
-    if(caja) caja.scrollIntoView({block: 'start', behavior: 'smooth'});
+    const p = $('statsPestanas');
+    if(p && p.getBoundingClientRect().top < 0) p.scrollIntoView({block: 'start', behavior: 'smooth'});
   }
 
   $('statsPeriodos').addEventListener('click', e => {
@@ -1148,16 +1170,17 @@
     pintarStats();
   });
 
-  /* Un solo oyente para todo el panel: cifras, barras, filas de técnico y
-     filas de solicitud. */
+  /* Un solo oyente para todo el panel: sub-pestañas, cifras, barras, filas
+     de técnico y filas de solicitud. */
   $('panelStats').addEventListener('click', e => {
     const abrirla = e.target.closest('[data-abrir]');
     if(abrirla){ abrir(abrirla.dataset.abrir); return; }
     if(e.target.closest('[data-cerrar-detalle]')){ statsVer = null; pintarStats(); return; }
+    const pestana = e.target.closest('[data-pestana]');
+    if(pestana){ statsPestana = pestana.dataset.pestana; pintarStats(); return; }
     const kpi = e.target.closest('[data-ver]');
     if(kpi){
       const k = kpi.dataset.ver;
-      if(statsVer && statsVer.k === k){ statsVer = null; pintarStats(); return; }
       const TIT = {
         entraron:  ['Las que entraron', rotuloPeriodo() + ', de la más reciente a la más antigua'],
         resueltas: ['Las que se resolvieron', 'entraron ' + rotuloPeriodo()],

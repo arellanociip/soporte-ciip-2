@@ -1637,6 +1637,27 @@ select.despierta{animation:destello .7s ease;}
 /* la cifra que se está mirando abajo queda marcada */
 .kpi.on{border-color:var(--navy-medio); box-shadow:0 0 0 1px var(--navy-medio), var(--shadow);}
 
+/* ---- las sub-pestañas: Resumen y el detalle abierto ----
+   Una raya debajo y nada más, para no confundirse con las fichas redondas
+   del tramo de tiempo, que están justo encima y son otra cosa: aquellas
+   cambian qué se cuenta, estas cambian qué se mira. */
+.subpestanas{display:flex; gap:4px; align-items:flex-end; border-bottom:1px solid var(--line); margin-bottom:18px; overflow-x:auto;}
+.subpestana{
+  font:inherit; font-size:13px; font-weight:600; color:var(--gray); background:none; cursor:pointer;
+  border:0; border-bottom:2px solid transparent; margin-bottom:-1px; padding:9px 12px 8px; white-space:nowrap;
+}
+.subpestana:hover{color:var(--ink);}
+.subpestana.on{color:var(--navy); border-bottom-color:var(--navy);}
+.subpestana .n{font-family:var(--cifras); font-weight:500; color:var(--gray-soft); margin-left:7px;}
+.subpestana-det{display:inline-flex; align-items:center; min-width:0;}
+.subpestana-det .subpestana{max-width:440px; overflow:hidden; text-overflow:ellipsis;}
+.subpestana-x{
+  font:inherit; font-size:17px; line-height:1; color:var(--gray-soft); background:none; border:0;
+  border-radius:4px; padding:3px 7px; margin-left:-4px; cursor:pointer;
+}
+.subpestana-x:hover{background:var(--line-soft); color:var(--ink);}
+.subpestana:focus-visible, .subpestana-x:focus-visible{outline:2px solid var(--navy-medio); outline-offset:-2px;}
+
 /* ---- el detalle: las solicitudes detrás de una cifra ---- */
 .stats-detalle{margin-bottom:20px;}
 .det-cab{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;}
