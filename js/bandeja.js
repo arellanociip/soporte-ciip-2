@@ -687,10 +687,19 @@
     if(tomadas.length) avisarTomadas(tomadas);
   }
 
+  /* La que ya tomó un compañero. Sigue en "En proceso" y en "Todas", pero no
+     en las pendientes de uno: si otro la lleva, no es trabajo que me toque. */
+  function deOtro(s){
+    if(s.estado !== 'en_proceso' || !s.tecnico) return false;
+    const yo = (yoTecnico().nombre || '').trim().toLowerCase();
+    return s.tecnico.trim().toLowerCase() !== yo;
+  }
+  const esPendiente = s => s.estado === 'recibida' || (s.estado === 'en_proceso' && !deOtro(s));
+
   function visibles(){
     const q = busqueda.trim().toLowerCase();
     return solicitudes.filter(s => {
-      if(filtro === 'pendientes' && !['recibida','en_proceso'].includes(s.estado)) return false;
+      if(filtro === 'pendientes' && !esPendiente(s)) return false;
       if(!['pendientes','todas'].includes(filtro) && s.estado !== filtro) return false;
       if(!q) return true;
       return [s.numero, s.usuario, s.gerencia, s.oficina, s.descripcion, s.tecnico]
@@ -700,7 +709,7 @@
 
   function cuenta(clave){
     if(clave === 'todas') return solicitudes.length;
-    if(clave === 'pendientes') return solicitudes.filter(s => ['recibida','en_proceso'].includes(s.estado)).length;
+    if(clave === 'pendientes') return solicitudes.filter(esPendiente).length;
     return solicitudes.filter(s => s.estado === clave).length;
   }
 
@@ -754,6 +763,9 @@
     if(s.estado === 'recibida'){
       return `<div class="acc"><button type="button" data-accion="en_proceso"
         data-id="${esc(s.id)}" title="Marcarla como tuya y ponerla en proceso">Tomar</button></div>`;
+    }
+    if(deOtro(s)){
+      return `<div class="acc"><span class="edad fin" title="La tomó otro técnico">${esc(s.tecnico)}</span></div>`;
     }
     if(s.estado === 'en_proceso'){
       return `<div class="acc"><button type="button" class="cerrar-r" data-accion="atendida"
