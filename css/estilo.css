@@ -1846,7 +1846,6 @@ select.despierta{animation:destello .7s ease;}
   display:flex; align-items:center; gap:16px; flex-wrap:wrap;
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
   box-shadow:var(--shadow); padding:13px 17px;
-  border-left:3px solid var(--navy);
 }
 .cuenta-q{display:flex; flex-direction:column; gap:2px; flex:1; min-width:190px;}
 .cuenta-q b{font-size:14px; font-weight:700;}
