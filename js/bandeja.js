@@ -973,94 +973,6 @@
     return 'desde el principio';
   }
 
-  /* ---------- cómo fue llegando ----------
-     El tramo partido en pedazos del tamaño que se lee bien: horas si se mira
-     el día, días si se mira la semana o el mes, meses si se mira el año o
-     todo. Cada pedazo es [desde, hasta) en la hora de la oficina. */
-  function pedazos(){
-    const hoy = new Date();
-    const out = [];
-    const MES = d => d.toLocaleDateString('es-VE', {month: 'short'}).replace('.', '');
-    if(periodo === 'hoy'){
-      const d0 = desdeDe('hoy');
-      for(let h = 0; h <= hoy.getHours(); h++){
-        const a = new Date(d0); a.setHours(h);
-        const b = new Date(d0); b.setHours(h + 1);
-        out.push({a, b, et: String(h), largo: h + ':00 a ' + (h + 1) + ':00'});
-      }
-    }else if(periodo === 'semana' || periodo === 'mes'){
-      const d = new Date(desdeDe(periodo));
-      while(d <= hoy){
-        const a = new Date(d), b = new Date(d); b.setDate(b.getDate() + 1);
-        out.push({a, b, et: periodo === 'semana' ? a.toLocaleDateString('es-VE', {weekday: 'short'}).replace('.', '') : String(a.getDate()),
-                  largo: a.toLocaleDateString('es-VE', {weekday: 'long', day: 'numeric', month: 'long'})});
-        d.setDate(d.getDate() + 1);
-      }
-    }else{
-      let d = periodo === 'anio' ? desdeDe('anio') : null;
-      if(!d){
-        /* "Todo" empieza en el mes de la primera solicitud que haya */
-        const fechas = solicitudes.filter(s => s.creada_en).map(s => new Date(s.creada_en));
-        const primera = fechas.length ? new Date(Math.min(...fechas)) : hoy;
-        d = new Date(primera.getFullYear(), primera.getMonth(), 1);
-      }
-      d = new Date(d);
-      const varios = d.getFullYear() !== hoy.getFullYear();
-      while(d <= hoy){
-        const a = new Date(d), b = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-        out.push({a, b, et: MES(a) + (varios ? ' ' + String(a.getFullYear()).slice(2) : ''),
-                  largo: a.toLocaleDateString('es-VE', {month: 'long', year: 'numeric'})});
-        d = b;
-      }
-    }
-    return out;
-  }
-  let pedazosVistos = [];
-
-  /* Dos columnas por pedazo: lo que entró y lo que se resolvió. "Resueltas"
-     aquí es lo que se cerró ese día, sin importar cuándo había entrado: es la
-     pregunta "¿cuánto trabajo salió?", distinta de la cifra de arriba. Dos
-     colores porque son dos cosas: el azul de siempre para lo que entra y el
-     verde de "atendida" para lo que sale, el mismo de la etiqueta de la fila. */
-  function evolucionHtml(lista){
-    const ps = pedazos();
-    pedazosVistos = ps;
-    const vivas = solicitudes.filter(s => s.estado !== 'anulada');
-    const dentro = (iso, p) => { if(!iso) return false; const t = new Date(iso); return t >= p.a && t < p.b; };
-    const cuentas = ps.map(p => ({
-      ent: lista.filter(s => dentro(s.creada_en, p)).length,
-      res: vivas.filter(s => s.estado === 'atendida' && dentro(s.atendida_en, p)).length,
-    }));
-    const mayor = Math.max(1, ...cuentas.map(c => Math.max(c.ent, c.res)));
-    const totEnt = cuentas.reduce((x, c) => x + c.ent, 0), totRes = cuentas.reduce((x, c) => x + c.res, 0);
-    const cadaCuanto = Math.ceil(ps.length / 16);   /* que los rótulos de abajo no se pisen */
-    const unidad = periodo === 'hoy' ? 'hora' : (periodo === 'semana' || periodo === 'mes') ? 'día' : 'mes';
-    if(!totEnt && !totRes){
-      return `<div class="barrio evol"><h2>Cómo fue llegando</h2><div class="s">Por ${unidad}</div>
-        <div class="vacio-b">Todavía no hay datos en este tramo.</div></div>`;
-    }
-    return `<div class="barrio evol">
-      <div class="evol-cab">
-        <div><h2>Cómo fue llegando</h2>
-          <div class="s">Por ${unidad} · ${totEnt} entraron y ${totRes} se resolvieron · pulsa una columna para ver cuáles</div></div>
-        <div class="evol-ley"><span class="ley ent">Entraron</span><span class="ley res">Resueltas ese ${unidad}</span></div>
-      </div>
-      <div class="evol-marco">
-        <div class="evol-tope">${mayor}</div>
-        <div class="evol-graf" style="grid-template-columns:repeat(${ps.length}, minmax(14px, 1fr))">
-        ${ps.map((p, i) => { const c = cuentas[i]; return `<button type="button" class="evol-col" data-pedazo="${i}"
-            title="${esc(p.largo)}: ${c.ent} entraron, ${c.res} resueltas">
-            <span class="evol-barras">
-              <i class="ent" style="height:${c.ent / mayor * 100}%"></i>
-              <i class="res" style="height:${c.res / mayor * 100}%"></i>
-            </span>
-            <span class="evol-et">${i % cadaCuanto === 0 ? esc(p.et) : ''}</span>
-          </button>`; }).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-
   /* ---------- tiempos y desempeño ----------
      Por técnico: lo que tiene entre manos ahora, lo que cerró en el tramo y
      cuánto tardó en promedio. Es la tabla para repartir el trabajo —quién
@@ -1120,12 +1032,6 @@
     if(v.k === 'campo')     return recientes((v.atendidas ? atendidas : lista).filter(s => CLAVES[v.campo](s) === v.valor));
     if(v.k === 'tecnico')   return recientes(vivas.filter(s => CLAVES.tecnico(s) === v.valor &&
                                        (s.estado === 'en_proceso' || atendidas.includes(s))));
-    if(v.k === 'pedazo'){
-      const p = pedazosVistos[v.i];
-      if(!p) return [];
-      const dentro = iso => { if(!iso) return false; const t = new Date(iso); return t >= p.a && t < p.b; };
-      return recientes(vivas.filter(s => dentro(s.creada_en) || (s.estado === 'atendida' && dentro(s.atendida_en))));
-    }
     return [];
   }
 
@@ -1169,7 +1075,7 @@
              (n ? `<span class="n">${n}</span>` : '') + '</button>';
     }).join('');
 
-    $('statsPeriodo').textContent = 'Lo que entró ' + rotuloPeriodo() + '. Pulsa cualquier cifra, barra o columna para ver las solicitudes que cuenta.';
+    $('statsPeriodo').textContent = 'Lo que entró ' + rotuloPeriodo() + '. Pulsa cualquier cifra o barra para ver las solicitudes que cuenta.';
 
     /* Las cuatro cifras son botones: cada una lleva a su lista. */
     const on = k => statsVer && statsVer.k === k ? ' on' : '';
@@ -1205,8 +1111,6 @@
       det.innerHTML = ''; det.hidden = true;
     }
 
-    $('statsEvolucion').innerHTML = evolucionHtml(lista);
-
     /* Tiempo medio por servicio: la misma barra, pero midiendo cuánto tarda
        en vez de cuántas veces. Solo con lo que tiene las dos fechas. */
     const porServicio = new Map();
@@ -1241,14 +1145,11 @@
     const b = e.target.closest('[data-periodo]');
     if(!b) return;
     periodo = b.dataset.periodo;
-    /* lo que se miraba era de otro tramo: una columna de "este mes" no
-       existe en "hoy" */
-    if(statsVer && statsVer.k === 'pedazo') statsVer = null;
     pintarStats();
   });
 
-  /* Un solo oyente para todo el panel: cifras, barras, columnas, filas de
-     técnico y filas de solicitud. */
+  /* Un solo oyente para todo el panel: cifras, barras, filas de técnico y
+     filas de solicitud. */
   $('panelStats').addEventListener('click', e => {
     const abrirla = e.target.closest('[data-abrir]');
     if(abrirla){ abrir(abrirla.dataset.abrir); return; }
@@ -1279,12 +1180,6 @@
       verDetalle({k: 'tecnico', valor: tec.dataset.tecnico, titulo: 'Técnico: ' + tec.dataset.tecnico,
                   sub: 'en proceso ahora y resueltas que entraron ' + rotuloPeriodo()});
       return;
-    }
-    const col = e.target.closest('[data-pedazo]');
-    if(col){
-      const p = pedazosVistos[+col.dataset.pedazo];
-      if(p) verDetalle({k: 'pedazo', i: +col.dataset.pedazo, titulo: p.largo.charAt(0).toUpperCase() + p.largo.slice(1),
-                        sub: 'las que entraron o se resolvieron en ese momento'});
     }
   });
 
