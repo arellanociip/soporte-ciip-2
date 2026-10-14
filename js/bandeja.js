@@ -570,7 +570,7 @@
     if(!hayNotificaciones() || Notification.permission !== 'granted') return;
     try{
       const n = new Notification('Llegó una solicitud · N° ' + String(s.numero).padStart(3,'0'), {
-        body: s.usuario + '\n' + (s.descripcion || ''),
+        body: s.usuario + ' · a las ' + horaCorta(s.creada_en) + '\n' + (s.descripcion || ''),
         icon: 'assets/logo_ciip.png',
         tag: 'solicitud-' + s.id,   /* si llega dos veces el mismo aviso, no se duplica */
       });
@@ -612,8 +612,9 @@
         <span class="punto"></span>Llegó una solicitud
         ${otras ? `<span class="nueva-mas">y ${otras} más sin ver</span>` : ''}
       </div>
-      <div class="nueva-num">N° ${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}
-        <small>${esc(hora(s.creada_en))}</small></div>
+      <div class="nueva-num">N° ${String(s.numero).padStart(3,'0')}-${esc(String(s.anio))}</div>
+      <div class="nueva-hora">La pidió a las <b>${esc(horaCorta(s.creada_en))}</b>${
+        new Date(s.creada_en).toDateString() === new Date().toDateString() ? '' : ' del ' + esc(fechaCorta(s.creada_en))}</div>
       <div class="nueva-quien">${esc(s.usuario)}</div>
       <div class="nueva-donde">${esc(donde)}</div>
       ${s.telefono ? `<div class="nueva-tel">Teléfono: <b>${esc(s.telefono)}</b></div>` : ''}
@@ -720,6 +721,14 @@
     return new Date(iso).toLocaleDateString('es-VE', {day:'2-digit', month:'short', year:'numeric'});
   }
 
+  /* La hora en que se pidió, "9:05 a. m.". Va con la fecha en la fila, en la
+     ficha, en la ventana del aviso y en la notificación: sin ella no se sabe
+     cuánto lleva esperando alguien que pidió "hoy". */
+  function horaCorta(iso){
+    if(!iso) return '';
+    return new Date(iso).toLocaleTimeString('es-VE', {hour: 'numeric', minute: '2-digit'});
+  }
+
   function pintar(){
     /* La cuenta de la barra son las pendientes, no el total: lo que importa de
        una cola es lo que queda por atender. Vacía cuando no hay ninguna, que
@@ -746,14 +755,18 @@
      la mañana, aunque no hayan pasado veinticuatro horas. Así lo cuenta quien
      lo espera. */
   function edadHtml(s){
+    const cuando = fechaCorta(s.creada_en) + ', ' + horaCorta(s.creada_en);
     if(s.estado === 'atendida' || s.estado === 'anulada'){
-      return `<span class="edad fin">${esc(fechaCorta(s.creada_en))}</span>`;
+      return `<span class="edad fin" title="Pedida el ${esc(cuando)}">${esc(cuando)}</span>`;
     }
     const dia = x => { const d = new Date(x); d.setHours(0,0,0,0); return d.getTime(); };
     const dias = Math.round((dia(Date.now()) - dia(s.creada_en)) / 86400000);
-    const txt = dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : 'hace ' + dias + ' días';
+    /* hoy y ayer llevan la hora; de ahí para atrás ya cuenta más cuántos días
+       lleva que a qué hora fue, y la hora queda en el globito del ratón */
+    const h = horaCorta(s.creada_en);
+    const txt = dias <= 0 ? 'hoy, ' + h : dias === 1 ? 'ayer, ' + h : 'hace ' + dias + ' días';
     const clase = dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : 'viejo';
-    return `<span class="edad ${clase}">${esc(txt)}</span>`;
+    return `<span class="edad ${clase}" title="Pedida el ${esc(cuando)}">${esc(txt)}</span>`;
   }
 
   /* Lo que se hace veinte veces al día, en la propia fila: tomarla o cerrarla.
@@ -1046,7 +1059,7 @@
     return `<button type="button" class="det-fila" data-abrir="${esc(s.id)}" title="Abrir la ficha">
       <span class="dnum">${String(s.numero).padStart(3,'0')}<small>${esc(String(s.anio))}</small></span>
       <span class="dquien"><b>${esc(s.usuario)}</b><small>${esc(enBonito(s.gerencia))} · ${esc(servicioDe(s))}</small></span>
-      <span class="dfecha">${esc(fechaCorta(s.creada_en))}</span>
+      <span class="dfecha" title="Pedida el ${esc(fechaCorta(s.creada_en))}, ${esc(horaCorta(s.creada_en))}">${esc(fechaCorta(s.creada_en))}<small>${esc(horaCorta(s.creada_en))}</small></span>
       <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
       <span class="dtec">${esc(s.tecnico ? enBonito(s.tecnico) : 'Sin técnico')}</span>
       <span class="dcuanto">${esc(cuanto)}</span>
@@ -2569,7 +2582,7 @@
     $('hojaFicha').innerHTML = `
       <button type="button" class="cerrar" id="botonCerrarFicha" aria-label="Cerrar">✕</button>
       <h2>${esc(numeroDe(s))}</h2>
-      <div class="bajada">Recibida el ${esc(fechaCorta(s.creada_en))} ·
+      <div class="bajada">Recibida el ${esc(fechaCorta(s.creada_en))} a las ${esc(horaCorta(s.creada_en))} ·
         <span class="etiqueta ${esc(s.estado)}">${esc(ESTADO_ETIQUETA[s.estado] || s.estado)}</span>
         ${chatBotonHtml(s)}</div>
 
