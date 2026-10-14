@@ -263,12 +263,16 @@
     <div class="barra">
       <div class="fichas" id="statsPeriodos" role="group" aria-label="Tramo de tiempo"></div>
     </div>
-    <div class="kpis" id="statsKpis"></div>
-    <!-- Las solicitudes detrás de lo que se pulse: una cifra, una barra o un
-         técnico. Vacío y escondido hasta entonces. -->
-    <div class="stats-detalle" id="statsDetalle" hidden></div>
-    <div class="barrios" id="statsBarras"></div>
-    <div class="stats-desempeno" id="statsDesempeno"></div>
+    <!-- Dos sub-pestañas: el resumen y, cuando se pulsa una cifra, una barra o
+         un técnico, la lista de las solicitudes que cuenta. Las pestañas solo
+         aparecen cuando hay un detalle abierto; si no, se ve el resumen solo. -->
+    <div class="subpestanas" id="statsPestanas" role="tablist" aria-label="Vista de las estadísticas" hidden></div>
+    <div id="statsResumen" role="tabpanel">
+      <div class="kpis" id="statsKpis"></div>
+      <div class="barrios" id="statsBarras"></div>
+      <div class="stats-desempeno" id="statsDesempeno"></div>
+    </div>
+    <div class="stats-detalle" id="statsDetalle" role="tabpanel" hidden></div>
   </section>
 
   <!-- ===================== QUÉ SABEMOS =====================
