@@ -1624,14 +1624,14 @@ select.despierta{animation:destello .7s ease;}
 .barrios > .barrio:last-child:nth-child(even){grid-column:1 / -1;}
 
 /* ---- todo se puede pulsar ----
-   Cifras, barras, columnas y filas llevan a las solicitudes que cuentan. Lo
+   Cifras, barras y filas llevan a las solicitudes que cuentan. Lo
    de abajo deshace lo que un <button> trae de fábrica, para que se vean igual
    que antes de ser botones. */
 .bfila.clic{
   width:100%; background:none; border:0; padding:0; font:inherit; text-align:left;
   cursor:pointer; border-radius:var(--r-sm);
 }
-.bfila.clic:focus-visible, .kpi:focus-visible, .evol-col:focus-visible,
+.bfila.clic:focus-visible, .kpi:focus-visible,
 .tfila:focus-visible, .det-fila:focus-visible{outline:2px solid var(--navy-medio); outline-offset:2px;}
 .bfila .n small{font-family:inherit; color:var(--gray-soft); font-weight:400;}
 /* la cifra que se está mirando abajo queda marcada */
@@ -1667,34 +1667,6 @@ select.despierta{animation:destello .7s ease;}
   .det-fila .dfecha, .det-fila .dtec{display:none;}
   .det-fila .dcuanto{grid-column:2 / -1; text-align:left;}
 }
-
-/* ---- cómo fue llegando ----
-   Dos columnas por pedazo de tiempo: azul lo que entró —el mismo azul de las
-   barras— y verde lo que se resolvió, el verde de la etiqueta "Atendida".
-   Son dos cosas distintas y por eso, solo aquí, dos colores. */
-.stats-evolucion{margin-bottom:16px;}
-.evol-cab{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
-.evol-cab h2{font-size:14px; font-weight:700; margin-bottom:3px;}
-.evol-cab .s{font-size:11.5px; color:var(--gray-soft);}
-.evol-ley{display:flex; gap:14px; font-size:11.5px; color:var(--gray);}
-.ley::before{content:""; display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px;}
-.ley.ent::before{background:var(--navy-medio);}
-.ley.res::before{background:var(--good);}
-.evol-marco{position:relative; overflow-x:auto; padding-top:16px;}
-/* la cifra más alta, arriba a la izquierda, sobre una línea fina: la escala */
-.evol-tope{position:absolute; top:0; left:0; font-family:var(--cifras); font-size:10.5px; color:var(--gray-soft);}
-.evol-marco::before{content:""; position:absolute; left:0; right:0; top:16px; border-top:1px dashed var(--line);}
-.evol-graf{display:grid; gap:3px; align-items:end; min-width:100%;}
-.evol-col{
-  display:flex; flex-direction:column; align-items:stretch; gap:6px; height:190px;
-  background:none; border:0; padding:0 1px; font:inherit; cursor:pointer; border-radius:4px;
-}
-.evol-col:hover{background:var(--line-soft);}
-.evol-barras{flex:1; display:flex; align-items:flex-end; justify-content:center; gap:2px; border-bottom:1px solid var(--line);}
-.evol-barras i{display:block; flex:1; max-width:14px; min-height:0; border-radius:3px 3px 0 0; transition:height .4s cubic-bezier(.4,0,.2,1);}
-.evol-barras i.ent{background:var(--navy-medio);}
-.evol-barras i.res{background:var(--good);}
-.evol-et{height:14px; font-family:var(--cifras); font-size:10.5px; color:var(--gray-soft); text-align:center; white-space:nowrap;}
 
 /* ---- tiempos y desempeño ---- */
 .stats-desempeno{display:grid; grid-template-columns:3fr 2fr; gap:16px; margin-top:16px; align-items:start;}
