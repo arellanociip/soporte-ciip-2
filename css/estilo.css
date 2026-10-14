@@ -1639,6 +1639,12 @@ select.despierta{animation:destello .7s ease;}
 .bfila .n small{font-family:inherit; color:var(--gray-soft); font-weight:400;}
 /* la cifra que se está mirando abajo queda marcada */
 .kpi.on{border-color:var(--navy-medio); box-shadow:0 0 0 1px var(--navy-medio), var(--shadow);}
+/* Las cuatro cifras eran <div> y ahora son <button> para poder pulsarlas. Un
+   botón no hereda el interlineado de la página —trae el "normal" del
+   navegador—, y el rótulo y la línea de abajo quedaban más apretados que
+   antes. Se devuelve el de siempre solo aquí: las de Trazabilidad ya eran
+   botones y se quedan como estaban. */
+#statsKpis .kpi{line-height:inherit;}
 
 /* ---- las sub-pestañas: Resumen y el detalle abierto ----
    Una raya debajo y nada más, para no confundirse con las fichas redondas
