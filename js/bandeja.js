@@ -788,18 +788,19 @@
   /* Cuenta cuántas veces aparece cada valor y devuelve el top, ya ordenado.
      Lo que no llegue al corte se suma en "Otras", que es más honesto que
      esconderlo: si no, los porcentajes no cuadran con el total. */
-  function contar(lista, deQuien, cuantas){
+  /* Todas las que haya, de la que más se repite a la que menos —antes se
+     cortaba en las primeras 6 u 8 y el resto se amontonaba en "Otras", que
+     escondía justo lo que alguien podía andar buscando (su propia
+     gerencia, si pedía poco soporte). La tarjeta ahora rueda por dentro
+     (ver .barrio-filas en la hoja de estilos) en vez de truncar datos. */
+  function contar(lista, deQuien){
     const c = new Map();
     lista.forEach(s => {
       const v = deQuien(s);
       if(!v) return;
       c.set(v, (c.get(v) || 0) + 1);
     });
-    const orden = [...c].sort((a, b) => b[1] - a[1]);
-    if(orden.length <= cuantas) return orden;
-    const cabeza = orden.slice(0, cuantas);
-    const cola = orden.slice(cuantas).reduce((s, x) => s + x[1], 0);
-    return cola ? [...cabeza, ['Otras', cola]] : cabeza;
+    return [...c].sort((a, b) => b[1] - a[1]);
   }
 
   /* ---------- de la mayúscula sostenida a algo que se lea ----------
@@ -852,10 +853,12 @@
        diferencia entre el primero y el segundo se ve, que es lo que se lee. */
     const mayor = filas[0][1];
     return `<div class="barrio"><h2>${esc(titulo)}</h2><div class="s">${esc(sub)}</div>
+      <div class="barrio-filas">
       ${filas.map(([et, n]) => `<div class="bfila" title="${esc(et)}: ${n}">
         <div class="et">${esc(et)}</div><div class="n">${n}</div>
         <div class="riel"><i style="width:${Math.round(n / mayor * 100)}%"></i></div>
-      </div>`).join('')}</div>`;
+      </div>`).join('')}
+      </div></div>`;
   }
 
   /* Cuánto se tarda de recibida a atendida, en promedio. Solo cuenta las que
@@ -972,11 +975,11 @@
          lo mismo dos veces —la oficina ya lleva el piso delante— y con tan
          pocas solicitudes al día no dicen nada que no se sepa. */
       barrasHtml('Lo que más se pide', 'Por detalle de servicio',
-        contar(lista, s => enBonito(s.detalle) || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'), 8)) +
+        contar(lista, s => enBonito(s.detalle) || (s.tipo ? catTipoEtiqueta(s.tipo) : 'Sin clasificar'))) +
       barrasHtml('De qué gerencia vienen', 'Quién pide más soporte',
-        contar(lista, s => enBonito(s.gerencia), 6)) +
+        contar(lista, s => enBonito(s.gerencia))) +
       barrasHtml('Quién atiende', 'Solicitudes cerradas por técnico',
-        contar(atendidas, s => enBonito(s.tecnico), 6));
+        contar(atendidas, s => enBonito(s.tecnico)));
   }
 
   $('statsPeriodos').addEventListener('click', e => {
