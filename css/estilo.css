@@ -731,6 +731,21 @@ input::placeholder, textarea::placeholder{color:#B4BBC9;}
 .aviso.malo{background:var(--rust-bg); color:var(--rust); border:1px solid #F0D2C6;}
 .aviso.bueno{background:var(--good-bg); color:var(--good); border:1px solid #C9E7D8;}
 
+/* Versión nueva publicada (js/version.js). Abajo y al centro, por encima de
+   todo, para que se vea esté abierta la ventana que esté; no tapa nada que
+   haya que tocar para seguir trabajando. */
+.aviso-version{
+  position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:9999;
+  display:flex; align-items:center; gap:14px;
+  width:max-content; max-width:calc(100vw - 32px);
+  background:var(--ink); color:#fff; font-size:13.5px;
+  padding:10px 10px 10px 16px; border-radius:var(--r);
+  box-shadow:0 8px 28px rgba(14,20,36,.28);
+}
+.aviso-version .boton{padding:8px 16px; flex:0 0 auto;}
+.aviso-version .boton.primario{background:var(--cyan); color:var(--ink);}
+.aviso-version .boton.primario:hover{background:#4cc2f5;}
+
 /* ===================== QUIZÁ LO RESUELVAS TÚ =====================
    Lo que GTIC ya sabe de este problema, del lado de quien pide. Se abre en su
    propia ventana al elegir el problema —ahí es cuando sirve— y en el
@@ -1849,6 +1864,7 @@ select.despierta{animation:destello .7s ease;}
 #impresion{display:none;}
 
 @media print{
+  .aviso-version{display:none !important;}
   /* Fuera todo lo de la pantalla: queda la hoja sola. */
   body > *:not(#impresion){display:none !important;}
   body{background:#fff; font-size:9pt;}
