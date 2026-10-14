@@ -1577,6 +1577,11 @@ select.despierta{animation:destello .7s ease;}
 .barrio > h2{font-size:14px; font-weight:700; margin-bottom:3px;}
 .barrio > .s{font-size:11.5px; color:var(--gray-soft); margin-bottom:14px;}
 
+/* Ya no se corta en 6 u 8 con un "Otras" juntando el resto —eso escondía
+   justo lo que alguien podía andar buscando—; la tarjeta muestra todo y
+   rueda por dentro, con el título siempre a la vista arriba. */
+.barrio-filas{max-height:320px; overflow-y:auto; overflow-x:hidden; padding-right:6px;}
+
 .bfila{display:grid; grid-template-columns:1fr auto; gap:3px 10px; margin-bottom:11px;}
 .bfila:last-child{margin-bottom:0;}
 .bfila .et{
