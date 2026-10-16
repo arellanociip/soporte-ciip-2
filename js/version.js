@@ -8,9 +8,11 @@
    No recarga solo: alguien puede estar a mitad de escribir una solicitud o
    unas observaciones, y eso no se le pierde por sorpresa.
 
-   Vercel da un ETag que es el hash del contenido, así que no hay número de
-   versión que acordarse de subir. El servidor local no lo manda, y ahí esto
-   simplemente no hace nada. */
+   El ETag solo sirve de primera señal: en algunas redes llegaba distinto sin
+   que el archivo hubiera cambiado, y el aviso salía cada vez que se volvía a
+   la pestaña. Así que cuando un ETag cambia se baja ese archivo y se compara
+   su contenido (SHA-256) con el que tenía al cargar. Solo si el contenido es
+   otro se avisa. El servidor local no manda ETag, y ahí esto no hace nada. */
 (function(){
   const CADA = 2 * 60 * 1000;
 
@@ -24,22 +26,24 @@
     return [location.pathname, ...propios];
   }
 
-  async function huella(){
-    const etags = await Promise.all(archivos().map(async p => {
-      try{
-        const r = await fetch(p, {method: 'HEAD', cache: 'no-store'});
-        /* Vercel antepone W/ cuando manda el archivo comprimido y no cuando
-           no; el hash es el mismo. Sin quitarlo, ese ir y venir se leía
-           como versión nueva y el aviso salía sin haber cambiado nada. */
-        return r.ok ? (r.headers.get('etag') || '').replace(/^W\//, '') : '';
-      }catch(e){ return ''; }
-    }));
-    /* si falta alguno (sin red, servidor local) no se compara: un hueco no
-       es una versión nueva */
-    return etags.every(Boolean) ? etags.join('|') : null;
+  async function etag(p){
+    try{
+      const r = await fetch(p, {method: 'HEAD', cache: 'no-store'});
+      return r.ok ? (r.headers.get('etag') || '').replace(/^W\//, '') : '';
+    }catch(e){ return ''; }
   }
 
-  let inicial = null;
+  async function contenido(p){
+    try{
+      const r = await fetch(p, {cache: 'no-store'});
+      if(!r.ok) return '';
+      const h = await crypto.subtle.digest('SHA-256', await r.arrayBuffer());
+      return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }catch(e){ return ''; }
+  }
+
+  /* por archivo: el ETag y el hash del contenido que se vio la última vez */
+  const visto = new Map();
   let avisado = false;
 
   function avisar(){
@@ -54,12 +58,34 @@
     document.body.appendChild(d);
   }
 
+  async function mirarUno(p){
+    const e = await etag(p);
+    if(!e) return false;   /* sin red o sin ETag: no se sabe, no se avisa */
+    const antes = visto.get(p);
+    if(!antes){
+      visto.set(p, {etag: e, hash: await contenido(p)});
+      return false;
+    }
+    if(e === antes.etag) return false;
+    const h = await contenido(p);
+    if(!h || !antes.hash) return false;
+    if(h === antes.hash){
+      /* mismo archivo con otra etiqueta: se aprende la etiqueta y se sigue */
+      antes.etag = e;
+      return false;
+    }
+    console.info('[version] cambió', p, antes.etag, '→', e);
+    return true;
+  }
+
+  let mirando = false;
   async function mirar(){
-    if(avisado || (inicial !== null && document.hidden)) return;
-    const h = await huella();
-    if(!h) return;
-    if(inicial === null){ inicial = h; return; }
-    if(h !== inicial) avisar();
+    if(avisado || mirando || (visto.size && document.hidden)) return;
+    mirando = true;
+    try{
+      const cambios = await Promise.all(archivos().map(mirarUno));
+      if(cambios.some(Boolean)) avisar();
+    }finally{ mirando = false; }
   }
 
   mirar();
