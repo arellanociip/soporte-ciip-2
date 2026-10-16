@@ -28,7 +28,10 @@
     const etags = await Promise.all(archivos().map(async p => {
       try{
         const r = await fetch(p, {method: 'HEAD', cache: 'no-store'});
-        return r.ok ? (r.headers.get('etag') || '') : '';
+        /* Vercel antepone W/ cuando manda el archivo comprimido y no cuando
+           no; el hash es el mismo. Sin quitarlo, ese ir y venir se leía
+           como versión nueva y el aviso salía sin haber cambiado nada. */
+        return r.ok ? (r.headers.get('etag') || '').replace(/^W\//, '') : '';
       }catch(e){ return ''; }
     }));
     /* si falta alguno (sin red, servidor local) no se compara: un hueco no
